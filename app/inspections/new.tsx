@@ -1,0 +1,16 @@
+import { router, useLocalSearchParams } from 'expo-router';
+
+import { QuickInspectionForm } from '@/components/feature/QuickInspectionForm';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { Screen } from '@/components/ui/Screen';
+
+export default function NewInspectionScreen() {
+  const params = useLocalSearchParams<{ hiveId?: string }>();
+
+  return (
+    <Screen>
+      <PrimaryButton label="Stäng" onPress={() => router.back()} variant="secondary" />
+      <QuickInspectionForm initialHiveId={params.hiveId} />
+    </Screen>
+  );
+}
