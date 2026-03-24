@@ -5,10 +5,17 @@ import { fontFamilies, textStyles } from './typography';
 export const shadows = {
   card: {
     shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 2,
+  },
+  floating: {
+    shadowColor: colors.shadowStrong,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 2,
+    shadowRadius: 24,
+    elevation: 6,
   },
 };
 

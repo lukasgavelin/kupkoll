@@ -14,9 +14,9 @@ export default function HivesScreen() {
       <SectionHeader
         eyebrow="Kupor"
         title="Samhällesöversikt"
-        description="Snabb överblick över status, drottningläge, styrka och senaste inspektion."
+        description="Snabb överblick över status, drottningläge, styrka och senaste inspektion i ett tydligare raster."
       />
-      <View style={{ gap: theme.spacing.md }}>
+      <View style={{ gap: theme.spacing.lg }}>
         {hives.map((hive) => (
           <HiveCard key={hive.id} apiaryName={getApiaryById(hive.apiaryId)?.name ?? 'Bigård'} hive={hive} />
         ))}

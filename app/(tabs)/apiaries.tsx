@@ -14,9 +14,9 @@ export default function ApiariesScreen() {
       <SectionHeader
         eyebrow="Bigårdar"
         title="Dina platser"
-        description="Varje bigård visar läge, anteckningar och hur många samhällen som står där."
+        description="Varje bigård visar läge, anteckningar och hur många samhällen som står där, utan onödigt brus."
       />
-      <View style={{ gap: theme.spacing.md }}>
+      <View style={{ gap: theme.spacing.lg }}>
         {apiaries.map((apiary) => (
           <ApiaryCard key={apiary.id} apiary={apiary} hiveCount={getHivesByApiary(apiary.id).length} />
         ))}

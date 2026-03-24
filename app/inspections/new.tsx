@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { QuickInspectionForm } from '@/components/feature/QuickInspectionForm';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
 
 export default function NewInspectionScreen() {
@@ -9,7 +9,7 @@ export default function NewInspectionScreen() {
 
   return (
     <Screen>
-      <PrimaryButton label="Stäng" onPress={() => router.back()} variant="secondary" />
+      <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => router.back()} eyebrow="Snabb loggning" title="Registrera inspektion" description="Förenklad för att fungera snabbt och tydligt även ute i bigården." />
       <QuickInspectionForm initialHiveId={params.hiveId} />
     </Screen>
   );

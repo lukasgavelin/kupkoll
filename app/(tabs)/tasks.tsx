@@ -15,10 +15,10 @@ export default function TasksScreen() {
       <SectionHeader
         eyebrow="Uppgifter"
         title="Det som behöver göras"
-        description="Både manuella uppgifter och rekommenderade nästa steg samlade i en vy."
+        description="Manuella uppgifter och rekommenderade nästa steg i ett mer avskalat arbetsflöde."
       />
 
-      <AppCard>
+      <AppCard style={styles.priorityCard}>
         <Text style={theme.textStyles.heading}>Prioriterat idag</Text>
         <Text style={theme.textStyles.body}>Fokusera först på kupor med hög svärmrisk, svag utveckling eller osäker drottningstatus.</Text>
       </AppCard>
@@ -44,7 +44,10 @@ export default function TasksScreen() {
 }
 
 const styles = StyleSheet.create({
+  priorityCard: {
+    borderColor: theme.colors.borderStrong,
+  },
   sectionList: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
   },
 });

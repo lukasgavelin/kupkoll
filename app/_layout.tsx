@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen } from 'expo-router';
 import { useFonts, Manrope_400Regular, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
+import { Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
 
 import { BeehavenProvider } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
@@ -12,6 +13,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
+    Newsreader_600SemiBold,
     Manrope_400Regular,
     Manrope_600SemiBold,
     Manrope_700Bold,

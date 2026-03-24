@@ -9,12 +9,12 @@ export function AppCard({ children, style }: { children: ReactNode; style?: Styl
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radii.lg,
+    backgroundColor: theme.colors.surfaceRaised,
+    borderRadius: theme.radii.xl,
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.xl,
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
     ...theme.shadows.card,
   },
 });

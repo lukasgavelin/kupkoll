@@ -11,9 +11,9 @@ export default function SettingsScreen() {
       <SectionHeader
         eyebrow="Inställningar"
         title="MVP-status"
-        description="Första versionen fokuserar på fältanvändning, svensk biodling och tydligt beslutsstöd."
+        description="Första versionen fokuserar på fältanvändning, svensk biodling och ett mer lågmält premiumgränssnitt."
       />
-      <View style={{ gap: theme.spacing.md }}>
+      <View style={{ gap: theme.spacing.lg }}>
         <AppCard>
           <Text style={theme.textStyles.heading}>I den här versionen</Text>
           <Text style={theme.textStyles.body}>Hem, bigårdar, kupor, uppgifter, snabb inspektion och regelbaserade råd.</Text>

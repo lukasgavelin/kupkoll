@@ -17,13 +17,23 @@ export default function HomeScreen() {
   return (
     <Screen>
       <AppCard style={styles.heroCard}>
-        <Text style={theme.textStyles.overline}>{getSeasonLabel()}</Text>
-        <Text style={theme.textStyles.display}>beehaven2</Text>
-        <Text style={theme.textStyles.body}>Svensk kupjournal och beslutsstöd för snabb användning ute i bigården.</Text>
+        <Text style={theme.textStyles.overline}>beehaven2 · {getSeasonLabel()}</Text>
+        <Text style={theme.textStyles.display}>Lugn överblick för dagens arbete i bigården.</Text>
+        <Text style={styles.heroText}>Svensk kupjournal och beslutsstöd med fokus på tydlighet, rytm och snabb användning ute i fält.</Text>
+        <View style={styles.heroMetaRow}>
+          <View style={styles.heroMetaCard}>
+            <Text style={theme.textStyles.overline}>Varningar</Text>
+            <Text style={styles.heroMetaValue}>{dashboard.criticalCount}</Text>
+          </View>
+          <View style={styles.heroMetaCard}>
+            <Text style={theme.textStyles.overline}>Uppgifter idag</Text>
+            <Text style={styles.heroMetaValue}>{dashboard.upcomingTaskCount}</Text>
+          </View>
+        </View>
         {quickHive ? <PrimaryButton label="Snabb inspektion" onPress={() => router.push(`/inspections/new?hiveId=${quickHive.id}`)} /> : null}
       </AppCard>
 
-      <SectionHeader title="Översikt" description="Det viktigaste först: kupor, bigårdar, varningar och uppgifter." />
+      <SectionHeader title="Översikt" description="Det viktigaste först, samlat i ett lugnare flöde för snabb orientering." />
       <View style={styles.grid}>
         <StatCard label="Kupor" value={String(dashboard.hiveCount)} />
         <StatCard label="Bigårdar" value={String(dashboard.apiaryCount)} />
@@ -57,14 +67,40 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   heroCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceRaised,
+    borderColor: theme.colors.borderStrong,
   },
-  grid: {
+  heroText: {
+    ...theme.textStyles.body,
+    color: theme.colors.textMuted,
+    maxWidth: 620,
+  },
+  heroMetaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
   },
+  heroMetaCard: {
+    flex: 1,
+    minWidth: 160,
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.xs,
+  },
+  heroMetaValue: {
+    ...theme.textStyles.title,
+    fontSize: 28,
+    lineHeight: 30,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.lg,
+  },
   sectionList: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
   },
 });

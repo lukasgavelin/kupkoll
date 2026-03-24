@@ -74,11 +74,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   return (
     <View style={styles.wrapper}>
-      <SectionHeader
-        eyebrow="Snabb loggning"
-        title="Registrera inspektion"
-        description="Utformad för att kunna fyllas i med en hand ute i bigården på under 30 sekunder."
-      />
+      <SectionHeader title="Fyll i observationer" description="Utformad för att kunna fyllas i med en hand ute i bigården på under 30 sekunder." />
 
       <AppCard>
         <Text style={theme.textStyles.heading}>Välj kupa</Text>
@@ -143,7 +139,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: theme.spacing.xl,
+    gap: theme.spacing.xxl,
   },
   optionGrid: {
     flexDirection: 'row',
@@ -155,15 +151,15 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.pill,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surfaceMuted,
+    backgroundColor: theme.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
   },
   optionSelected: {
-    backgroundColor: theme.colors.text,
-    borderColor: theme.colors.text,
+    backgroundColor: theme.colors.sage,
+    borderColor: theme.colors.sage,
   },
   optionSelectedText: {
     color: theme.colors.surface,
@@ -171,7 +167,9 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 110,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
     padding: theme.spacing.lg,
     textAlignVertical: 'top',
     ...theme.textStyles.body,

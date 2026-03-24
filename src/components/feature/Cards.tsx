@@ -10,24 +10,24 @@ import { Apiary, Hive, Inspection, Recommendation, Task } from '@/types/domain';
 export function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <AppCard style={styles.statCard}>
+      <Text style={theme.textStyles.overline}>{label}</Text>
       <Text style={styles.statValue}>{value}</Text>
-      <Text style={theme.textStyles.caption}>{label}</Text>
     </AppCard>
   );
 }
 
 export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: number }) {
   return (
-    <Pressable onPress={() => router.push(`/apiaries/${apiary.id}`)}>
+    <Pressable onPress={() => router.push(`/apiaries/${apiary.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
       <AppCard>
         <View style={styles.rowBetween}>
           <View style={styles.textColumn}>
             <Text style={theme.textStyles.heading}>{apiary.name}</Text>
-            <Text style={theme.textStyles.body}>{apiary.location}</Text>
+            <Text style={theme.textStyles.caption}>{apiary.location}</Text>
           </View>
           <StatusBadge label={`${hiveCount} kupor`} tone="calm" />
         </View>
-        <Text style={theme.textStyles.caption}>{apiary.notes}</Text>
+        <Text style={theme.textStyles.body}>{apiary.notes}</Text>
       </AppCard>
     </Pressable>
   );
@@ -37,7 +37,7 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
   const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : 'calm';
 
   return (
-    <Pressable onPress={() => router.push(`/hives/${hive.id}`)}>
+    <Pressable onPress={() => router.push(`/hives/${hive.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
       <AppCard>
         <View style={styles.rowBetween}>
           <View style={styles.textColumn}>
@@ -108,19 +108,28 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    borderRadius: theme.radii.xl,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
   statCard: {
     flex: 1,
     minWidth: '47%',
+    justifyContent: 'space-between',
+    minHeight: 144,
   },
   statValue: {
     ...theme.textStyles.display,
-    fontSize: 32,
+    fontSize: 36,
+    lineHeight: 38,
   },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
   },
   textColumn: {
     flex: 1,

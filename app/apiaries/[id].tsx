@@ -3,9 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveCard } from '@/components/feature/Cards';
 import { AppCard } from '@/components/ui/AppCard';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useBeehaven } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
 
@@ -29,8 +29,7 @@ export default function ApiaryDetailScreen() {
 
   return (
     <Screen>
-      <PrimaryButton label="Tillbaka" onPress={() => router.back()} variant="secondary" />
-      <SectionHeader eyebrow="Bigårdsdetalj" title={apiary.name} description={apiary.location} />
+      <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={() => router.back()} eyebrow="Bigårdsdetalj" title={apiary.name} description={apiary.location} />
       <AppCard>
         <Text style={theme.textStyles.heading}>Anteckningar</Text>
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
@@ -46,6 +45,6 @@ export default function ApiaryDetailScreen() {
 
 const styles = StyleSheet.create({
   sectionList: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
   },
 });

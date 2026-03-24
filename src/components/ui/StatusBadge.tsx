@@ -17,11 +17,13 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
     borderRadius: theme.radii.pill,
-    paddingVertical: 7,
+    paddingVertical: 8,
     paddingHorizontal: 12,
   },
   label: {
     ...theme.textStyles.caption,
     fontFamily: theme.fontFamilies.semibold,
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

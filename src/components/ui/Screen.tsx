@@ -34,9 +34,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.canvas,
   },
   content: {
+    width: '100%',
+    maxWidth: 920,
+    alignSelf: 'center',
     paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.xxxl,
-    gap: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxxxl + theme.spacing.xxl,
+    gap: theme.spacing.xxl,
   },
 });

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { InspectionSnapshot, RecommendationCard, TaskCard } from '@/components/feature/Cards';
 import { AppCard } from '@/components/ui/AppCard';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -33,8 +34,14 @@ export default function HiveDetailScreen() {
 
   return (
     <Screen>
-      <PrimaryButton label="Tillbaka" onPress={() => router.back()} variant="secondary" />
-      <SectionHeader eyebrow="Kupdetalj" title={hive.name} description={apiary ? `${apiary.name} · ${formatDateLabel(hive.lastInspectionAt)}` : undefined} />
+      <PageHeader
+        actionLabel="Tillbaka"
+        actionIconName="chevron-back"
+        onActionPress={() => router.back()}
+        eyebrow="Kupdetalj"
+        title={hive.name}
+        description={apiary ? `${apiary.name} · Senast inspekterad ${formatDateLabel(hive.lastInspectionAt)}` : undefined}
+      />
 
       <AppCard>
         <View style={styles.metaGrid}>
@@ -79,13 +86,13 @@ const styles = StyleSheet.create({
   metaGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
   },
   metaItem: {
     width: '47%',
     gap: theme.spacing.xs,
   },
   sectionList: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.lg,
   },
 });
