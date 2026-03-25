@@ -7,26 +7,75 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
   },
 }));
 
-import { apiaries, hives, inspections, tasks } from '@/data/mock';
 import { createSeedBeehavenState, parsePersistedBeehavenState } from '@/lib/storage';
 
+const apiaries = [
+  {
+    id: 'apiary-1',
+    name: 'Testgård',
+    location: 'Uppsala',
+    notes: 'Anteckning',
+  },
+];
+
+const hives = [
+  {
+    id: 'hive-1',
+    apiaryId: 'apiary-1',
+    name: 'Kupa 1',
+    status: 'Stabilt' as const,
+    queenStatus: 'Bekräftad' as const,
+    strength: 'Medel' as const,
+    temperament: 'Lugnt' as const,
+    boxSystem: 'Svea' as const,
+    lastInspectionAt: '2026-03-20T10:15:00.000Z',
+    notes: 'Anteckning',
+  },
+];
+
+const inspections = [
+  {
+    id: 'insp-1',
+    hiveId: 'hive-1',
+    performedAt: '2026-03-20T10:15:00.000Z',
+    queenSeen: true,
+    eggsSeen: true,
+    openBrood: true,
+    cappedBrood: true,
+    honey: true,
+    pollen: true,
+    queenCells: false,
+    swarmSigns: false,
+    varroaLevel: 'Låg' as const,
+    temperament: 'Lugnt' as const,
+    actionNeeded: false,
+    notes: 'Anteckning',
+  },
+];
+
+const tasks = [
+  {
+    id: 'task-1',
+    title: 'Testuppgift',
+    description: 'Beskrivning',
+    dueDate: '2026-03-24T08:00:00.000Z',
+    apiaryId: 'apiary-1',
+    priority: 'Medel' as const,
+    source: 'Egen planering' as const,
+    completed: false,
+  },
+];
+
 describe('createSeedBeehavenState', () => {
-  it('returns cloned arrays and items from the mock seed', () => {
+  it('returns empty arrays for a clean install seed', () => {
     const seed = createSeedBeehavenState();
 
-    expect(seed.apiaries).not.toBe(apiaries);
-    expect(seed.hives).not.toBe(hives);
-    expect(seed.inspections).not.toBe(inspections);
-    expect(seed.manualTasks).not.toBe(tasks);
-
-    expect(seed.apiaries[0]).not.toBe(apiaries[0]);
-    expect(seed.hives[0]).not.toBe(hives[0]);
-    expect(seed.inspections[0]).not.toBe(inspections[0]);
-    expect(seed.manualTasks[0]).not.toBe(tasks[0]);
-
-    seed.hives[0].name = 'Ändrad kupa';
-
-    expect(hives[0].name).not.toBe('Ändrad kupa');
+    expect(seed).toEqual({
+      apiaries: [],
+      hives: [],
+      inspections: [],
+      manualTasks: [],
+    });
   });
 });
 
@@ -40,9 +89,56 @@ describe('parsePersistedBeehavenState', () => {
         inspections,
         manualTasks: tasks,
       }),
+    ).toBeNull();
+
+    expect(
+      parsePersistedBeehavenState({
+        version: 2,
+        apiaries,
+        hives,
+        inspections,
+        manualTasks: tasks,
+      }),
     ).toEqual({
       apiaries,
       hives,
+      inspections,
+      manualTasks: tasks,
+    });
+  });
+
+  it('normalizes older stored kuptyper to the new option labels', () => {
+    expect(
+      parsePersistedBeehavenState({
+        version: 2,
+        apiaries,
+        hives: [
+          {
+            ...hives[0],
+            boxSystem: 'Svensk normal',
+          },
+          {
+            ...hives[0],
+            id: 'hive-2',
+            boxSystem: 'Lågnormal 10 ramar',
+          },
+        ],
+        inspections,
+        manualTasks: tasks,
+      }),
+    ).toEqual({
+      apiaries,
+      hives: [
+        {
+          ...hives[0],
+          boxSystem: 'Svea',
+        },
+        {
+          ...hives[0],
+          id: 'hive-2',
+          boxSystem: 'Lågnormal',
+        },
+      ],
       inspections,
       manualTasks: tasks,
     });

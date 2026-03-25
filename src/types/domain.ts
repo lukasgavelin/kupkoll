@@ -5,7 +5,7 @@ export type HiveTemperament = 'Lugnt' | 'Vaksamt' | 'Hetsigt';
 export type TaskPriority = 'Låg' | 'Medel' | 'Hög';
 export type RecommendationSeverity = 'info' | 'warning' | 'critical';
 export type SeasonLabel = 'Vintertillsyn' | 'Vårutveckling' | 'Svärmperiod' | 'Drag och skattning' | 'Invintring' | 'Vinterro';
-export type HiveBoxSystem = 'Lågnormal 10 ramar' | 'Svensk normal' | 'Langstroth';
+export type HiveBoxSystem = 'Lågnormal' | 'Svea' | 'Langstroth' | 'Dadant';
 export type TaskSource = 'Egen planering' | 'Beslutsstöd';
 export type VarroaLevel = 'Ej kontrollerad' | 'Låg' | 'Förhöjd' | 'Hög';
 
@@ -25,7 +25,7 @@ export type Hive = {
   strength: HiveStrength;
   temperament: HiveTemperament;
   boxSystem: HiveBoxSystem;
-  lastInspectionAt: string;
+  lastInspectionAt?: string;
   notes: string;
 };
 
@@ -70,3 +70,7 @@ export type Recommendation = {
 };
 
 export type NewInspectionInput = Omit<Inspection, 'id' | 'performedAt'>;
+export type NewApiaryInput = Omit<Apiary, 'id'>;
+export type NewHiveInput = Pick<Hive, 'apiaryId' | 'name' | 'strength' | 'temperament' | 'boxSystem' | 'notes'>;
+export type UpdateApiaryInput = NewApiaryInput;
+export type UpdateHiveInput = NewHiveInput;

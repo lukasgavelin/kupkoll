@@ -2,6 +2,8 @@
 
 beehaven2 är en svensk Expo-app för biodling med fokus på snabb kupjournal, tydlig överblick och regelbaserat beslutsstöd ute i bigården.
 
+Appen startar nu utan demo- eller mockdata för att motsvara en ren nyinstallation.
+
 Gränssnittet är utformat för att kännas skandinaviskt, lugnt och premium utan att tappa enkelhet i fält. Den nuvarande versionen använder en lågmäld naturpalett, luftig spacing, tydlig svensk text och en kombination av Manrope för brödtext och Newsreader för rubriker.
 
 ## MVP-innehåll
@@ -12,6 +14,7 @@ Gränssnittet är utformat för att kännas skandinaviskt, lugnt och premium uta
 - Snabbt genomgångsflöde på svenska för fältbruk.
 - Uppgifter och rekommendationer baserade på svenska biodlingssäsonger och senaste genomgångar.
 - Förfinad UI med rundade kort, flytande tabb-navigering och mer konsekventa detaljvyer.
+- Rent förstastartsläge utan förifyllda bigårdar, kupor, genomgångar eller uppgifter.
 
 ## Start
 

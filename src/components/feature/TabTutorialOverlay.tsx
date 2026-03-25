@@ -19,12 +19,17 @@ type TabTutorialOverlayProps = {
 export function TabTutorialOverlay({ visible, title, description, step, totalSteps, activeIndex, nextLabel, onNext, onClose }: TabTutorialOverlayProps) {
   const { width } = useWindowDimensions();
 
+  const tabBarInset = theme.spacing.lg;
+  const tabBarInnerPadding = theme.spacing.sm;
   const tabBarOuterWidth = width - theme.spacing.lg * 2;
-  const tabSlotWidth = tabBarOuterWidth / totalSteps;
+  const tabBarInnerWidth = tabBarOuterWidth - tabBarInnerPadding * 2;
+  const tabSlotWidth = tabBarInnerWidth / totalSteps;
   const highlightWidth = Math.max(tabSlotWidth - theme.spacing.md, 52);
-  const highlightLeft = theme.spacing.lg + activeIndex * tabSlotWidth + (tabSlotWidth - highlightWidth) / 2;
+  const highlightLeft = tabBarInset + tabBarInnerPadding + activeIndex * tabSlotWidth + (tabSlotWidth - highlightWidth) / 2;
   const animatedLeft = useRef(new Animated.Value(highlightLeft)).current;
   const animatedWidth = useRef(new Animated.Value(highlightWidth)).current;
+  const ringScale = useRef(new Animated.Value(1)).current;
+  const ringOpacity = useRef(new Animated.Value(0.32)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -45,6 +50,51 @@ export function TabTutorialOverlay({ visible, title, description, step, totalSte
     ]).start();
   }, [animatedLeft, animatedWidth, highlightLeft, highlightWidth]);
 
+  useEffect(() => {
+    if (!visible) {
+      ringScale.stopAnimation();
+      ringOpacity.stopAnimation();
+      ringScale.setValue(1);
+      ringOpacity.setValue(0.32);
+      return;
+    }
+
+    const pulse = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(ringScale, {
+            toValue: 1.08,
+            duration: 900,
+            useNativeDriver: false,
+          }),
+          Animated.timing(ringScale, {
+            toValue: 1,
+            duration: 900,
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(ringOpacity, {
+            toValue: 0.14,
+            duration: 900,
+            useNativeDriver: false,
+          }),
+          Animated.timing(ringOpacity, {
+            toValue: 0.32,
+            duration: 900,
+            useNativeDriver: false,
+          }),
+        ]),
+      ]),
+    );
+
+    pulse.start();
+
+    return () => {
+      pulse.stop();
+    };
+  }, [ringOpacity, ringScale, visible]);
+
   if (!visible) {
     return null;
   }
@@ -52,8 +102,11 @@ export function TabTutorialOverlay({ visible, title, description, step, totalSte
   return (
     <View pointerEvents="box-none" style={styles.overlay}>
       <Pressable onPress={onClose} style={styles.backdrop} />
+      <Animated.View pointerEvents="none" style={[styles.tabGlow, { width: animatedWidth, left: animatedLeft, transform: [{ scale: ringScale }], opacity: ringOpacity }]} />
       <Animated.View pointerEvents="none" style={[styles.tabHighlight, { width: animatedWidth, left: animatedLeft }]}>
-        <Text style={styles.tabHighlightLabel}>Den här fliken</Text>
+        <View style={styles.tabHighlightInner}>
+          <View style={styles.tabHighlightDot} />
+        </View>
       </Animated.View>
       <AppCard style={styles.card}>
         <View style={styles.topRow}>
@@ -98,6 +151,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceRaised,
     gap: theme.spacing.xl,
   },
+  tabGlow: {
+    position: 'absolute',
+    bottom: 52,
+    minHeight: 58,
+    borderRadius: theme.radii.pill,
+    backgroundColor: theme.colors.accent,
+  },
   tabHighlight: {
     position: 'absolute',
     bottom: 52,
@@ -105,12 +165,28 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.pill,
     borderWidth: 2,
     borderColor: theme.colors.accent,
-    backgroundColor: theme.colors.surfaceRaised,
+    backgroundColor: 'rgba(251, 250, 246, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 4,
     ...theme.shadows.floating,
   },
-  tabHighlightLabel: {
+  tabHighlightInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(233, 220, 197, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabHighlightDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: theme.colors.accent,
+  },
+  stepBadgeText: {
     ...theme.textStyles.label,
     color: theme.colors.accent,
   },
@@ -137,10 +213,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.md,
-  },
-  stepBadgeText: {
-    ...theme.textStyles.label,
-    color: theme.colors.accent,
   },
   description: {
     ...theme.textStyles.body,

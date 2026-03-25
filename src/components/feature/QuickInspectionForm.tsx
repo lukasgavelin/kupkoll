@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
+import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useBeehaven } from '@/store/BeehavenContext';
@@ -108,7 +109,7 @@ function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTem
 }
 
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
-  const { addInspection, hives } = useBeehaven();
+  const { addInspection, apiaries, hives } = useBeehaven();
   const [selectedPresetId, setSelectedPresetId] = useState(inspectionPresets[0].id);
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [notes, setNotes] = useState('');
@@ -163,6 +164,28 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   }
 
   const summaryLabel = activePreset ? activePreset.label : 'Anpassad logg';
+  const hasApiaries = apiaries.length > 0;
+
+  if (!hives.length) {
+    return (
+      <View style={styles.wrapper}>
+        <SectionHeader
+          title="Snabbflöde i fyra tryck"
+          description="Snabbgenomgången blir tillgänglig så fort det finns minst en kupa att välja."
+        />
+        <EmptyStateCard
+          title={hasApiaries ? 'Lägg till första kupan först' : 'Skapa först en bigård'}
+          description={
+            hasApiaries
+              ? 'Det finns ännu inga kupor att logga genomgång på. Skapa första kupan och kom sedan tillbaka till snabbflödet.'
+              : 'Snabbgenomgången behöver en kupa, och en kupa behöver tillhöra en bigård. Börja därför med att skapa en bigård.'
+          }
+          actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
+          onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -174,9 +197,6 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             <Text style={theme.textStyles.overline}>Val just nu</Text>
             <Text style={styles.summaryTitle}>{selectedHive ? selectedHive.name : 'Välj kupa först'}</Text>
             <Text style={styles.summaryDescription}>{summaryLabel} • {temperament} • Varroa {varroaLevel}</Text>
-          </View>
-          <View style={styles.stepBadge}>
-            <Text style={styles.stepBadgeText}>Under 30 sek</Text>
           </View>
         </View>
         <Text style={theme.textStyles.caption}>Fritext är valfri. Om du inte skriver något sparas en kort standardnotering från valt läge.</Text>
@@ -226,7 +246,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             const selected = values[item.key];
             return (
               <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[theme.textStyles.bodyStrong, selected && styles.optionSelectedText]}>{item.label}</Text>
+                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
               </Pressable>
             );
           })}
@@ -237,7 +257,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             const selected = value === temperament;
             return (
               <Pressable key={value} onPress={() => setTemperament(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[theme.textStyles.bodyStrong, selected && styles.optionSelectedText]}>{value}</Text>
+                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
               </Pressable>
             );
           })}
@@ -248,7 +268,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             const selected = value === varroaLevel;
             return (
               <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[theme.textStyles.bodyStrong, selected && styles.optionSelectedText]}>{value}</Text>
+                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
               </Pressable>
             );
           })}
@@ -257,10 +277,10 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>4. Kort notering om du vill</Text>
-        <View style={styles.optionGrid}>
+        <View style={styles.chipGrid}>
           {quickNoteSuggestions.map((suggestion) => (
             <Pressable key={suggestion} onPress={() => addQuickNote(suggestion)} style={styles.option}>
-              <Text style={theme.textStyles.bodyStrong}>{suggestion}</Text>
+              <Text style={styles.optionLabel}>{suggestion}</Text>
             </Pressable>
           ))}
         </View>
@@ -305,18 +325,6 @@ const styles = StyleSheet.create({
   summaryDescription: {
     ...theme.textStyles.body,
     color: theme.colors.textMuted,
-  },
-  stepBadge: {
-    minHeight: 40,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-  },
-  stepBadgeText: {
-    ...theme.textStyles.label,
-    color: theme.colors.accent,
   },
   stack: {
     gap: theme.spacing.md,
@@ -364,6 +372,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  chipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
   },
   option: {
     minHeight: 56,
@@ -378,12 +392,19 @@ const styles = StyleSheet.create({
   },
   largeOption: {
     minHeight: 68,
-    minWidth: '47%',
-    flex: 1,
+    width: '48%',
+    maxWidth: '48%',
+    flexGrow: 0,
+    flexShrink: 0,
   },
   optionSelected: {
     backgroundColor: theme.colors.sage,
     borderColor: theme.colors.sage,
+  },
+  optionLabel: {
+    ...theme.textStyles.bodyStrong,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   optionSelectedText: {
     color: theme.colors.surface,
@@ -391,6 +412,7 @@ const styles = StyleSheet.create({
   inlineLabel: {
     ...theme.textStyles.label,
     color: theme.colors.textMuted,
+    marginTop: theme.spacing.md,
   },
   input: {
     minHeight: 92,

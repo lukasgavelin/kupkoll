@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { theme } from '@/theme';
@@ -14,16 +14,20 @@ export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
   if (!scroll) {
     return (
       <SafeAreaView style={styles.safeArea} edges={[ 'top', 'left', 'right' ]}>
-        <View style={[styles.content, contentStyle]}>{children}</View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoider}>
+          <View style={[styles.content, contentStyle]}>{children}</View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={[ 'top', 'left', 'right' ]}>
-      <ScrollView contentContainerStyle={[styles.content, contentStyle]} showsVerticalScrollIndicator={false}>
-        {children}
-      </ScrollView>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoider}>
+        <ScrollView contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -33,7 +37,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.canvas,
   },
+  keyboardAvoider: {
+    flex: 1,
+  },
   content: {
+    flexGrow: 1,
     width: '100%',
     maxWidth: 920,
     alignSelf: 'center',

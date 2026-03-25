@@ -55,7 +55,12 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.canvas } }}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="apiaries/new" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="apiaries/[id]/edit" options={{ presentation: 'modal' }} />
           <Stack.Screen name="apiaries/[id]" />
+          <Stack.Screen name="hives/new" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="hives/[id]/edit" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="hives/[id]/inspections" />
           <Stack.Screen name="hives/[id]" />
           <Stack.Screen name="inspections/new" options={{ presentation: 'modal' }} />
         </Stack>

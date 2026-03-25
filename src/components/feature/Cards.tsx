@@ -52,7 +52,7 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
           <Text style={theme.textStyles.caption}>Temperament: {hive.temperament}</Text>
           <Text style={theme.textStyles.caption}>Kupsystem: {hive.boxSystem}</Text>
         </View>
-        <Text style={theme.textStyles.caption}>Senaste genomgång {formatDateLabel(hive.lastInspectionAt)}</Text>
+        <Text style={theme.textStyles.caption}>{hive.lastInspectionAt ? `Senaste genomgång ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång registrerad ännu'}</Text>
       </AppCard>
     </Pressable>
   );

@@ -1,10 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { apiaries as initialApiaries, hives as initialHives, inspections as initialInspections, tasks as initialTasks } from '@/data/mock';
-import { Apiary, Hive, Inspection, Task, VarroaLevel } from '@/types/domain';
+import { Apiary, Hive, HiveBoxSystem, Inspection, Task, VarroaLevel } from '@/types/domain';
 
 const BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
-const BEEHAVEN_APP_STATE_VERSION = 1;
+const BEEHAVEN_APP_STATE_VERSION = 2;
 
 export type BeehavenAppState = {
   apiaries: Apiary[];
@@ -38,6 +37,25 @@ function normalizeVarroaLevel(value: unknown): VarroaLevel {
   return value === 'Låg' || value === 'Förhöjd' || value === 'Hög' || value === 'Ej kontrollerad' ? value : 'Ej kontrollerad';
 }
 
+function normalizeHiveBoxSystem(value: unknown): HiveBoxSystem {
+  if (value === 'Lågnormal 10 ramar') {
+    return 'Lågnormal';
+  }
+
+  if (value === 'Svensk normal') {
+    return 'Svea';
+  }
+
+  return value === 'Lågnormal' || value === 'Svea' || value === 'Langstroth' || value === 'Dadant' ? value : 'Lågnormal';
+}
+
+function normalizeHive(item: Record<string, unknown>): Hive {
+  return {
+    ...(item as Hive),
+    boxSystem: normalizeHiveBoxSystem(item.boxSystem),
+  };
+}
+
 function normalizeInspection(item: Record<string, unknown>): Inspection {
   return {
     ...(item as Inspection),
@@ -62,7 +80,7 @@ function createParsedState(candidate: {
 
   return {
     apiaries: candidate.apiaries as Apiary[],
-    hives: candidate.hives as Hive[],
+    hives: candidate.hives.map(normalizeHive),
     inspections: candidate.inspections.map(normalizeInspection),
     manualTasks: candidate.manualTasks as Task[],
   };
@@ -79,10 +97,10 @@ function migrateLegacyState(candidate: LegacyPersistedBeehavenAppState): Beehave
 
 export function createSeedBeehavenState(): BeehavenAppState {
   return {
-    apiaries: cloneItems(initialApiaries),
-    hives: cloneItems(initialHives),
-    inspections: cloneItems(initialInspections),
-    manualTasks: cloneItems(initialTasks),
+    apiaries: [],
+    hives: [],
+    inspections: [],
+    manualTasks: [],
   };
 }
 

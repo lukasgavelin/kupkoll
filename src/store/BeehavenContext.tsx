@@ -5,7 +5,7 @@ import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { BeehavenAppState, saveBeehavenState } from '@/lib/storage';
 import { deriveTabTutorialViewState } from '@/lib/tutorialState';
-import { Apiary, Hive, Inspection, NewInspectionInput, Recommendation, Task } from '@/types/domain';
+import { Apiary, Hive, Inspection, NewApiaryInput, NewHiveInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
 
 const TAB_TUTORIAL_STORAGE_KEY = 'beehaven:first-run-tab-tutorial';
 
@@ -23,6 +23,12 @@ type BeehavenContextValue = {
   tabTutorialReady: boolean;
   tabTutorialPromptVisible: boolean;
   tabTutorialVisible: boolean;
+  addApiary: (input: NewApiaryInput) => Apiary;
+  addHive: (input: NewHiveInput) => Hive;
+  updateApiary: (apiaryId: string, input: UpdateApiaryInput) => Apiary | undefined;
+  updateHive: (hiveId: string, input: UpdateHiveInput) => Hive | undefined;
+  deleteApiary: (apiaryId: string) => void;
+  deleteHive: (hiveId: string) => void;
   addInspection: (input: NewInspectionInput) => void;
   completeTabTutorial: () => Promise<void>;
   resetTabTutorial: () => Promise<void>;
@@ -31,6 +37,7 @@ type BeehavenContextValue = {
   getApiaryById: (id: string) => Apiary | undefined;
   getHiveById: (id: string) => Hive | undefined;
   getHivesByApiary: (apiaryId: string) => Hive[];
+  getInspectionsForHive: (hiveId: string) => Inspection[];
   getRecommendationsForHive: (hiveId: string) => Recommendation[];
   getTasksForHive: (hiveId: string) => Task[];
 };
@@ -49,21 +56,26 @@ function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'que
 }
 
 export function BeehavenProvider({ children, initialData }: { children: ReactNode; initialData: BeehavenAppState }) {
-  const [apiaries] = useState(initialData.apiaries);
+  const [apiaries, setApiaries] = useState(initialData.apiaries);
   const [hives, setHives] = useState(initialData.hives);
   const [inspections, setInspections] = useState(initialData.inspections);
-  const [manualTasks] = useState(initialData.manualTasks);
+  const [manualTasks, setManualTasks] = useState(initialData.manualTasks);
   const [tabTutorialReady, setTabTutorialReady] = useState(false);
   const [tabTutorialPromptVisible, setTabTutorialPromptVisible] = useState(false);
   const [tabTutorialVisible, setTabTutorialVisible] = useState(false);
 
   useEffect(() => {
-    void saveBeehavenState({
-      apiaries,
-      hives,
-      inspections,
-      manualTasks,
-    });
+    void (async () => {
+      try {
+        await saveBeehavenState({
+          apiaries,
+          hives,
+          inspections,
+          manualTasks,
+        });
+      } catch {
+      }
+    })();
   }, [apiaries, hives, inspections, manualTasks]);
 
   useEffect(() => {
@@ -109,6 +121,75 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
       }),
     [apiaries, hives, inspections, tasks, derived.recommendations],
   );
+
+  function addApiary(input: NewApiaryInput) {
+    const apiary: Apiary = {
+      id: `apiary-${Date.now()}`,
+      ...input,
+    };
+
+    setApiaries((current) => [apiary, ...current]);
+    return apiary;
+  }
+
+  function addHive(input: NewHiveInput) {
+    const hive: Hive = {
+      id: `hive-${Date.now()}`,
+      status: 'Under uppbyggnad',
+      queenStatus: 'Behöver följas upp',
+      ...input,
+    };
+
+    setHives((current) => [hive, ...current]);
+    return hive;
+  }
+
+  function updateApiary(apiaryId: string, input: UpdateApiaryInput) {
+    const currentApiary = apiaries.find((apiary) => apiary.id === apiaryId);
+
+    if (!currentApiary) {
+      return undefined;
+    }
+
+    const updatedApiary: Apiary = {
+      ...currentApiary,
+      ...input,
+    };
+
+    setApiaries((current) => current.map((apiary) => (apiary.id === apiaryId ? updatedApiary : apiary)));
+    return updatedApiary;
+  }
+
+  function updateHive(hiveId: string, input: UpdateHiveInput) {
+    const currentHive = hives.find((hive) => hive.id === hiveId);
+
+    if (!currentHive) {
+      return undefined;
+    }
+
+    const updatedHive: Hive = {
+      ...currentHive,
+      ...input,
+    };
+
+    setHives((current) => current.map((hive) => (hive.id === hiveId ? updatedHive : hive)));
+    return updatedHive;
+  }
+
+  function deleteHive(hiveId: string) {
+    setHives((current) => current.filter((hive) => hive.id !== hiveId));
+    setInspections((current) => current.filter((inspection) => inspection.hiveId !== hiveId));
+    setManualTasks((current) => current.filter((task) => task.hiveId !== hiveId));
+  }
+
+  function deleteApiary(apiaryId: string) {
+    const hiveIds = hives.filter((hive) => hive.apiaryId === apiaryId).map((hive) => hive.id);
+
+    setApiaries((current) => current.filter((apiary) => apiary.id !== apiaryId));
+    setHives((current) => current.filter((hive) => hive.apiaryId !== apiaryId));
+    setInspections((current) => current.filter((inspection) => !hiveIds.includes(inspection.hiveId)));
+    setManualTasks((current) => current.filter((task) => task.apiaryId !== apiaryId && (!task.hiveId || !hiveIds.includes(task.hiveId))));
+  }
 
   function addInspection(input: NewInspectionInput) {
     const now = new Date().toISOString();
@@ -181,6 +262,12 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
       tabTutorialReady,
       tabTutorialPromptVisible,
       tabTutorialVisible,
+      addApiary,
+      addHive,
+      updateApiary,
+      updateHive,
+      deleteApiary,
+      deleteHive,
       addInspection,
       completeTabTutorial,
       resetTabTutorial,
@@ -189,6 +276,10 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),
       getHiveById: (id) => hives.find((hive) => hive.id === id),
       getHivesByApiary: (apiaryId) => hives.filter((hive) => hive.apiaryId === apiaryId),
+      getInspectionsForHive: (hiveId) =>
+        [...inspections]
+          .filter((inspection) => inspection.hiveId === hiveId)
+          .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime()),
       getRecommendationsForHive: (hiveId) => derived.recommendations.filter((item) => item.hiveId === hiveId),
       getTasksForHive: (hiveId) => tasks.filter((task) => task.hiveId === hiveId),
     }),
