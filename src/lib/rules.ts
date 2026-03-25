@@ -66,7 +66,44 @@ function createTask(
   };
 }
 
+function getVarroaSeverity(inspection: Inspection): RecommendationSeverity {
+  return inspection.varroaLevel === 'Hög' ? 'critical' : 'warning';
+}
+
+function getVarroaPriority(inspection: Inspection): Task['priority'] {
+  return inspection.varroaLevel === 'Hög' ? 'Hög' : 'Medel';
+}
+
+function getVarroaDueInDays(inspection: Inspection) {
+  return inspection.varroaLevel === 'Hög' ? 1 : 4;
+}
+
 const decisionRules: DecisionRule[] = [
+  {
+    id: 'varroa-pressure',
+    shouldApply: ({ inspection }) => inspection.varroaLevel === 'Förhöjd' || inspection.varroaLevel === 'Hög',
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'varroa',
+        title: context.inspection.varroaLevel === 'Hög' ? 'Hög varroabelastning' : 'Förhöjt varroatryck',
+        detail:
+          context.inspection.varroaLevel === 'Hög'
+            ? 'Varroaläget är högt och bör hanteras skyndsamt. Bekräfta med vald metod och planera snabb åtgärd innan samhället tappar kraft.'
+            : 'Varroaläget börjar stiga. Följ upp med ny mätning eller planerad säsongsåtgärd innan trycket blir svårt att vända.',
+        severity: getVarroaSeverity(context.inspection),
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'varroa',
+        title: 'Planera varroaåtgärd',
+        description:
+          context.inspection.varroaLevel === 'Hög'
+            ? `Prioritera varroaåtgärd i ${context.hive.name} och bekräfta belastningen med vald kontrollmetod så snart som möjligt.`
+            : `Följ upp varroaläget i ${context.hive.name} med ny kontroll eller planerad åtgärd innan nästa genomgång.`,
+        dueInDays: getVarroaDueInDays(context.inspection),
+        priority: getVarroaPriority(context.inspection),
+      }),
+  },
   {
     id: 'swarm-risk',
     shouldApply: ({ inspection }) => inspection.queenCells || inspection.swarmSigns,

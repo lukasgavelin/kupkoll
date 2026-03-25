@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
-import { apiaries as initialApiaries, hives as initialHives, inspections as initialInspections, tasks as initialTasks } from '@/data/mock';
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
+import { BeehavenAppState, saveBeehavenState } from '@/lib/storage';
 import { deriveTabTutorialViewState } from '@/lib/tutorialState';
 import { Apiary, Hive, Inspection, NewInspectionInput, Recommendation, Task } from '@/types/domain';
 
@@ -39,7 +39,7 @@ const BeehavenContext = createContext<BeehavenContextValue | undefined>(undefine
 
 function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'queenStatus' | 'temperament'> {
   const queenStatus = input.queenSeen || input.eggsSeen ? 'Bekräftad' : input.actionNeeded ? 'Behöver följas upp' : 'Osäker';
-  const status = input.actionNeeded || (!input.openBrood && !input.cappedBrood) ? 'Behöver åtgärd' : 'Stabilt';
+  const status = input.actionNeeded || input.varroaLevel === 'Hög' || (!input.openBrood && !input.cappedBrood) ? 'Behöver åtgärd' : 'Stabilt';
 
   return {
     status,
@@ -48,14 +48,23 @@ function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'que
   };
 }
 
-export function BeehavenProvider({ children }: { children: ReactNode }) {
-  const [apiaries] = useState(initialApiaries);
-  const [hives, setHives] = useState(initialHives);
-  const [inspections, setInspections] = useState(initialInspections);
-  const [manualTasks] = useState(initialTasks);
+export function BeehavenProvider({ children, initialData }: { children: ReactNode; initialData: BeehavenAppState }) {
+  const [apiaries] = useState(initialData.apiaries);
+  const [hives, setHives] = useState(initialData.hives);
+  const [inspections, setInspections] = useState(initialData.inspections);
+  const [manualTasks] = useState(initialData.manualTasks);
   const [tabTutorialReady, setTabTutorialReady] = useState(false);
   const [tabTutorialPromptVisible, setTabTutorialPromptVisible] = useState(false);
   const [tabTutorialVisible, setTabTutorialVisible] = useState(false);
+
+  useEffect(() => {
+    void saveBeehavenState({
+      apiaries,
+      hives,
+      inspections,
+      manualTasks,
+    });
+  }, [apiaries, hives, inspections, manualTasks]);
 
   useEffect(() => {
     let cancelled = false;

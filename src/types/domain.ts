@@ -7,6 +7,7 @@ export type RecommendationSeverity = 'info' | 'warning' | 'critical';
 export type SeasonLabel = 'Vintertillsyn' | 'Vårutveckling' | 'Svärmperiod' | 'Drag och skattning' | 'Invintring' | 'Vinterro';
 export type HiveBoxSystem = 'Lågnormal 10 ramar' | 'Svensk normal' | 'Langstroth';
 export type TaskSource = 'Egen planering' | 'Beslutsstöd';
+export type VarroaLevel = 'Ej kontrollerad' | 'Låg' | 'Förhöjd' | 'Hög';
 
 export type Apiary = {
   id: string;
@@ -40,6 +41,7 @@ export type Inspection = {
   pollen: boolean;
   queenCells: boolean;
   swarmSigns: boolean;
+  varroaLevel: VarroaLevel;
   temperament: HiveTemperament;
   actionNeeded: boolean;
   notes: string;

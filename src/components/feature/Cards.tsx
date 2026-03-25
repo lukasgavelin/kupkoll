@@ -95,6 +95,8 @@ export function RecommendationCard({ recommendation, hiveName }: { recommendatio
 }
 
 export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
+  const varroaTone = inspection.varroaLevel === 'Hög' ? 'critical' : inspection.varroaLevel === 'Förhöjd' ? 'warning' : 'info';
+
   return (
     <AppCard>
       <Text style={theme.textStyles.heading}>{formatDateTimeLabel(inspection.performedAt)}</Text>
@@ -102,6 +104,7 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
         <StatusBadge label={inspection.queenSeen ? 'Drottning sedd' : 'Drottning ej sedd'} tone={inspection.queenSeen ? 'calm' : 'warning'} />
         <StatusBadge label={inspection.eggsSeen ? 'Ägg sedda' : 'Inga ägg'} tone={inspection.eggsSeen ? 'calm' : 'warning'} />
         <StatusBadge label={inspection.actionNeeded ? 'Åtgärd behövs' : 'Normalläge'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
+        <StatusBadge label={`Varroa: ${inspection.varroaLevel}`} tone={varroaTone} />
       </View>
       <Text style={theme.textStyles.body}>{inspection.notes}</Text>
     </AppCard>

@@ -7,7 +7,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useBeehaven } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
-import { HiveTemperament } from '@/types/domain';
+import { HiveTemperament, VarroaLevel } from '@/types/domain';
 
 type BooleanKey = 'queenSeen' | 'eggsSeen' | 'openBrood' | 'cappedBrood' | 'honey' | 'pollen' | 'queenCells' | 'swarmSigns' | 'actionNeeded';
 
@@ -21,6 +21,7 @@ type InspectionPreset = {
   description: string;
   defaultNote: string;
   temperament: HiveTemperament;
+  varroaLevel: VarroaLevel;
   values: Record<BooleanKey, boolean>;
 };
 
@@ -31,6 +32,7 @@ const inspectionPresets: InspectionPreset[] = [
     description: 'Bra yngelbild, gott om foder och inget akut att följa upp.',
     defaultNote: 'Snabb kontroll: kupan känns stabil och i balans.',
     temperament: 'Lugnt',
+    varroaLevel: 'Ej kontrollerad',
     values: {
       queenSeen: true,
       eggsSeen: true,
@@ -49,6 +51,7 @@ const inspectionPresets: InspectionPreset[] = [
     description: 'Något avviker, men läget går att bevaka till nästa kontroll.',
     defaultNote: 'Snabb kontroll: läget är okej men bör följas upp snart.',
     temperament: 'Vaksamt',
+    varroaLevel: 'Förhöjd',
     values: {
       queenSeen: false,
       eggsSeen: true,
@@ -67,6 +70,7 @@ const inspectionPresets: InspectionPreset[] = [
     description: 'Tecken på problem eller ingrepp som inte bör vänta.',
     defaultNote: 'Snabb kontroll: avvikelse upptäckt och åtgärd behövs.',
     temperament: 'Hetsigt',
+    varroaLevel: 'Hög',
     values: {
       queenSeen: false,
       eggsSeen: false,
@@ -92,9 +96,15 @@ const quickToggleLabels: Array<{ key: Extract<BooleanKey, 'queenSeen' | 'eggsSee
 const quickNoteSuggestions = ['Lugn öppning', 'Fint drag', 'Byggt starkt', 'Kontroll om 7 dagar'];
 
 const temperaments: HiveTemperament[] = ['Lugnt', 'Vaksamt', 'Hetsigt'];
+const varroaLevels: VarroaLevel[] = ['Ej kontrollerad', 'Låg', 'Förhöjd', 'Hög'];
 
-function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTemperament, preset: InspectionPreset) {
-  return temperaments.includes(temperament) && Object.entries(preset.values).every(([key, value]) => values[key as BooleanKey] === value) && preset.temperament === temperament;
+function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTemperament, varroaLevel: VarroaLevel, preset: InspectionPreset) {
+  return (
+    temperaments.includes(temperament) &&
+    Object.entries(preset.values).every(([key, value]) => values[key as BooleanKey] === value) &&
+    preset.temperament === temperament &&
+    preset.varroaLevel === varroaLevel
+  );
 }
 
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
@@ -103,15 +113,17 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [notes, setNotes] = useState('');
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);
+  const [varroaLevel, setVarroaLevel] = useState<VarroaLevel>(inspectionPresets[0].varroaLevel);
   const [values, setValues] = useState<Record<BooleanKey, boolean>>(inspectionPresets[0].values);
 
   const selectedHive = useMemo(() => hives.find((item) => item.id === selectedHiveId), [hives, selectedHiveId]);
   const selectedPreset = useMemo(() => inspectionPresets.find((preset) => preset.id === selectedPresetId) ?? inspectionPresets[0], [selectedPresetId]);
-  const activePreset = useMemo(() => inspectionPresets.find((preset) => matchesPreset(values, temperament, preset)), [temperament, values]);
+  const activePreset = useMemo(() => inspectionPresets.find((preset) => matchesPreset(values, temperament, varroaLevel, preset)), [temperament, values, varroaLevel]);
 
   function applyPreset(preset: InspectionPreset) {
     setSelectedPresetId(preset.id);
     setTemperament(preset.temperament);
+    setVarroaLevel(preset.varroaLevel);
     setValues(preset.values);
   }
 
@@ -131,6 +143,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     addInspection({
       hiveId: selectedHiveId,
       temperament,
+      varroaLevel,
       notes: notes.trim() || selectedPreset.defaultNote,
       ...values,
     });
@@ -160,7 +173,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <View style={styles.summaryTextBlock}>
             <Text style={theme.textStyles.overline}>Val just nu</Text>
             <Text style={styles.summaryTitle}>{selectedHive ? selectedHive.name : 'Välj kupa först'}</Text>
-            <Text style={styles.summaryDescription}>{summaryLabel} • {temperament}</Text>
+            <Text style={styles.summaryDescription}>{summaryLabel} • {temperament} • Varroa {varroaLevel}</Text>
           </View>
           <View style={styles.stepBadge}>
             <Text style={styles.stepBadgeText}>Under 30 sek</Text>
@@ -224,6 +237,17 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             const selected = value === temperament;
             return (
               <Pressable key={value} onPress={() => setTemperament(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                <Text style={[theme.textStyles.bodyStrong, selected && styles.optionSelectedText]}>{value}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.inlineLabel}>Varroaläge</Text>
+        <View style={styles.optionGrid}>
+          {varroaLevels.map((value) => {
+            const selected = value === varroaLevel;
+            return (
+              <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
                 <Text style={[theme.textStyles.bodyStrong, selected && styles.optionSelectedText]}>{value}</Text>
               </Pressable>
             );

@@ -32,6 +32,7 @@ function createInspection(overrides: Partial<Inspection> = {}): Inspection {
     pollen: true,
     queenCells: false,
     swarmSigns: false,
+    varroaLevel: 'Låg',
     temperament: 'Lugnt',
     actionNeeded: false,
     notes: 'Testinspektion',
@@ -78,5 +79,16 @@ describe('buildDerivedSignals', () => {
       expect.arrayContaining(['Samhället verkar svagt', 'Kontrollera drottningstatus', 'Förbered invintring']),
     );
     expect(result.tasks.every((item) => item.source === 'Beslutsstöd')).toBe(true);
+  });
+
+  it('recommends quick action when varroa pressure is high', () => {
+    vi.setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+
+    const hive = createHive({ strength: 'Medel' });
+    const inspection = createInspection({ varroaLevel: 'Hög' });
+    const result = buildDerivedSignals([hive], [inspection]);
+
+    expect(result.recommendations.map((item) => item.title)).toContain('Hög varroabelastning');
+    expect(result.tasks.map((item) => item.title)).toContain('Planera varroaåtgärd');
   });
 });
