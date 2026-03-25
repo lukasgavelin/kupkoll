@@ -40,18 +40,19 @@ export default function HiveDetailScreen() {
         onActionPress={() => router.back()}
         eyebrow="Kupdetalj"
         title={hive.name}
-        description={apiary ? `${apiary.name} · Senast inspekterad ${formatDateLabel(hive.lastInspectionAt)}` : undefined}
+        description={apiary ? `${apiary.name} · Senaste genomgång ${formatDateLabel(hive.lastInspectionAt)}` : undefined}
       />
 
       <AppCard>
         <View style={styles.metaGrid}>
           <MetaItem label="Status" value={hive.status} />
-          <MetaItem label="Drottning" value={hive.queenStatus} />
-          <MetaItem label="Styrka" value={hive.strength} />
+          <MetaItem label="Drottningstatus" value={hive.queenStatus} />
+          <MetaItem label="Samhällsstyrka" value={hive.strength} />
           <MetaItem label="Temperament" value={hive.temperament} />
+          <MetaItem label="Kupsystem" value={hive.boxSystem} />
         </View>
         <Text style={theme.textStyles.body}>{hive.notes}</Text>
-        <PrimaryButton label="Ny snabb inspektion" onPress={() => router.push(`/inspections/new?hiveId=${hive.id}`)} />
+        <PrimaryButton label="Ny snabb genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hive.id}`)} />
       </AppCard>
 
       {latestInspection ? <InspectionSnapshot inspection={latestInspection} /> : null}
@@ -63,7 +64,7 @@ export default function HiveDetailScreen() {
         ))}
       </View>
 
-      <SectionHeader eyebrow="Åtgärder" title="Relaterade uppgifter" />
+      <SectionHeader eyebrow="Åtgärder" title="Relaterade arbetsmoment" />
       <View style={styles.sectionList}>
         {tasks.map((task) => (
           <TaskCard key={task.id} hiveName={hive.name} task={task} />

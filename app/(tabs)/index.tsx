@@ -13,27 +13,28 @@ import { theme } from '@/theme';
 export default function HomeScreen() {
   const { dashboard, hives, apiaries, recommendations, tasks, getHiveById } = useBeehaven();
   const quickHive = hives[0];
+  const season = getSeasonLabel();
 
   return (
     <Screen>
       <AppCard style={styles.heroCard}>
-        <Text style={theme.textStyles.overline}>beehaven2 · {getSeasonLabel()}</Text>
-        <Text style={theme.textStyles.display}>Lugn överblick för dagens arbete i bigården.</Text>
-        <Text style={styles.heroText}>Svensk kupjournal och beslutsstöd med fokus på tydlighet, rytm och snabb användning ute i fält.</Text>
+        <Text style={theme.textStyles.overline}>beehaven2 · {season}</Text>
+        <Text style={theme.textStyles.display}>Dagens biodlingsläge för svenska bigårdar.</Text>
+        <Text style={styles.heroText}>Kupjournal och beslutsstöd anpassat för svenska säsonger, arbetsmoment och snabb användning ute vid kuporna.</Text>
         <View style={styles.heroMetaRow}>
           <View style={styles.heroMetaCard}>
             <Text style={theme.textStyles.overline}>Varningar</Text>
             <Text style={styles.heroMetaValue}>{dashboard.criticalCount}</Text>
           </View>
           <View style={styles.heroMetaCard}>
-            <Text style={theme.textStyles.overline}>Uppgifter idag</Text>
+            <Text style={theme.textStyles.overline}>Arbetsmoment</Text>
             <Text style={styles.heroMetaValue}>{dashboard.upcomingTaskCount}</Text>
           </View>
         </View>
-        {quickHive ? <PrimaryButton label="Snabb inspektion" onPress={() => router.push(`/inspections/new?hiveId=${quickHive.id}`)} /> : null}
+        {quickHive ? <PrimaryButton label="Logga genomgång" onPress={() => router.push(`/inspections/new?hiveId=${quickHive.id}`)} /> : null}
       </AppCard>
 
-      <SectionHeader title="Översikt" description="Det viktigaste först, samlat i ett lugnare flöde för snabb orientering." />
+      <SectionHeader title="Översikt" description="Det viktigaste först, samlat för snabb orientering under svensk biodlingssäsong." />
       <View style={styles.grid}>
         <StatCard label="Kupor" value={String(dashboard.hiveCount)} />
         <StatCard label="Bigårdar" value={String(dashboard.apiaryCount)} />
@@ -41,21 +42,21 @@ export default function HomeScreen() {
         <StatCard label="Varningsflaggor" value={String(dashboard.criticalCount)} />
       </View>
 
-      <SectionHeader eyebrow="Beslutsstöd" title="Flaggor att följa upp" description="Rekommendationer baserade på senaste inspektion och säsong." />
+      <SectionHeader eyebrow="Beslutsstöd" title="Flaggor att följa upp" description="Råd baserade på senaste genomgång, samhällsläge och aktuell biodlingssäsong." />
       <View style={styles.sectionList}>
         {recommendations.slice(0, 3).map((recommendation) => (
           <RecommendationCard key={recommendation.id} hiveName={getHiveById(recommendation.hiveId)?.name ?? 'Kupa'} recommendation={recommendation} />
         ))}
       </View>
 
-      <SectionHeader eyebrow="Att göra" title="Närmaste uppgifter" />
+      <SectionHeader eyebrow="Att göra" title="Närmaste arbetsmoment" />
       <View style={styles.sectionList}>
         {tasks.slice(0, 3).map((task) => (
           <TaskCard key={task.id} hiveName={task.hiveId ? getHiveById(task.hiveId)?.name : apiaries.find((item) => item.id === task.apiaryId)?.name} task={task} />
         ))}
       </View>
 
-      <SectionHeader eyebrow="Senast" title="Nya observationer" />
+      <SectionHeader eyebrow="Senast" title="Senaste genomgångar" />
       <View style={styles.sectionList}>
         {dashboard.latestInspections.map((inspection) => (
           <InspectionSnapshot key={inspection.id} inspection={inspection} />

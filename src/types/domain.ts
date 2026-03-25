@@ -4,6 +4,9 @@ export type HiveStrength = 'Starkt' | 'Medel' | 'Svagt';
 export type HiveTemperament = 'Lugnt' | 'Vaksamt' | 'Hetsigt';
 export type TaskPriority = 'Låg' | 'Medel' | 'Hög';
 export type RecommendationSeverity = 'info' | 'warning' | 'critical';
+export type SeasonLabel = 'Vintertillsyn' | 'Vårutveckling' | 'Svärmperiod' | 'Drag och skattning' | 'Invintring' | 'Vinterro';
+export type HiveBoxSystem = 'Lågnormal 10 ramar' | 'Svensk normal' | 'Langstroth';
+export type TaskSource = 'Egen planering' | 'Beslutsstöd';
 
 export type Apiary = {
   id: string;
@@ -20,7 +23,7 @@ export type Hive = {
   queenStatus: QueenStatus;
   strength: HiveStrength;
   temperament: HiveTemperament;
-  frameType: 'Lågnormal';
+  boxSystem: HiveBoxSystem;
   lastInspectionAt: string;
   notes: string;
 };
@@ -50,7 +53,7 @@ export type Task = {
   hiveId?: string;
   apiaryId?: string;
   priority: TaskPriority;
-  source: 'Manuell' | 'Rekommenderad';
+  source: TaskSource;
   completed: boolean;
 };
 
@@ -60,7 +63,7 @@ export type Recommendation = {
   title: string;
   detail: string;
   severity: RecommendationSeverity;
-  season: string;
+  season: SeasonLabel;
   createdAt: string;
 };
 

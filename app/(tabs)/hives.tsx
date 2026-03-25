@@ -14,7 +14,7 @@ export default function HivesScreen() {
       <SectionHeader
         eyebrow="Kupor"
         title="Samhällesöversikt"
-        description="Snabb överblick över status, drottningläge, styrka och senaste inspektion i ett tydligare raster."
+        description="Snabb överblick över samhällsläge, drottningstatus, kupsystem och senaste genomgång i ett tydligt raster."
       />
       <View style={{ gap: theme.spacing.lg }}>
         {hives.map((hive) => (

@@ -31,7 +31,7 @@ export default function ApiaryDetailScreen() {
     <Screen>
       <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={() => router.back()} eyebrow="Bigårdsdetalj" title={apiary.name} description={apiary.location} />
       <AppCard>
-        <Text style={theme.textStyles.heading}>Anteckningar</Text>
+        <Text style={theme.textStyles.heading}>Läge och förutsättningar</Text>
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
       </AppCard>
       <View style={styles.sectionList}>

@@ -50,8 +50,9 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
           <Text style={theme.textStyles.caption}>Drottning: {hive.queenStatus}</Text>
           <Text style={theme.textStyles.caption}>Styrka: {hive.strength}</Text>
           <Text style={theme.textStyles.caption}>Temperament: {hive.temperament}</Text>
+          <Text style={theme.textStyles.caption}>Kupsystem: {hive.boxSystem}</Text>
         </View>
-        <Text style={theme.textStyles.caption}>Senaste inspektion {formatDateLabel(hive.lastInspectionAt)}</Text>
+        <Text style={theme.textStyles.caption}>Senaste genomgång {formatDateLabel(hive.lastInspectionAt)}</Text>
       </AppCard>
     </Pressable>
   );
@@ -65,7 +66,7 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
       <View style={styles.rowBetween}>
         <View style={styles.textColumn}>
           <Text style={theme.textStyles.heading}>{task.title}</Text>
-          <Text style={theme.textStyles.caption}>Senast {formatDateLabel(task.dueDate)}</Text>
+          <Text style={theme.textStyles.caption}>Planerad senast {formatDateLabel(task.dueDate)}</Text>
         </View>
         <StatusBadge label={task.priority} tone={tone} />
       </View>
@@ -84,7 +85,7 @@ export function RecommendationCard({ recommendation, hiveName }: { recommendatio
       <View style={styles.rowBetween}>
         <View style={styles.textColumn}>
           <Text style={theme.textStyles.heading}>{recommendation.title}</Text>
-          <Text style={theme.textStyles.caption}>{hiveName}</Text>
+          <Text style={theme.textStyles.caption}>{hiveName} · {recommendation.season}</Text>
         </View>
         <StatusBadge label={label} tone={recommendation.severity} />
       </View>
@@ -100,7 +101,7 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
       <View style={styles.inlineWrap}>
         <StatusBadge label={inspection.queenSeen ? 'Drottning sedd' : 'Drottning ej sedd'} tone={inspection.queenSeen ? 'calm' : 'warning'} />
         <StatusBadge label={inspection.eggsSeen ? 'Ägg sedda' : 'Inga ägg'} tone={inspection.eggsSeen ? 'calm' : 'warning'} />
-        <StatusBadge label={inspection.actionNeeded ? 'Behov av åtgärd' : 'Ingen åtgärd'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
+        <StatusBadge label={inspection.actionNeeded ? 'Åtgärd behövs' : 'Normalläge'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
       </View>
       <Text style={theme.textStyles.body}>{inspection.notes}</Text>
     </AppCard>

@@ -15,12 +15,12 @@ export default function TasksScreen() {
       <SectionHeader
         eyebrow="Uppgifter"
         title="Det som behöver göras"
-        description="Manuella uppgifter och rekommenderade nästa steg i ett mer avskalat arbetsflöde."
+        description="Egen planering och beslutstöd för vårgenomgång, stödfodring, skattning och invintring."
       />
 
       <AppCard style={styles.priorityCard}>
         <Text style={theme.textStyles.heading}>Prioriterat idag</Text>
-        <Text style={theme.textStyles.body}>Fokusera först på kupor med hög svärmrisk, svag utveckling eller osäker drottningstatus.</Text>
+        <Text style={theme.textStyles.body}>Fokusera först på samhällen med hög svärmrisk, svag utveckling, tunt foderläge eller osäker drottningstatus.</Text>
       </AppCard>
 
       <View style={styles.sectionList}>
@@ -33,7 +33,7 @@ export default function TasksScreen() {
         ))}
       </View>
 
-      <SectionHeader eyebrow="Råd" title="Beslutsstöd" />
+      <SectionHeader eyebrow="Råd" title="Säsongsanpassat beslutsstöd" />
       <View style={styles.sectionList}>
         {recommendations.map((recommendation) => (
           <RecommendationCard key={recommendation.id} hiveName={getHiveById(recommendation.hiveId)?.name ?? 'Kupa'} recommendation={recommendation} />

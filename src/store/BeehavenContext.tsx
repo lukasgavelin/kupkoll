@@ -1,9 +1,12 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 import { apiaries as initialApiaries, hives as initialHives, inspections as initialInspections, tasks as initialTasks } from '@/data/mock';
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { Apiary, Hive, Inspection, NewInspectionInput, Recommendation, Task } from '@/types/domain';
+
+const TAB_TUTORIAL_STORAGE_KEY = 'beehaven:first-run-tab-tutorial';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
@@ -16,7 +19,14 @@ type BeehavenContextValue = {
   tasks: Task[];
   latestInspectionMap: Record<string, Inspection>;
   dashboard: DashboardSnapshot;
+  tabTutorialReady: boolean;
+  tabTutorialPromptVisible: boolean;
+  tabTutorialVisible: boolean;
   addInspection: (input: NewInspectionInput) => void;
+  completeTabTutorial: () => Promise<void>;
+  resetTabTutorial: () => Promise<void>;
+  startTabTutorial: () => Promise<void>;
+  skipTabTutorial: () => Promise<void>;
   getApiaryById: (id: string) => Apiary | undefined;
   getHiveById: (id: string) => Hive | undefined;
   getHivesByApiary: (apiaryId: string) => Hive[];
@@ -42,6 +52,37 @@ export function BeehavenProvider({ children }: { children: ReactNode }) {
   const [hives, setHives] = useState(initialHives);
   const [inspections, setInspections] = useState(initialInspections);
   const [manualTasks] = useState(initialTasks);
+  const [tabTutorialReady, setTabTutorialReady] = useState(false);
+  const [tabTutorialPromptVisible, setTabTutorialPromptVisible] = useState(false);
+  const [tabTutorialVisible, setTabTutorialVisible] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTabTutorialState() {
+      try {
+        const storedValue = await AsyncStorage.getItem(TAB_TUTORIAL_STORAGE_KEY);
+
+        if (!cancelled) {
+          setTabTutorialPromptVisible(!storedValue);
+          setTabTutorialVisible(storedValue === 'active');
+          setTabTutorialReady(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setTabTutorialPromptVisible(true);
+          setTabTutorialVisible(false);
+          setTabTutorialReady(true);
+        }
+      }
+    }
+
+    loadTabTutorialState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const derived = useMemo(() => buildDerivedSignals(hives, inspections), [hives, inspections]);
   const tasks = useMemo(() => getUpcomingTasks([...manualTasks, ...derived.tasks]), [manualTasks, derived.tasks]);
@@ -80,6 +121,42 @@ export function BeehavenProvider({ children }: { children: ReactNode }) {
     );
   }
 
+  async function completeTabTutorial() {
+    setTabTutorialPromptVisible(false);
+    setTabTutorialVisible(false);
+
+    try {
+      await AsyncStorage.setItem(TAB_TUTORIAL_STORAGE_KEY, 'done');
+    } catch {
+    }
+  }
+
+  async function resetTabTutorial() {
+    setTabTutorialPromptVisible(true);
+    setTabTutorialVisible(false);
+    setTabTutorialReady(true);
+
+    try {
+      await AsyncStorage.removeItem(TAB_TUTORIAL_STORAGE_KEY);
+    } catch {
+    }
+  }
+
+  async function startTabTutorial() {
+    setTabTutorialPromptVisible(false);
+    setTabTutorialVisible(true);
+    setTabTutorialReady(true);
+
+    try {
+      await AsyncStorage.setItem(TAB_TUTORIAL_STORAGE_KEY, 'active');
+    } catch {
+    }
+  }
+
+  async function skipTabTutorial() {
+    await completeTabTutorial();
+  }
+
   const value = useMemo<BeehavenContextValue>(
     () => ({
       apiaries,
@@ -90,14 +167,21 @@ export function BeehavenProvider({ children }: { children: ReactNode }) {
       tasks,
       latestInspectionMap,
       dashboard,
+      tabTutorialReady,
+      tabTutorialPromptVisible,
+      tabTutorialVisible,
       addInspection,
+      completeTabTutorial,
+      resetTabTutorial,
+      startTabTutorial,
+      skipTabTutorial,
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),
       getHiveById: (id) => hives.find((hive) => hive.id === id),
       getHivesByApiary: (apiaryId) => hives.filter((hive) => hive.apiaryId === apiaryId),
       getRecommendationsForHive: (hiveId) => derived.recommendations.filter((item) => item.hiveId === hiveId),
       getTasksForHive: (hiveId) => tasks.filter((task) => task.hiveId === hiveId),
     }),
-    [apiaries, hives, inspections, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard],
+    [apiaries, hives, inspections, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard, tabTutorialReady, tabTutorialPromptVisible, tabTutorialVisible],
   );
 
   return <BeehavenContext.Provider value={value}>{children}</BeehavenContext.Provider>;

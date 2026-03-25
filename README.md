@@ -6,11 +6,11 @@ Gränssnittet är utformat för att kännas skandinaviskt, lugnt och premium uta
 
 ## MVP-innehåll
 
-- Hemöversikt med antal kupor, bigårdar, kommande uppgifter, varningsflaggor och senaste observationer.
-- Bigårdar med plats, anteckningar och antal kupor.
-- Kupor med status, drottningstatus, styrka, temperament och senaste inspektion.
-- Snabbt inspektionsflöde på svenska.
-- Uppgifter och rekommendationer baserade på senaste inspektioner.
+- Hemöversikt med antal kupor, bigårdar, kommande arbetsmoment, varningsflaggor och senaste genomgångar.
+- Bigårdar med läge, dragförutsättningar och antal kupor.
+- Kupor med samhällsläge, drottningstatus, styrka, kupsystem och senaste genomgång.
+- Snabbt genomgångsflöde på svenska för fältbruk.
+- Uppgifter och rekommendationer baserade på svenska biodlingssäsonger och senaste genomgångar.
 - Förfinad UI med rundade kort, flytande tabb-navigering och mer konsekventa detaljvyer.
 
 ## Start
@@ -44,6 +44,7 @@ npm run typecheck
 - Mjuk naturpalett med hög läsbarhet i dagsljus.
 - Luftig layout med tydlig rytm mellan sektioner och kort.
 - Premiumkänsla genom typografi, rundade ytor och avskalad navigation.
+- Svenska biodlingstermer, säsonger och arbetsmoment som vårutveckling, svärmperiod, skattning och invintring.
 
 ## Nästa steg
 

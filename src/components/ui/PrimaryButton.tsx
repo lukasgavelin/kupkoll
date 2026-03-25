@@ -9,14 +9,16 @@ type PrimaryButtonProps = {
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'default' | 'compact';
   iconName?: keyof typeof Ionicons.glyphMap;
+  fullWidth?: boolean;
 };
 
-export function PrimaryButton({ label, onPress, variant = 'primary', size = 'default', iconName }: PrimaryButtonProps) {
+export function PrimaryButton({ label, onPress, variant = 'primary', size = 'default', iconName, fullWidth = false }: PrimaryButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
+        fullWidth && styles.fullWidth,
         size === 'compact' && styles.buttonCompact,
         variant === 'secondary' && styles.secondary,
         variant === 'ghost' && styles.ghost,
@@ -42,6 +44,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.xl,
+  },
+  fullWidth: {
+    alignSelf: 'stretch',
   },
   buttonCompact: {
     minHeight: 44,

@@ -9,7 +9,14 @@ export default function NewInspectionScreen() {
 
   return (
     <Screen>
-      <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => router.back()} eyebrow="Snabb loggning" title="Registrera inspektion" description="Förenklad för att fungera snabbt och tydligt även ute i bigården." />
+      <PageHeader
+        actionLabel="Stäng"
+        actionIconName="close"
+        onActionPress={() => router.back()}
+        eyebrow="30-sekundersflöde"
+        title="Logga genomgång snabbt"
+        description="Välj kupa, tryck in läget och spara. Flödet är anpassat för stora tryckytor och få beslut ute i fält."
+      />
       <QuickInspectionForm initialHiveId={params.hiveId} />
     </Screen>
   );

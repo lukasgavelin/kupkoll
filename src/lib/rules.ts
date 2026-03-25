@@ -1,9 +1,23 @@
-import { Hive, HiveStrength, Inspection, Recommendation, Task } from '@/types/domain';
+import { Hive, HiveStrength, Inspection, Recommendation, RecommendationSeverity, SeasonLabel, Task } from '@/types/domain';
 import { getLatestInspectionMap, getSeasonLabel } from '@/lib/selectors';
 
 type DerivedResult = {
   recommendations: Recommendation[];
   tasks: Task[];
+};
+
+type RuleContext = {
+  hive: Hive;
+  inspection: Inspection;
+  now: Date;
+  season: SeasonLabel;
+};
+
+type DecisionRule = {
+  id: string;
+  shouldApply: (context: RuleContext) => boolean;
+  buildRecommendation: (context: RuleContext) => Recommendation;
+  buildTask: (context: RuleContext) => Task;
 };
 
 function buildTaskId(prefix: string, hiveId: string) {
@@ -13,6 +27,148 @@ function buildTaskId(prefix: string, hiveId: string) {
 function taskPriorityFromStrength(strength: HiveStrength): Task['priority'] {
   return strength === 'Svagt' ? 'Hög' : 'Medel';
 }
+
+function addDays(date: Date, days: number) {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function createRecommendation(context: RuleContext, params: { id: string; title: string; detail: string; severity: RecommendationSeverity }): Recommendation {
+  return {
+    id: `rec-${params.id}-${context.hive.id}`,
+    hiveId: context.hive.id,
+    title: params.title,
+    detail: params.detail,
+    severity: params.severity,
+    season: context.season,
+    createdAt: context.now.toISOString(),
+  };
+}
+
+function createTask(
+  context: RuleContext,
+  params: {
+    id: string;
+    title: string;
+    description: string;
+    priority: Task['priority'];
+    dueInDays: number;
+  },
+): Task {
+  return {
+    id: buildTaskId(`task-${params.id}`, context.hive.id),
+    title: params.title,
+    description: params.description,
+    dueDate: addDays(context.now, params.dueInDays),
+    hiveId: context.hive.id,
+    priority: params.priority,
+    source: 'Beslutsstöd',
+    completed: false,
+  };
+}
+
+const decisionRules: DecisionRule[] = [
+  {
+    id: 'swarm-risk',
+    shouldApply: ({ inspection }) => inspection.queenCells || inspection.swarmSigns,
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'swarm',
+        title: 'Hög svärmrisk',
+        detail: 'Drottningceller eller tydliga svärmtecken noterades. Följ upp snabbt och bedöm avläggare, skattlåda eller annan svärmförebyggande åtgärd.',
+        severity: 'critical',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'swarm',
+        title: 'Gör svärmkontroll',
+        description: `Gå igenom ${context.hive.name} igen inom några dagar och avgör om samhället behöver avläggare, skattlåda eller brytning av svärmceller.`,
+        dueInDays: 2,
+        priority: 'Hög',
+      }),
+  },
+  {
+    id: 'weak-colony',
+    shouldApply: ({ hive, inspection }) => hive.strength === 'Svagt' || (!inspection.openBrood && !inspection.cappedBrood) || (!inspection.honey && !inspection.pollen),
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'weak',
+        title: 'Samhället verkar svagt',
+        detail: 'Lite yngel, svag styrka eller tunt foderläge tyder på att samhället behöver tätare uppföljning, stödfodring eller förstärkning.',
+        severity: 'warning',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'weak',
+        title: 'Bedöm stödåtgärd',
+        description: `Avgör om ${context.hive.name} behöver stödfodring, utjämning med yngelram eller annan stödåtgärd för att komma i balans.`,
+        dueInDays: 4,
+        priority: taskPriorityFromStrength(context.hive.strength),
+      }),
+  },
+  {
+    id: 'super-needed',
+    shouldApply: ({ hive, inspection, season }) =>
+      hive.strength === 'Starkt' &&
+      inspection.honey &&
+      (inspection.openBrood || inspection.cappedBrood) &&
+      !inspection.actionNeeded &&
+      (season === 'Vårutveckling' || season === 'Svärmperiod' || season === 'Drag och skattning'),
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'super',
+        title: 'Överväg skattlåda',
+        detail: 'Samhället är starkt, har gott drag och producerar. Förbered skattlåda innan trängsel i yngelrummet ökar svärmtrycket.',
+        severity: 'info',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'super',
+        title: 'Planera skattlåda',
+        description: `Säkerställ att ${context.hive.name} snabbt kan få skattlåda eller mer utrymme om draget fortsätter öka.`,
+        dueInDays: 5,
+        priority: 'Medel',
+      }),
+  },
+  {
+    id: 'queen-check',
+    shouldApply: ({ inspection, hive }) => (!inspection.queenSeen && !inspection.eggsSeen) || (inspection.actionNeeded && hive.queenStatus !== 'Bekräftad'),
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'queen',
+        title: 'Kontrollera drottningstatus',
+        detail: 'Drottning eller färska ägg kunde inte bekräftas, eller så finns redan osäker drottningstatus. Samhället bör följas upp med fokus på äggläggning, yngelbild och eventuellt visecellbygge.',
+        severity: 'warning',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'queen',
+        title: 'Bekräfta drottningstatus',
+        description: `Följ upp ${context.hive.name} med fokus på drottning, färska ägg, jämn yngelsättning och eventuella tecken på viselöshet.`,
+        dueInDays: 3,
+        priority: 'Hög',
+      }),
+  },
+  {
+    id: 'winter-prep',
+    shouldApply: ({ inspection, season, hive }) =>
+      season === 'Invintring' && (inspection.actionNeeded || !inspection.honey || hive.strength !== 'Starkt'),
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'winter',
+        title: 'Förbered invintring',
+        detail: 'Det är dags att planera invintring. Samhället behöver rätt fodermängd, varroaplan och tillräcklig vinterstyrka.',
+        severity: 'warning',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'winter',
+        title: 'Planera invintring',
+        description: `Se över invintringsfoder, varroabehandling och vinterstyrka i ${context.hive.name} innan höstens beslut blir akuta.`,
+        dueInDays: 7,
+        priority: 'Medel',
+      }),
+  },
+];
 
 export function buildDerivedSignals(hives: Hive[], inspections: Inspection[]): DerivedResult {
   const latestInspections = getLatestInspectionMap(inspections);
@@ -28,119 +184,20 @@ export function buildDerivedSignals(hives: Hive[], inspections: Inspection[]): D
       continue;
     }
 
-    if (inspection.queenCells || inspection.swarmSigns) {
-      recommendations.push({
-        id: `rec-swarm-${hive.id}`,
-        hiveId: hive.id,
-        title: 'Hög svärmrisk',
-        detail: 'Samhället visar tecken på svärmlust. Planera snabb uppföljning och bedöm platsbehov.',
-        severity: 'critical',
-        season,
-        createdAt: now.toISOString(),
-      });
+    const context: RuleContext = {
+      hive,
+      inspection,
+      now,
+      season,
+    };
 
-      tasks.push({
-        id: buildTaskId('task-swarm', hive.id),
-        title: 'Kontrollera svärmtecken',
-        description: `Gå igenom ${hive.name} igen inom några dagar och bedöm om avläggare eller utökning behövs.`,
-        dueDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        hiveId: hive.id,
-        priority: 'Hög',
-        source: 'Rekommenderad',
-        completed: false,
-      });
-    }
+    for (const rule of decisionRules) {
+      if (!rule.shouldApply(context)) {
+        continue;
+      }
 
-    if (!inspection.queenSeen && !inspection.eggsSeen) {
-      recommendations.push({
-        id: `rec-queen-${hive.id}`,
-        hiveId: hive.id,
-        title: 'Kontrollera drottningstatus',
-        detail: 'Varken drottning eller färska ägg noterades. Säkerställ om samhället är drottningrätt.',
-        severity: 'warning',
-        season,
-        createdAt: now.toISOString(),
-      });
-
-      tasks.push({
-        id: buildTaskId('task-queen', hive.id),
-        title: 'Bekräfta drottningstatus',
-        description: `Följ upp ${hive.name} med fokus på drottning, ägg och jämn yngelsättning.`,
-        dueDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        hiveId: hive.id,
-        priority: 'Hög',
-        source: 'Rekommenderad',
-        completed: false,
-      });
-    }
-
-    if (hive.strength === 'Svagt' || (!inspection.openBrood && !inspection.cappedBrood)) {
-      recommendations.push({
-        id: `rec-weak-${hive.id}`,
-        hiveId: hive.id,
-        title: 'Samhället verkar svagt',
-        detail: 'Utvecklingen är låg jämfört med säsongen. Foder, drottningstatus och möjlighet till förstärkning bör bedömas.',
-        severity: 'warning',
-        season,
-        createdAt: now.toISOString(),
-      });
-
-      tasks.push({
-        id: buildTaskId('task-weak', hive.id),
-        title: 'Bedöm stödåtgärd',
-        description: `Avgör om ${hive.name} behöver foder, sammanslagning eller tätare uppföljning.`,
-        dueDate: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-        hiveId: hive.id,
-        priority: taskPriorityFromStrength(hive.strength),
-        source: 'Rekommenderad',
-        completed: false,
-      });
-    }
-
-    if (hive.strength === 'Starkt' && inspection.honey && (inspection.openBrood || inspection.cappedBrood)) {
-      recommendations.push({
-        id: `rec-super-${hive.id}`,
-        hiveId: hive.id,
-        title: 'Dags att överväga skattlåda',
-        detail: 'Samhället visar styrka och gott dragläge. Förbered extra utrymme innan trängsel uppstår.',
-        severity: 'info',
-        season,
-        createdAt: now.toISOString(),
-      });
-
-      tasks.push({
-        id: buildTaskId('task-super', hive.id),
-        title: 'Planera skattlåda',
-        description: `Förbered material så att ${hive.name} kan utökas snabbt när draget tar fart.`,
-        dueDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        hiveId: hive.id,
-        priority: 'Medel',
-        source: 'Rekommenderad',
-        completed: false,
-      });
-    }
-
-    if (season === 'Invintring' || (!inspection.honey && inspection.actionNeeded)) {
-      recommendations.push({
-        id: `rec-winter-${hive.id}`,
-        hiveId: hive.id,
-        title: 'Förbered invintring',
-        detail: 'Foderläge eller styrka motiverar tidig planering inför invintring och varroastrategi.',
-        severity: 'warning',
-        season,
-        createdAt: now.toISOString(),
-      });
-
-      tasks.push({
-        id: buildTaskId('task-winter', hive.id),
-        title: 'Planera invintring',
-        description: `Se över foder, behandling och styrka i ${hive.name} inför sensommar och höst.`,
-        dueDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        hiveId: hive.id,
-        priority: 'Medel',
-        source: 'Rekommenderad',
-        completed: false,
-      });
+      recommendations.push(rule.buildRecommendation(context));
+      tasks.push(rule.buildTask(context));
     }
   }
 

@@ -13,8 +13,8 @@ export default function ApiariesScreen() {
     <Screen>
       <SectionHeader
         eyebrow="Bigårdar"
-        title="Dina platser"
-        description="Varje bigård visar läge, anteckningar och hur många samhällen som står där, utan onödigt brus."
+        title="Dina bigårdslägen"
+        description="Varje bigård visar läge, dragförutsättningar och hur många samhällen som står där, utan onödigt brus."
       />
       <View style={{ gap: theme.spacing.lg }}>
         {apiaries.map((apiary) => (

@@ -1,4 +1,4 @@
-import { Apiary, Hive, Inspection, Task } from '@/types/domain';
+import { Apiary, Hive, Inspection, SeasonLabel, Task } from '@/types/domain';
 
 export function formatDateLabel(value: string) {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -16,19 +16,25 @@ export function formatDateTimeLabel(value: string) {
   }).format(new Date(value));
 }
 
-export function getSeasonLabel(date = new Date()) {
+export function getSeasonLabel(date = new Date()): SeasonLabel {
   const month = date.getMonth() + 1;
 
-  if (month >= 3 && month <= 4) {
-    return 'Vårgenomgång';
+  if (month <= 2) {
+    return 'Vintertillsyn';
   }
-  if (month >= 5 && month <= 7) {
-    return 'Högsäsong';
+  if (month <= 4) {
+    return 'Vårutveckling';
   }
-  if (month >= 8 && month <= 9) {
+  if (month <= 6) {
+    return 'Svärmperiod';
+  }
+  if (month <= 8) {
+    return 'Drag och skattning';
+  }
+  if (month <= 10) {
     return 'Invintring';
   }
-  return 'Vinterläge';
+  return 'Vinterro';
 }
 
 export function getLatestInspectionMap(inspections: Inspection[]) {
