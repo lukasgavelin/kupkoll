@@ -4,6 +4,7 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useState } fr
 import { apiaries as initialApiaries, hives as initialHives, inspections as initialInspections, tasks as initialTasks } from '@/data/mock';
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
+import { deriveTabTutorialViewState } from '@/lib/tutorialState';
 import { Apiary, Hive, Inspection, NewInspectionInput, Recommendation, Task } from '@/types/domain';
 
 const TAB_TUTORIAL_STORAGE_KEY = 'beehaven:first-run-tab-tutorial';
@@ -62,10 +63,11 @@ export function BeehavenProvider({ children }: { children: ReactNode }) {
     async function loadTabTutorialState() {
       try {
         const storedValue = await AsyncStorage.getItem(TAB_TUTORIAL_STORAGE_KEY);
+        const viewState = deriveTabTutorialViewState(storedValue);
 
         if (!cancelled) {
-          setTabTutorialPromptVisible(!storedValue);
-          setTabTutorialVisible(storedValue === 'active');
+          setTabTutorialPromptVisible(viewState.promptVisible);
+          setTabTutorialVisible(viewState.tutorialVisible);
           setTabTutorialReady(true);
         }
       } catch {
