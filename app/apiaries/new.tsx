@@ -2,18 +2,21 @@ import { router } from 'expo-router';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
+import { ApiaryLocationField } from '@/components/feature/ApiaryLocationField';
 import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { useBeehaven } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
+import { Coordinates } from '@/types/domain';
 
 export default function NewApiaryScreen() {
   const { addApiary } = useBeehaven();
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [coordinates, setCoordinates] = useState<Coordinates | undefined>(undefined);
 
   function saveApiary() {
     const trimmedName = name.trim();
@@ -28,6 +31,7 @@ export default function NewApiaryScreen() {
       name: trimmedName,
       location: trimmedLocation,
       notes: notes.trim() || 'Ingen anteckning ännu.',
+      coordinates,
     });
 
     router.replace(`/apiaries/${apiary.id}`);
@@ -50,10 +54,7 @@ export default function NewApiaryScreen() {
           <TextInput onChangeText={setName} placeholder="Till exempel Södra skogsbrynet" placeholderTextColor={theme.colors.textMuted} style={styles.input} value={name} />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Plats</Text>
-          <TextInput onChangeText={setLocation} placeholder="Ort, område eller gårdsnamn" placeholderTextColor={theme.colors.textMuted} style={styles.input} value={location} />
-        </View>
+        <ApiaryLocationField coordinates={coordinates} location={location} onCoordinatesChange={setCoordinates} onLocationChange={setLocation} />
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Anteckning</Text>

@@ -107,7 +107,7 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
     };
   }, []);
 
-  const derived = useMemo(() => buildDerivedSignals(hives, inspections), [hives, inspections]);
+  const derived = useMemo(() => buildDerivedSignals(apiaries, hives, inspections), [apiaries, hives, inspections]);
   const tasks = useMemo(() => getUpcomingTasks([...manualTasks, ...derived.tasks]), [manualTasks, derived.tasks]);
   const latestInspectionMap = useMemo(() => getLatestInspectionMap(inspections), [inspections]);
   const dashboard = useMemo(

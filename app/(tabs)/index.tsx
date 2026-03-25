@@ -1,13 +1,16 @@
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { InspectionSnapshot, RecommendationCard, StatCard, TaskCard } from '@/components/feature/Cards';
+import { InspectionSnapshot, StatCard, TaskCard } from '@/components/feature/Cards';
+import { RecommendationSections } from '@/components/feature/RecommendationSections';
+import { SeasonStatusCard } from '@/components/feature/SeasonStatusCard';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { getSeasonLabel } from '@/lib/selectors';
+import { sortRecommendations } from '@/lib/recommendations';
+import { getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
 import { useBeehaven } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
 
@@ -15,10 +18,14 @@ export default function HomeScreen() {
   const { dashboard, hives, apiaries, recommendations, tasks, getHiveById } = useBeehaven();
   const quickHive = hives[0];
   const season = getSeasonLabel();
+  const seasonStatus = getSeasonStatus(new Date(), apiaries);
+  const prioritizedRecommendations = sortRecommendations(recommendations).slice(0, 4);
   const hasApiaries = apiaries.length > 0;
 
   return (
     <Screen>
+      <SeasonStatusCard status={seasonStatus} />
+
       <AppCard style={styles.heroCard}>
         <Text style={theme.textStyles.overline}>beehaven2 · {season}</Text>
         <Text style={theme.textStyles.display}>Dagens biodlingsläge för svenska bigårdar.</Text>
@@ -50,10 +57,8 @@ export default function HomeScreen() {
 
       <SectionHeader eyebrow="Beslutsstöd" title="Flaggor att följa upp" description="Råd baserade på senaste genomgång, samhällsläge och aktuell biodlingssäsong." />
       <View style={styles.sectionList}>
-        {recommendations.length ? (
-          recommendations.slice(0, 3).map((recommendation) => (
-            <RecommendationCard key={recommendation.id} hiveName={getHiveById(recommendation.hiveId)?.name ?? 'Kupa'} recommendation={recommendation} />
-          ))
+        {prioritizedRecommendations.length ? (
+          <RecommendationSections recommendations={prioritizedRecommendations} getHiveName={(hiveId) => getHiveById(hiveId)?.name ?? 'Kupa'} />
         ) : (
           <EmptyStateCard title="Inga rekommendationer ännu" description="När du har registrerat kupor och sparat genomgångar dyker säsongsanpassade råd upp här." actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
         )}

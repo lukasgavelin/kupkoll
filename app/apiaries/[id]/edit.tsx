@@ -2,12 +2,14 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
+import { ApiaryLocationField } from '@/components/feature/ApiaryLocationField';
 import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { useBeehaven } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
+import { Coordinates } from '@/types/domain';
 
 export default function EditApiaryScreen() {
   const params = useLocalSearchParams<{ id: string }>();
@@ -16,6 +18,7 @@ export default function EditApiaryScreen() {
   const [name, setName] = useState(apiary?.name ?? '');
   const [location, setLocation] = useState(apiary?.location ?? '');
   const [notes, setNotes] = useState(apiary?.notes ?? '');
+  const [coordinates, setCoordinates] = useState<Coordinates | undefined>(apiary?.coordinates);
 
   if (!apiary) {
     return (
@@ -43,6 +46,7 @@ export default function EditApiaryScreen() {
       name: trimmedName,
       location: trimmedLocation,
       notes: notes.trim() || 'Ingen anteckning ännu.',
+      coordinates,
     });
 
     router.replace(`/apiaries/${apiaryId}`);
@@ -65,10 +69,7 @@ export default function EditApiaryScreen() {
           <TextInput onChangeText={setName} placeholder="Till exempel Södra skogsbrynet" placeholderTextColor={theme.colors.textMuted} style={styles.input} value={name} />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Plats</Text>
-          <TextInput onChangeText={setLocation} placeholder="Ort, område eller gårdsnamn" placeholderTextColor={theme.colors.textMuted} style={styles.input} value={location} />
-        </View>
+        <ApiaryLocationField coordinates={coordinates} location={location} onCoordinatesChange={setCoordinates} onLocationChange={setLocation} />
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Anteckning</Text>

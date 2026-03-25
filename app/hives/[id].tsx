@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { InspectionSnapshot, RecommendationCard, TaskCard } from '@/components/feature/Cards';
+import { InspectionSnapshot, TaskCard } from '@/components/feature/Cards';
+import { RecommendationSections } from '@/components/feature/RecommendationSections';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -85,7 +86,7 @@ export default function HiveDetailScreen() {
 
       <SectionHeader eyebrow="Beslutsstöd" title="Rekommendationer" />
       <View style={styles.sectionList}>
-        {recommendations.length ? recommendations.map((recommendation) => <RecommendationCard key={recommendation.id} hiveName={hive.name} recommendation={recommendation} />) : <EmptyStateCard title="Inga rekommendationer ännu" description="Beslutsstödet aktiveras när kupan har minst en sparad genomgång." />}
+        {recommendations.length ? <RecommendationSections recommendations={recommendations} getHiveName={() => hive.name} /> : <EmptyStateCard title="Inga rekommendationer ännu" description="Beslutsstödet aktiveras när kupan har minst en sparad genomgång." />}
       </View>
 
       <SectionHeader eyebrow="Åtgärder" title="Relaterade arbetsmoment" />

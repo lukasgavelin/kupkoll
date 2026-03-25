@@ -11,7 +11,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Beehaven använder din plats för att spara bigårdens position på kartan."
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true

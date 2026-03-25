@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
-import { RecommendationCard, TaskCard } from '@/components/feature/Cards';
+import { TaskCard } from '@/components/feature/Cards';
+import { RecommendationSections } from '@/components/feature/RecommendationSections';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { Screen } from '@/components/ui/Screen';
@@ -56,9 +57,7 @@ export default function TasksScreen() {
       <SectionHeader eyebrow="Råd" title="Säsongsanpassat beslutsstöd" />
       <View style={styles.sectionList}>
         {recommendations.length ? (
-          recommendations.map((recommendation) => (
-            <RecommendationCard key={recommendation.id} hiveName={getHiveById(recommendation.hiveId)?.name ?? 'Kupa'} recommendation={recommendation} />
-          ))
+          <RecommendationSections recommendations={recommendations} getHiveName={(hiveId) => getHiveById(hiveId)?.name ?? 'Kupa'} />
         ) : (
           <EmptyStateCard title="Inga råd ännu" description="Beslutsstödet börjar ge råd när det finns sparade observationer att räkna på." />
         )}

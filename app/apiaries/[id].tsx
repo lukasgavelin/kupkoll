@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 
 import { HiveCard } from '@/components/feature/Cards';
 import { AppCard } from '@/components/ui/AppCard';
@@ -7,6 +7,7 @@ import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
+import { buildApiaryMapUrl, formatCoordinates } from '@/lib/mapLinks';
 import { useBeehaven } from '@/store/BeehavenContext';
 import { theme } from '@/theme';
 
@@ -28,6 +29,7 @@ export default function ApiaryDetailScreen() {
 
   const apiaryId = apiary.id;
   const apiaryHives = getHivesByApiary(apiary.id);
+  const mapUrl = buildApiaryMapUrl(apiary.location, apiary.coordinates);
 
   function confirmDelete() {
     const hiveList = apiaryHives.map((hive) => `• ${hive.name}`).join('\n');
@@ -52,12 +54,32 @@ export default function ApiaryDetailScreen() {
     );
   }
 
+  async function openMap() {
+    if (!mapUrl) {
+      Alert.alert('Ingen plats att visa', 'Bigården saknar plats som kan öppnas i karta.');
+      return;
+    }
+
+    const canOpen = await Linking.canOpenURL(mapUrl);
+
+    if (!canOpen) {
+      Alert.alert('Kunde inte öppna karta', 'Det gick inte att öppna kartlänken på enheten.');
+      return;
+    }
+
+    await Linking.openURL(mapUrl);
+  }
+
   return (
     <Screen>
       <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={() => router.back()} eyebrow="Bigårdsdetalj" title={apiary.name} description={apiary.location} />
       <AppCard>
         <Text style={theme.textStyles.heading}>Läge och förutsättningar</Text>
+        {apiary.coordinates ? <Text style={theme.textStyles.caption}>GPS-position: {formatCoordinates(apiary.coordinates)}</Text> : null}
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
+        {mapUrl ? <PrimaryButton fullWidth label="Öppna plats i karta" onPress={() => {
+          void openMap();
+        }} variant="secondary" iconName="map-outline" /> : null}
         <PrimaryButton fullWidth label="Lägg till kupa" onPress={() => router.push(`/hives/new?apiaryId=${apiaryId}`)} />
         <PrimaryButton fullWidth label="Redigera bigård" onPress={() => router.push(`/apiaries/${apiaryId}/edit`)} variant="secondary" />
         <PrimaryButton fullWidth label="Ta bort bigård" onPress={confirmDelete} variant="ghost" />

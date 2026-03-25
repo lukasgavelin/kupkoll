@@ -1,5 +1,5 @@
-import { Hive, HiveStrength, Inspection, Recommendation, RecommendationSeverity, SeasonLabel, Task } from '@/types/domain';
-import { getLatestInspectionMap, getSeasonLabel } from '@/lib/selectors';
+import { Apiary, Hive, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task } from '@/types/domain';
+import { getApiaryRegion, getApiarySeasonLabel, getLatestInspectionMap, getRecommendedInspectionCadenceDays } from '@/lib/selectors';
 
 type DerivedResult = {
   recommendations: Recommendation[];
@@ -7,17 +7,22 @@ type DerivedResult = {
 };
 
 type RuleContext = {
+  apiary?: Apiary;
   hive: Hive;
   inspection: Inspection;
+  inspectionHistory: Inspection[];
   now: Date;
   season: SeasonLabel;
+  daysSinceLastInspection: number;
+  regionLabel: string;
+  inspectionCadenceDays: number;
 };
 
 type DecisionRule = {
   id: string;
   shouldApply: (context: RuleContext) => boolean;
   buildRecommendation: (context: RuleContext) => Recommendation;
-  buildTask: (context: RuleContext) => Task;
+  buildTask?: (context: RuleContext) => Task;
 };
 
 function buildTaskId(prefix: string, hiveId: string) {
@@ -32,13 +37,48 @@ function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-function createRecommendation(context: RuleContext, params: { id: string; title: string; detail: string; severity: RecommendationSeverity }): Recommendation {
+function differenceInDays(later: Date, earlier: Date) {
+  return Math.floor((later.getTime() - earlier.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+function getInspectionHistoryMap(inspections: Inspection[]) {
+  return inspections.reduce<Record<string, Inspection[]>>((map, inspection) => {
+    if (!map[inspection.hiveId]) {
+      map[inspection.hiveId] = [];
+    }
+
+    map[inspection.hiveId].push(inspection);
+    return map;
+  }, {});
+}
+
+function getRecentInspections(history: Inspection[], count: number) {
+  return [...history]
+    .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime())
+    .slice(0, count);
+}
+
+function getVarroaRank(level: Inspection['varroaLevel']) {
+  if (level === 'Ej kontrollerad') {
+    return 0;
+  }
+  if (level === 'Låg') {
+    return 1;
+  }
+  if (level === 'Förhöjd') {
+    return 2;
+  }
+  return 3;
+}
+
+function createRecommendation(context: RuleContext, params: { id: string; title: string; detail: string; severity: RecommendationSeverity; kind: RecommendationKind }): Recommendation {
   return {
     id: `rec-${params.id}-${context.hive.id}`,
     hiveId: context.hive.id,
     title: params.title,
     detail: params.detail,
     severity: params.severity,
+    kind: params.kind,
     season: context.season,
     createdAt: context.now.toISOString(),
   };
@@ -80,6 +120,46 @@ function getVarroaDueInDays(inspection: Inspection) {
 
 const decisionRules: DecisionRule[] = [
   {
+    id: 'queen-recovered',
+    shouldApply: ({ inspectionHistory, inspection }) => {
+      const recent = getRecentInspections(inspectionHistory, 3);
+
+      return recent.length === 3 && inspection.id === recent[0].id && recent[0].queenSeen && !recent[1].queenSeen && !recent[2].queenSeen;
+    },
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'queen-recovered',
+        title: 'Drottning verifierad igen',
+        detail: 'De senaste genomgångarna visade osäkerhet, men drottningen är nu sedd igen. Läget ser stabilt ut och ingen extra åtgärd behövs just nu.',
+        severity: 'info',
+        kind: 'status',
+      }),
+  },
+  {
+    id: 'queen-missing-trend',
+    shouldApply: ({ inspectionHistory }) => {
+      const recent = getRecentInspections(inspectionHistory, 3);
+
+      return recent.length === 3 && recent.every((item) => !item.queenSeen);
+    },
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'queen-trend',
+        title: 'Möjligt drottningproblem',
+        detail: 'Drottning ej observerad vid tre genomgångar i rad. Kontrollera yngelbild, svärmceller och om samhället visar tecken på drottninglöshet.',
+        severity: 'warning',
+        kind: 'alert',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'queen-trend',
+        title: 'Fördjupa drottningkontroll',
+        description: `Gå igenom ${context.hive.name} med fokus på yngelbild, svärmceller och möjliga tecken på drottninglöshet efter tre genomgångar utan sedd drottning.`,
+        dueInDays: 2,
+        priority: 'Hög',
+      }),
+  },
+  {
     id: 'varroa-pressure',
     shouldApply: ({ inspection }) => inspection.varroaLevel === 'Förhöjd' || inspection.varroaLevel === 'Hög',
     buildRecommendation: (context) =>
@@ -91,6 +171,7 @@ const decisionRules: DecisionRule[] = [
             ? 'Varroaläget är högt och bör hanteras skyndsamt. Bekräfta med vald metod och planera snabb åtgärd innan samhället tappar kraft.'
             : 'Varroaläget börjar stiga. Följ upp med ny mätning eller planerad säsongsåtgärd innan trycket blir svårt att vända.',
         severity: getVarroaSeverity(context.inspection),
+        kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
@@ -105,6 +186,38 @@ const decisionRules: DecisionRule[] = [
       }),
   },
   {
+    id: 'varroa-trend',
+    shouldApply: ({ inspectionHistory, inspection }) => {
+      const recent = getRecentInspections(inspectionHistory, 3);
+
+      if (recent.length < 3 || inspection.varroaLevel === 'Hög') {
+        return false;
+      }
+
+      const ordered = [...recent].reverse();
+      const ranks = ordered.map((item) => getVarroaRank(item.varroaLevel));
+      const nonDecreasing = ranks.every((rank, index) => index === 0 || rank >= ranks[index - 1]);
+
+      return nonDecreasing && ranks[ranks.length - 1] >= 2 && ranks[ranks.length - 1] > ranks[0];
+    },
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'varroa-trend',
+        title: 'Varroa-trend uppåt',
+        detail: 'Varroaläget har stigit över de senaste genomgångarna. Planera behandling inom 1-2 veckor innan trycket blir svårt att vända.',
+        severity: 'warning',
+        kind: 'alert',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'varroa-trend',
+        title: 'Planera behandling mot varroa',
+        description: `Varroan i ${context.hive.name} visar en stigande trend. Lägg in behandling eller tätt återbesök inom de närmaste 1-2 veckorna.`,
+        dueInDays: 10,
+        priority: 'Hög',
+      }),
+  },
+  {
     id: 'swarm-risk',
     shouldApply: ({ inspection }) => inspection.queenCells || inspection.swarmSigns,
     buildRecommendation: (context) =>
@@ -113,6 +226,7 @@ const decisionRules: DecisionRule[] = [
         title: 'Hög svärmrisk',
         detail: 'Drottningceller eller tydliga svärmtecken noterades. Följ upp snabbt och bedöm avläggare, skattlåda eller annan svärmförebyggande åtgärd.',
         severity: 'critical',
+        kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
@@ -124,6 +238,26 @@ const decisionRules: DecisionRule[] = [
       }),
   },
   {
+    id: 'seasonal-swarm-risk',
+    shouldApply: ({ season, hive, inspection }) => season === 'Svärmperiod' && hive.strength === 'Starkt' && inspection.eggsSeen && !inspection.queenCells && !inspection.swarmSigns,
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'seasonal-swarm',
+        title: 'Möjlig svärmperiod',
+        detail: 'Det är svärmperiod och samhället är starkt med äggläggning igång. Kontrollera svärmceller, utrymme och om avläggare kan bli aktuell.',
+        severity: 'warning',
+        kind: 'seasonal',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'seasonal-swarm',
+        title: 'Gör förebyggande svärmkontroll',
+        description: `Kontrollera ${context.hive.name} för svärmceller, utrymmesbehov och eventuell avläggare medan svärmtrycket byggs upp.`,
+        dueInDays: 3,
+        priority: 'Medel',
+      }),
+  },
+  {
     id: 'weak-colony',
     shouldApply: ({ hive, inspection }) => hive.strength === 'Svagt' || (!inspection.openBrood && !inspection.cappedBrood) || (!inspection.honey && !inspection.pollen),
     buildRecommendation: (context) =>
@@ -132,6 +266,7 @@ const decisionRules: DecisionRule[] = [
         title: 'Samhället verkar svagt',
         detail: 'Lite yngel, svag styrka eller tunt foderläge tyder på att samhället behöver tätare uppföljning, stödfodring eller förstärkning.',
         severity: 'warning',
+        kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
@@ -140,6 +275,26 @@ const decisionRules: DecisionRule[] = [
         description: `Avgör om ${context.hive.name} behöver stödfodring, utjämning med yngelram eller annan stödåtgärd för att komma i balans.`,
         dueInDays: 4,
         priority: taskPriorityFromStrength(context.hive.strength),
+      }),
+  },
+  {
+    id: 'inactive-hive',
+    shouldApply: ({ daysSinceLastInspection, inspectionCadenceDays }) => daysSinceLastInspection >= inspectionCadenceDays,
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'inactive-hive',
+        title: 'Dags för ny genomgång',
+        detail: `Ingen genomgång har registrerats på ${context.daysSinceLastInspection} dagar. För ${context.regionLabel.toLowerCase()} i det här säsongsläget är det rimligt att följa kupan ungefär var ${context.inspectionCadenceDays}:e dag.`,
+        severity: 'info',
+        kind: 'reminder',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'inactive-hive',
+        title: 'Planera ny genomgång',
+        description: `${context.hive.name} följs just nu för glest i förhållande till säsong och region. Lägg in en ny genomgång för att få uppdaterat läge.`,
+        dueInDays: 1,
+        priority: 'Medel',
       }),
   },
   {
@@ -156,6 +311,7 @@ const decisionRules: DecisionRule[] = [
         title: 'Överväg skattlåda',
         detail: 'Samhället är starkt, har gott drag och producerar. Förbered skattlåda innan trängsel i yngelrummet ökar svärmtrycket.',
         severity: 'info',
+        kind: 'seasonal',
       }),
     buildTask: (context) =>
       createTask(context, {
@@ -175,6 +331,7 @@ const decisionRules: DecisionRule[] = [
         title: 'Kontrollera drottningstatus',
         detail: 'Drottning eller färska ägg kunde inte bekräftas, eller så finns redan osäker drottningstatus. Samhället bör följas upp med fokus på äggläggning, yngelbild och eventuellt visecellbygge.',
         severity: 'warning',
+        kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
@@ -195,6 +352,7 @@ const decisionRules: DecisionRule[] = [
         title: 'Förbered invintring',
         detail: 'Det är dags att planera invintring. Samhället behöver rätt fodermängd, varroaplan och tillräcklig vinterstyrka.',
         severity: 'warning',
+        kind: 'seasonal',
       }),
     buildTask: (context) =>
       createTask(context, {
@@ -207,10 +365,14 @@ const decisionRules: DecisionRule[] = [
   },
 ];
 
-export function buildDerivedSignals(hives: Hive[], inspections: Inspection[]): DerivedResult {
+export function buildDerivedSignals(apiaries: Apiary[], hives: Hive[], inspections: Inspection[]): DerivedResult {
   const latestInspections = getLatestInspectionMap(inspections);
+  const inspectionHistoryMap = getInspectionHistoryMap(inspections);
+  const apiaryMap = apiaries.reduce<Record<string, Apiary>>((map, apiary) => {
+    map[apiary.id] = apiary;
+    return map;
+  }, {});
   const now = new Date();
-  const season = getSeasonLabel(now);
   const recommendations: Recommendation[] = [];
   const tasks: Task[] = [];
 
@@ -221,11 +383,23 @@ export function buildDerivedSignals(hives: Hive[], inspections: Inspection[]): D
       continue;
     }
 
+    const apiary = apiaryMap[hive.apiaryId];
+    const season = getApiarySeasonLabel(apiary, now);
+    const regionLabel = getApiaryRegion(apiary);
+    const inspectionHistory = inspectionHistoryMap[hive.id] ?? [inspection];
+    const daysSinceLastInspection = differenceInDays(now, new Date(inspection.performedAt));
+    const inspectionCadenceDays = getRecommendedInspectionCadenceDays(season, regionLabel);
+
     const context: RuleContext = {
+      apiary,
       hive,
       inspection,
+      inspectionHistory,
       now,
       season,
+      daysSinceLastInspection,
+      regionLabel,
+      inspectionCadenceDays,
     };
 
     for (const rule of decisionRules) {
@@ -234,7 +408,10 @@ export function buildDerivedSignals(hives: Hive[], inspections: Inspection[]): D
       }
 
       recommendations.push(rule.buildRecommendation(context));
-      tasks.push(rule.buildTask(context));
+
+      if (rule.buildTask) {
+        tasks.push(rule.buildTask(context));
+      }
     }
   }
 

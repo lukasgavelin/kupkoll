@@ -4,16 +4,23 @@ export type HiveStrength = 'Starkt' | 'Medel' | 'Svagt';
 export type HiveTemperament = 'Lugnt' | 'Vaksamt' | 'Hetsigt';
 export type TaskPriority = 'Låg' | 'Medel' | 'Hög';
 export type RecommendationSeverity = 'info' | 'warning' | 'critical';
+export type RecommendationKind = 'alert' | 'seasonal' | 'reminder' | 'status';
 export type SeasonLabel = 'Vintertillsyn' | 'Vårutveckling' | 'Svärmperiod' | 'Drag och skattning' | 'Invintring' | 'Vinterro';
 export type HiveBoxSystem = 'Lågnormal' | 'Svea' | 'Langstroth' | 'Dadant';
 export type TaskSource = 'Egen planering' | 'Beslutsstöd';
 export type VarroaLevel = 'Ej kontrollerad' | 'Låg' | 'Förhöjd' | 'Hög';
+
+export type Coordinates = {
+  latitude: number;
+  longitude: number;
+};
 
 export type Apiary = {
   id: string;
   name: string;
   location: string;
   notes: string;
+  coordinates?: Coordinates;
 };
 
 export type Hive = {
@@ -65,6 +72,7 @@ export type Recommendation = {
   title: string;
   detail: string;
   severity: RecommendationSeverity;
+  kind: RecommendationKind;
   season: SeasonLabel;
   createdAt: string;
 };

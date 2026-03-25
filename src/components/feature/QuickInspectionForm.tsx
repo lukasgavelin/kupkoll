@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
@@ -94,8 +94,6 @@ const quickToggleLabels: Array<{ key: Extract<BooleanKey, 'queenSeen' | 'eggsSee
   { key: 'actionNeeded', label: 'Följ upp direkt' },
 ];
 
-const quickNoteSuggestions = ['Lugn öppning', 'Fint drag', 'Byggt starkt', 'Kontroll om 7 dagar'];
-
 const temperaments: HiveTemperament[] = ['Lugnt', 'Vaksamt', 'Hetsigt'];
 const varroaLevels: VarroaLevel[] = ['Ej kontrollerad', 'Låg', 'Förhöjd', 'Hög'];
 
@@ -112,7 +110,6 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const { addInspection, apiaries, hives } = useBeehaven();
   const [selectedPresetId, setSelectedPresetId] = useState(inspectionPresets[0].id);
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
-  const [notes, setNotes] = useState('');
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);
   const [varroaLevel, setVarroaLevel] = useState<VarroaLevel>(inspectionPresets[0].varroaLevel);
   const [values, setValues] = useState<Record<BooleanKey, boolean>>(inspectionPresets[0].values);
@@ -145,22 +142,12 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       hiveId: selectedHiveId,
       temperament,
       varroaLevel,
-      notes: notes.trim() || selectedPreset.defaultNote,
+      notes: selectedPreset.defaultNote,
       ...values,
     });
 
     Alert.alert('Genomgång sparad', 'Observationen har lagts till och beslutsstödet har uppdaterats.');
     router.replace(`/hives/${selectedHiveId}`);
-  }
-
-  function addQuickNote(suggestion: string) {
-    setNotes((current) => {
-      if (current.includes(suggestion)) {
-        return current;
-      }
-
-      return current.trim() ? `${current.trim()}. ${suggestion}` : suggestion;
-    });
   }
 
   const summaryLabel = activePreset ? activePreset.label : 'Anpassad logg';
@@ -199,7 +186,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             <Text style={styles.summaryDescription}>{summaryLabel} • {temperament} • Varroa {varroaLevel}</Text>
           </View>
         </View>
-        <Text style={theme.textStyles.caption}>Fritext är valfri. Om du inte skriver något sparas en kort standardnotering från valt läge.</Text>
+        <Text style={theme.textStyles.caption}>En kort standardnotering sparas automatiskt från valt läge, så snabbflödet stannar vid tre steg.</Text>
       </AppCard>
 
       <AppCard>
@@ -273,26 +260,6 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             );
           })}
         </View>
-      </AppCard>
-
-      <AppCard>
-        <Text style={theme.textStyles.heading}>4. Kort notering om du vill</Text>
-        <View style={styles.chipGrid}>
-          {quickNoteSuggestions.map((suggestion) => (
-            <Pressable key={suggestion} onPress={() => addQuickNote(suggestion)} style={styles.option}>
-              <Text style={styles.optionLabel}>{suggestion}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <TextInput
-          multiline
-          numberOfLines={3}
-          onChangeText={setNotes}
-          placeholder="Valfritt: lägg till en kort anteckning"
-          placeholderTextColor={theme.colors.textMuted}
-          style={styles.input}
-          value={notes}
-        />
       </AppCard>
 
       <PrimaryButton fullWidth label={selectedHive ? `Spara för ${selectedHive.name}` : 'Välj kupa för att spara'} onPress={saveInspection} />
@@ -374,11 +341,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     marginTop: theme.spacing.sm,
   },
-  chipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
   option: {
     minHeight: 56,
     borderRadius: theme.radii.pill,
@@ -413,15 +375,5 @@ const styles = StyleSheet.create({
     ...theme.textStyles.label,
     color: theme.colors.textMuted,
     marginTop: theme.spacing.md,
-  },
-  input: {
-    minHeight: 92,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-    textAlignVertical: 'top',
-    ...theme.textStyles.body,
   },
 });

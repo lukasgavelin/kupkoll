@@ -15,6 +15,10 @@ const apiaries = [
     name: 'Testgård',
     location: 'Uppsala',
     notes: 'Anteckning',
+    coordinates: {
+      latitude: 59.85856,
+      longitude: 17.63893,
+    },
   },
 ];
 

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { getRecommendationKindLabel } from '@/lib/recommendations';
 import { formatDateLabel, formatDateTimeLabel } from '@/lib/selectors';
 import { theme } from '@/theme';
 import { Apiary, Hive, Inspection, Recommendation, Task } from '@/types/domain';
@@ -79,15 +80,19 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
 
 export function RecommendationCard({ recommendation, hiveName }: { recommendation: Recommendation; hiveName: string }) {
   const label = recommendation.severity === 'critical' ? 'Akut' : recommendation.severity === 'warning' ? 'Följ upp' : 'Tips';
+  const kindTone = recommendation.kind === 'alert' ? recommendation.severity : recommendation.kind === 'seasonal' ? 'calm' : 'info';
 
   return (
-    <AppCard>
+    <AppCard style={[styles.recommendationCard, recommendation.kind === 'alert' && styles.recommendationCardAlert, recommendation.kind === 'seasonal' && styles.recommendationCardSeasonal]}>
       <View style={styles.rowBetween}>
         <View style={styles.textColumn}>
           <Text style={theme.textStyles.heading}>{recommendation.title}</Text>
           <Text style={theme.textStyles.caption}>{hiveName} · {recommendation.season}</Text>
         </View>
-        <StatusBadge label={label} tone={recommendation.severity} />
+        <View style={styles.badgeColumn}>
+          <StatusBadge label={label} tone={recommendation.severity} />
+          <StatusBadge label={getRecommendationKindLabel(recommendation.kind)} tone={kindTone} />
+        </View>
       </View>
       <Text style={theme.textStyles.body}>{recommendation.detail}</Text>
     </AppCard>
@@ -143,5 +148,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.sm,
+  },
+  badgeColumn: {
+    alignItems: 'flex-end',
+    gap: theme.spacing.xs,
+  },
+  recommendationCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.info,
+  },
+  recommendationCardAlert: {
+    borderLeftColor: theme.colors.danger,
+  },
+  recommendationCardSeasonal: {
+    borderLeftColor: theme.colors.sage,
   },
 });
