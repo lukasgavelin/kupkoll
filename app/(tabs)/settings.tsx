@@ -5,11 +5,11 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function SettingsScreen() {
-  const { resetTabTutorial } = useBeehaven();
+  const { resetTabTutorial } = useKupkoll();
 
   async function showTutorialAgain() {
     await resetTabTutorial();

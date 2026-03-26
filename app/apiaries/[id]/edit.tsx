@@ -7,13 +7,13 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 import { Coordinates } from '@/types/domain';
 
 export default function EditApiaryScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { getApiaryById, updateApiary } = useBeehaven();
+  const { getApiaryById, updateApiary } = useKupkoll();
   const apiary = getApiaryById(params.id);
   const [name, setName] = useState(apiary?.name ?? '');
   const [location, setLocation] = useState(apiary?.location ?? '');

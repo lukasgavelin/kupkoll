@@ -6,7 +6,7 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 import { HiveBoxSystem, HiveStrength, HiveTemperament } from '@/types/domain';
 
@@ -16,7 +16,7 @@ const hiveBoxSystems: HiveBoxSystem[] = ['Lågnormal', 'Svea', 'Langstroth', 'Da
 
 export default function EditHiveScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { apiaries, getHiveById, getApiaryById, updateHive } = useBeehaven();
+  const { apiaries, getHiveById, getApiaryById, updateHive } = useKupkoll();
   const hive = getHiveById(params.id);
   const [selectedApiaryId, setSelectedApiaryId] = useState(hive?.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState(hive?.name ?? '');

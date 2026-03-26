@@ -8,12 +8,12 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { buildApiaryMapUrl, formatCoordinates } from '@/lib/mapLinks';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function ApiaryDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { deleteApiary, getApiaryById, getHivesByApiary } = useBeehaven();
+  const { deleteApiary, getApiaryById, getHivesByApiary } = useKupkoll();
   const apiary = getApiaryById(params.id);
 
   if (!apiary) {

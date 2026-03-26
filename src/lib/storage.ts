@@ -2,21 +2,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Apiary, Hive, HiveBoxSystem, Inspection, Task, VarroaLevel } from '@/types/domain';
 
-const BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
-const BEEHAVEN_APP_STATE_VERSION = 2;
+const KUPKOLL_APP_STATE_STORAGE_KEY = 'kupkoll:app-state';
+const LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
+const KUPKOLL_APP_STATE_VERSION = 2;
 
-export type BeehavenAppState = {
+export type KupkollAppState = {
   apiaries: Apiary[];
   hives: Hive[];
   inspections: Inspection[];
   manualTasks: Task[];
 };
 
-type PersistedBeehavenAppState = BeehavenAppState & {
+type PersistedKupkollAppState = KupkollAppState & {
   version: number;
 };
 
-type LegacyPersistedBeehavenAppState = {
+type LegacyPersistedKupkollAppState = {
   apiaries?: unknown;
   hives?: unknown;
   inspections?: unknown;
@@ -68,7 +69,7 @@ function createParsedState(candidate: {
   hives: unknown;
   inspections: unknown;
   manualTasks: unknown;
-}): BeehavenAppState | null {
+}): KupkollAppState | null {
   if (
     !isObjectArray(candidate.apiaries) ||
     !isObjectArray(candidate.hives) ||
@@ -86,7 +87,7 @@ function createParsedState(candidate: {
   };
 }
 
-function migrateLegacyState(candidate: LegacyPersistedBeehavenAppState): BeehavenAppState | null {
+function migrateLegacyState(candidate: LegacyPersistedKupkollAppState): KupkollAppState | null {
   return createParsedState({
     apiaries: candidate.apiaries,
     hives: candidate.hives,
@@ -95,7 +96,7 @@ function migrateLegacyState(candidate: LegacyPersistedBeehavenAppState): Beehave
   });
 }
 
-export function createSeedBeehavenState(): BeehavenAppState {
+export function createSeedKupkollState(): KupkollAppState {
   return {
     apiaries: [],
     hives: [],
@@ -104,19 +105,19 @@ export function createSeedBeehavenState(): BeehavenAppState {
   };
 }
 
-export function parsePersistedBeehavenState(input: unknown): BeehavenAppState | null {
+export function parsePersistedKupkollState(input: unknown): KupkollAppState | null {
   if (!input || typeof input !== 'object') {
     return null;
   }
 
-  const candidate = input as LegacyPersistedBeehavenAppState;
+  const candidate = input as LegacyPersistedKupkollAppState;
   const version = candidate.version;
 
   if (version === undefined) {
     return migrateLegacyState(candidate);
   }
 
-  if (version !== BEEHAVEN_APP_STATE_VERSION) {
+  if (version !== KUPKOLL_APP_STATE_VERSION) {
     return null;
   }
 
@@ -128,26 +129,35 @@ export function parsePersistedBeehavenState(input: unknown): BeehavenAppState | 
   });
 }
 
-export async function loadBeehavenState(): Promise<BeehavenAppState> {
+export async function loadKupkollState(): Promise<KupkollAppState> {
   try {
-    const raw = await AsyncStorage.getItem(BEEHAVEN_APP_STATE_STORAGE_KEY);
+    const currentRaw = await AsyncStorage.getItem(KUPKOLL_APP_STATE_STORAGE_KEY);
+    const legacyRaw = currentRaw ? null : await AsyncStorage.getItem(LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY);
+    const raw = currentRaw ?? legacyRaw;
 
     if (!raw) {
-      return createSeedBeehavenState();
+      return createSeedKupkollState();
     }
 
     const parsed = JSON.parse(raw);
-    return parsePersistedBeehavenState(parsed) ?? createSeedBeehavenState();
+    const state = parsePersistedKupkollState(parsed) ?? createSeedKupkollState();
+
+    if (!currentRaw && legacyRaw) {
+      await saveKupkollState(state);
+      await AsyncStorage.removeItem(LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY);
+    }
+
+    return state;
   } catch {
-    return createSeedBeehavenState();
+    return createSeedKupkollState();
   }
 }
 
-export async function saveBeehavenState(state: BeehavenAppState) {
-  const payload: PersistedBeehavenAppState = {
-    version: BEEHAVEN_APP_STATE_VERSION,
+export async function saveKupkollState(state: KupkollAppState) {
+  const payload: PersistedKupkollAppState = {
+    version: KUPKOLL_APP_STATE_VERSION,
     ...state,
   };
 
-  await AsyncStorage.setItem(BEEHAVEN_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
+  await AsyncStorage.setItem(KUPKOLL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
 }

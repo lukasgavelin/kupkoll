@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
     getItem: vi.fn(),
+    removeItem: vi.fn(),
     setItem: vi.fn(),
   },
 }));
 
-import { createSeedBeehavenState, parsePersistedBeehavenState } from '@/lib/storage';
+import { createSeedKupkollState, parsePersistedKupkollState } from '@/lib/storage';
 
 const apiaries = [
   {
@@ -70,9 +71,9 @@ const tasks = [
   },
 ];
 
-describe('createSeedBeehavenState', () => {
+describe('createSeedKupkollState', () => {
   it('returns empty arrays for a clean install seed', () => {
-    const seed = createSeedBeehavenState();
+    const seed = createSeedKupkollState();
 
     expect(seed).toEqual({
       apiaries: [],
@@ -83,10 +84,10 @@ describe('createSeedBeehavenState', () => {
   });
 });
 
-describe('parsePersistedBeehavenState', () => {
+describe('parsePersistedKupkollState', () => {
   it('parses the current persisted state format', () => {
     expect(
-      parsePersistedBeehavenState({
+      parsePersistedKupkollState({
         version: 1,
         apiaries,
         hives,
@@ -96,7 +97,7 @@ describe('parsePersistedBeehavenState', () => {
     ).toBeNull();
 
     expect(
-      parsePersistedBeehavenState({
+      parsePersistedKupkollState({
         version: 2,
         apiaries,
         hives,
@@ -113,7 +114,7 @@ describe('parsePersistedBeehavenState', () => {
 
   it('normalizes older stored kuptyper to the new option labels', () => {
     expect(
-      parsePersistedBeehavenState({
+      parsePersistedKupkollState({
         version: 2,
         apiaries,
         hives: [
@@ -152,7 +153,7 @@ describe('parsePersistedBeehavenState', () => {
     const legacyInspections = inspections.map(({ varroaLevel, ...inspection }) => inspection);
 
     expect(
-      parsePersistedBeehavenState({
+      parsePersistedKupkollState({
         apiaries,
         hives,
         inspections: legacyInspections,
@@ -171,7 +172,7 @@ describe('parsePersistedBeehavenState', () => {
 
   it('rejects malformed or unsupported payloads', () => {
     expect(
-      parsePersistedBeehavenState({
+      parsePersistedKupkollState({
         version: 99,
         apiaries,
         hives,
@@ -181,7 +182,7 @@ describe('parsePersistedBeehavenState', () => {
     ).toBeNull();
 
     expect(
-      parsePersistedBeehavenState({
+      parsePersistedKupkollState({
         version: 1,
         apiaries: 'invalid',
         hives,

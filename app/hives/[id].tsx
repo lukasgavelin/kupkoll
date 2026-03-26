@@ -10,12 +10,12 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { formatDateLabel } from '@/lib/selectors';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function HiveDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { deleteHive, getHiveById, getApiaryById, getInspectionsForHive, getRecommendationsForHive, getTasksForHive, latestInspectionMap } = useBeehaven();
+  const { deleteHive, getHiveById, getApiaryById, getInspectionsForHive, getRecommendationsForHive, getTasksForHive, latestInspectionMap } = useKupkoll();
   const hive = getHiveById(params.id);
 
   if (!hive) {

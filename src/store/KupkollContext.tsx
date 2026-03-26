@@ -3,15 +3,16 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useState } fr
 
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
-import { BeehavenAppState, saveBeehavenState } from '@/lib/storage';
+import { KupkollAppState, saveKupkollState } from '@/lib/storage';
 import { deriveTabTutorialViewState } from '@/lib/tutorialState';
 import { Apiary, Hive, Inspection, NewApiaryInput, NewHiveInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
 
-const TAB_TUTORIAL_STORAGE_KEY = 'beehaven:first-run-tab-tutorial';
+const KUPKOLL_TAB_TUTORIAL_STORAGE_KEY = 'kupkoll:first-run-tab-tutorial';
+const LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY = 'beehaven:first-run-tab-tutorial';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
-type BeehavenContextValue = {
+type KupkollContextValue = {
   apiaries: Apiary[];
   hives: Hive[];
   inspections: Inspection[];
@@ -42,7 +43,7 @@ type BeehavenContextValue = {
   getTasksForHive: (hiveId: string) => Task[];
 };
 
-const BeehavenContext = createContext<BeehavenContextValue | undefined>(undefined);
+const KupkollContext = createContext<KupkollContextValue | undefined>(undefined);
 
 function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'queenStatus' | 'temperament'> {
   const queenStatus = input.queenSeen || input.eggsSeen ? 'Bekräftad' : input.actionNeeded ? 'Behöver följas upp' : 'Osäker';
@@ -55,7 +56,7 @@ function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'que
   };
 }
 
-export function BeehavenProvider({ children, initialData }: { children: ReactNode; initialData: BeehavenAppState }) {
+export function KupkollProvider({ children, initialData }: { children: ReactNode; initialData: KupkollAppState }) {
   const [apiaries, setApiaries] = useState(initialData.apiaries);
   const [hives, setHives] = useState(initialData.hives);
   const [inspections, setInspections] = useState(initialData.inspections);
@@ -67,7 +68,7 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
   useEffect(() => {
     void (async () => {
       try {
-        await saveBeehavenState({
+        await saveKupkollState({
           apiaries,
           hives,
           inspections,
@@ -83,8 +84,15 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
 
     async function loadTabTutorialState() {
       try {
-        const storedValue = await AsyncStorage.getItem(TAB_TUTORIAL_STORAGE_KEY);
+        const currentValue = await AsyncStorage.getItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY);
+        const legacyValue = currentValue ? null : await AsyncStorage.getItem(LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY);
+        const storedValue = currentValue ?? legacyValue;
         const viewState = deriveTabTutorialViewState(storedValue);
+
+        if (!currentValue && legacyValue) {
+          await AsyncStorage.setItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY, legacyValue);
+          await AsyncStorage.removeItem(LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY);
+        }
 
         if (!cancelled) {
           setTabTutorialPromptVisible(viewState.promptVisible);
@@ -218,7 +226,7 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
     setTabTutorialVisible(false);
 
     try {
-      await AsyncStorage.setItem(TAB_TUTORIAL_STORAGE_KEY, 'done');
+      await AsyncStorage.setItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY, 'done');
     } catch {
     }
   }
@@ -229,7 +237,8 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
     setTabTutorialReady(true);
 
     try {
-      await AsyncStorage.removeItem(TAB_TUTORIAL_STORAGE_KEY);
+      await AsyncStorage.removeItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY);
+      await AsyncStorage.removeItem(LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY);
     } catch {
     }
   }
@@ -240,7 +249,7 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
     setTabTutorialReady(true);
 
     try {
-      await AsyncStorage.setItem(TAB_TUTORIAL_STORAGE_KEY, 'active');
+      await AsyncStorage.setItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY, 'active');
     } catch {
     }
   }
@@ -249,7 +258,7 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
     await completeTabTutorial();
   }
 
-  const value = useMemo<BeehavenContextValue>(
+  const value = useMemo<KupkollContextValue>(
     () => ({
       apiaries,
       hives,
@@ -286,14 +295,14 @@ export function BeehavenProvider({ children, initialData }: { children: ReactNod
     [apiaries, hives, inspections, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard, tabTutorialReady, tabTutorialPromptVisible, tabTutorialVisible],
   );
 
-  return <BeehavenContext.Provider value={value}>{children}</BeehavenContext.Provider>;
+  return <KupkollContext.Provider value={value}>{children}</KupkollContext.Provider>;
 }
 
-export function useBeehaven() {
-  const context = useContext(BeehavenContext);
+export function useKupkoll() {
+  const context = useContext(KupkollContext);
 
   if (!context) {
-    throw new Error('useBeehaven must be used inside BeehavenProvider');
+    throw new Error('useKupkoll must be used inside KupkollProvider');
   }
 
   return context;

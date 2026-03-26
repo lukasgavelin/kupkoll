@@ -6,11 +6,11 @@ import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function HivesScreen() {
-  const { apiaries, hives, getApiaryById } = useBeehaven();
+  const { apiaries, hives, getApiaryById } = useKupkoll();
   const hasApiaries = apiaries.length > 0;
 
   return (

@@ -11,11 +11,11 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { sortRecommendations } from '@/lib/recommendations';
 import { getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function HomeScreen() {
-  const { dashboard, hives, apiaries, recommendations, tasks, getHiveById } = useBeehaven();
+  const { dashboard, hives, apiaries, recommendations, tasks, getHiveById } = useKupkoll();
   const quickHive = hives[0];
   const season = getSeasonLabel();
   const seasonStatus = getSeasonStatus(new Date(), apiaries);
@@ -27,7 +27,7 @@ export default function HomeScreen() {
       <SeasonStatusCard status={seasonStatus} />
 
       <AppCard style={styles.heroCard}>
-        <Text style={theme.textStyles.overline}>beehaven2 · {season}</Text>
+        <Text style={theme.textStyles.overline}>Kupkoll · {season}</Text>
         <Text style={theme.textStyles.display}>Dagens biodlingsläge för svenska bigårdar.</Text>
         <Text style={styles.heroText}>
           {quickHive

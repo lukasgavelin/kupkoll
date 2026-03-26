@@ -7,12 +7,12 @@ import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function HiveInspectionHistoryScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { getHiveById, getInspectionsForHive } = useBeehaven();
+  const { getHiveById, getInspectionsForHive } = useKupkoll();
   const hive = getHiveById(params.id);
 
   if (!hive) {

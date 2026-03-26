@@ -7,7 +7,7 @@ import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 import { HiveBoxSystem, HiveStrength, HiveTemperament } from '@/types/domain';
 
@@ -17,7 +17,7 @@ const hiveBoxSystems: HiveBoxSystem[] = ['Lågnormal', 'Svea', 'Langstroth', 'Da
 
 export default function NewHiveScreen() {
   const params = useLocalSearchParams<{ apiaryId?: string }>();
-  const { addHive, apiaries, getApiaryById } = useBeehaven();
+  const { addHive, apiaries, getApiaryById } = useKupkoll();
   const [selectedApiaryId, setSelectedApiaryId] = useState(params.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState('');
   const [strength, setStrength] = useState<HiveStrength>('Medel');

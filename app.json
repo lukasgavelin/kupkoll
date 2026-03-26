@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "beehaven2",
-    "slug": "beehaven2",
-    "scheme": "beehaven2",
+    "name": "Kupkoll",
+    "slug": "kupkoll",
+    "scheme": "kupkoll",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Beehaven använder din plats för att spara bigårdens position på kartan."
+          "locationWhenInUsePermission": "Kupkoll använder din plats för att spara bigårdens position på kartan."
         }
       ]
     ],

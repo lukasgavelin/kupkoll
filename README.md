@@ -1,6 +1,6 @@
-# beehaven2
+# Kupkoll
 
-beehaven2 är en svensk Expo-app för biodlare som vill få struktur i vardagsarbetet ute i bigården och samtidigt få säsongsanpassat beslutsstöd. Appen är byggd för att vara snabb i fält, tydlig på mobilen och förankrad i svensk biodlingspraxis.
+Kupkoll är en svensk Expo-app för biodlare som vill få struktur i vardagsarbetet ute i bigården och samtidigt få säsongsanpassat beslutsstöd. Appen är byggd för att vara snabb i fält, tydlig på mobilen och förankrad i svensk biodlingspraxis.
 
 Målet är att kombinera tre saker i samma arbetsyta: enkel journalföring, bra överblick över bigårdar och kupor, samt konkreta rekommendationer om vad som bör följas upp härnäst.
 
@@ -20,7 +20,7 @@ Appen startar utan demo- eller mockdata för att motsvara en ren nyinstallation.
 
 ## Produktidé
 
-beehaven2 är tänkt som ett digitalt stöd för svensk biodling snarare än bara ett register. I stället för att enbart visa vad användaren matat in ska appen hjälpa biodlaren att se vad som kräver uppmärksamhet nu, vad som är normalt för säsongen och vilka mönster i kupans historik som bör tas på allvar.
+Kupkoll är tänkt som ett digitalt stöd för svensk biodling snarare än bara ett register. I stället för att enbart visa vad användaren matat in ska appen hjälpa biodlaren att se vad som kräver uppmärksamhet nu, vad som är normalt för säsongen och vilka mönster i kupans historik som bör tas på allvar.
 
 Beslutsstödet lutar mot svensk praxis och säsongsråd från svenska källor, med särskilt fokus på hur arbetsbehovet skiftar mellan vårutveckling, dragperiod, svärmning, skattning och invintring.
 

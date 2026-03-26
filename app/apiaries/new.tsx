@@ -7,12 +7,12 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 import { Coordinates } from '@/types/domain';
 
 export default function NewApiaryScreen() {
-  const { addApiary } = useBeehaven();
+  const { addApiary } = useKupkoll();
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');

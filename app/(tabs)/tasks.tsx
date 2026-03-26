@@ -7,11 +7,11 @@ import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function TasksScreen() {
-  const { apiaries, hives, tasks, recommendations, getHiveById, getApiaryById } = useBeehaven();
+  const { apiaries, hives, tasks, recommendations, getHiveById, getApiaryById } = useKupkoll();
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
 

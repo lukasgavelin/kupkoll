@@ -6,7 +6,7 @@ import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 import { HiveTemperament, VarroaLevel } from '@/types/domain';
 
@@ -107,7 +107,7 @@ function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTem
 }
 
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
-  const { addInspection, apiaries, hives } = useBeehaven();
+  const { addInspection, apiaries, hives } = useKupkoll();
   const [selectedPresetId, setSelectedPresetId] = useState(inspectionPresets[0].id);
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);

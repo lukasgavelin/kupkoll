@@ -5,7 +5,7 @@ import { View } from 'react-native';
 
 import { FirstRunTutorialPrompt } from '@/components/feature/FirstRunTutorialPrompt';
 import { TabTutorialOverlay } from '@/components/feature/TabTutorialOverlay';
-import { useBeehaven } from '@/store/BeehavenContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 const tutorialSteps = [
@@ -42,7 +42,7 @@ function TabIcon({ name, color, focused }: { name: keyof typeof Ionicons.glyphMa
 
 export default function TabsLayout() {
   const pathname = usePathname();
-  const { completeTabTutorial, skipTabTutorial, startTabTutorial, tabTutorialPromptVisible, tabTutorialReady, tabTutorialVisible } = useBeehaven();
+  const { completeTabTutorial, skipTabTutorial, startTabTutorial, tabTutorialPromptVisible, tabTutorialReady, tabTutorialVisible } = useKupkoll();
 
   const activeTutorialIndex = useMemo(() => tutorialSteps.findIndex((step) => step.path === pathname), [pathname]);
   const activeStep = activeTutorialIndex >= 0 ? tutorialSteps[activeTutorialIndex] : null;
