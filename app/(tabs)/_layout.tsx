@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs, router, usePathname } from 'expo-router';
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FirstRunTutorialPrompt } from '@/components/feature/FirstRunTutorialPrompt';
 import { TabTutorialOverlay } from '@/components/feature/TabTutorialOverlay';
@@ -42,8 +43,11 @@ function TabIcon({ name, color, focused }: { name: keyof typeof Ionicons.glyphMa
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const { completeTabTutorial, skipTabTutorial, startTabTutorial, tabTutorialPromptVisible, tabTutorialReady, tabTutorialVisible } = useKupkoll();
+  const tabBarBottomOffset = insets.bottom > 0 ? insets.bottom + theme.spacing.sm : theme.spacing.lg;
+  const tabBarHeight = 78 + insets.bottom;
 
   const activeTutorialIndex = useMemo(() => tutorialSteps.findIndex((step) => step.path === pathname), [pathname]);
   const activeStep = activeTutorialIndex >= 0 ? tutorialSteps[activeTutorialIndex] : null;
@@ -76,10 +80,10 @@ export default function TabsLayout() {
             position: 'absolute',
             left: theme.spacing.lg,
             right: theme.spacing.lg,
-            bottom: theme.spacing.lg,
-            height: 78,
+            bottom: tabBarBottomOffset,
+            height: tabBarHeight,
             paddingTop: theme.spacing.sm,
-            paddingBottom: theme.spacing.sm,
+            paddingBottom: Math.max(theme.spacing.sm, insets.bottom),
             paddingHorizontal: theme.spacing.sm,
             borderTopWidth: 0,
             borderWidth: 1,

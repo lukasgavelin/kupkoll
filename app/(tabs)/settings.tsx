@@ -115,34 +115,29 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
           </View>
         </AppCard>
         <AppCard>
-          <Text style={theme.textStyles.heading}>Backup</Text>
-          <Text style={theme.textStyles.body}>Spara en kopia av det du har lagt in i appen, så att du har informationen kvar även utanför telefonen eller webben.</Text>
+          <View style={styles.backupIntro}>
+            <Text style={theme.textStyles.heading}>Backup</Text>
+            <Text style={theme.textStyles.body}>Spara en kopia av det du har lagt in i appen, så att du har informationen kvar även utanför telefonen eller webben.</Text>
+          </View>
           <View style={styles.exportFacts}>
             <Text style={styles.exportFact}>Bigårdar: {apiaries.length}</Text>
             <Text style={styles.exportFact}>Kupor: {hives.length}</Text>
             <Text style={styles.exportFact}>Genomgångar: {inspections.length}</Text>
             <Text style={styles.exportFact}>Uppgifter: {manualTasks.length}</Text>
           </View>
-          <PrimaryButton
-            fullWidth
-            iconName="download-outline"
-            label={isExporting ? 'Skapar export...' : 'Exportera som JSON'}
-            onPress={() => {
-              void handleExport();
-            }}
-          />
-          <Text style={theme.textStyles.caption}>Exporten skapas som en JSON-fil och fungerar bäst som säkerhetskopia av det du har sparat.</Text>
-          {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
-        </AppCard>
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Så är appen byggd</Text>
-          <Text style={theme.textStyles.body}>Kupkoll är byggd som en mobilanpassad app med moderna webb- och apptekniker, där gränssnitt, regler och lagring hålls ihop i tydliga delar.</Text>
-          <View style={styles.infoList}>
-            <Text style={styles.infoItem}>1. Appen är byggd med Expo, React Native och TypeScript.</Text>
-            <Text style={styles.infoItem}>2. Skärmarna är uppbyggda av återanvändbara komponenter för kort, rubriker, knappar och formulär.</Text>
-            <Text style={styles.infoItem}>3. Flikarna och sidnavigeringen hanteras med Expo Router.</Text>
-            <Text style={styles.infoItem}>4. Data om bigårdar, kupor, genomgångar och uppgifter lagras lokalt i appen.</Text>
-            <Text style={styles.infoItem}>5. Regler för råd och uppgifter räknas fram utifrån det som sparats, tillsammans med säsong, plats och väder.</Text>
+          <View style={styles.exportAction}>
+            <PrimaryButton
+              fullWidth
+              iconName="download-outline"
+              label={isExporting ? 'Skapar export...' : 'Exportera som JSON'}
+              onPress={() => {
+                void handleExport();
+              }}
+            />
+            <View style={styles.exportMeta}>
+              <Text style={theme.textStyles.caption}>Exporten skapas som en JSON-fil och fungerar bäst som säkerhetskopia av det du har sparat.</Text>
+              {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
+            </View>
           </View>
         </AppCard>
         <AppCard>
@@ -199,10 +194,20 @@ function createStyles(theme: Theme) {
       flex: 1,
       gap: theme.spacing.xs,
     },
+    backupIntro: {
+      gap: theme.spacing.xs,
+    },
     exportFacts: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
+    },
+    exportAction: {
+      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.xs,
+    },
+    exportMeta: {
+      gap: theme.spacing.xs,
     },
     exportFact: {
       ...theme.textStyles.caption,
@@ -211,9 +216,6 @@ function createStyles(theme: Theme) {
       borderRadius: theme.radii.pill,
       backgroundColor: theme.colors.surfaceMuted,
       color: theme.colors.text,
-    },
-    infoList: {
-      gap: theme.spacing.sm,
     },
     infoItem: {
       ...theme.textStyles.body,
