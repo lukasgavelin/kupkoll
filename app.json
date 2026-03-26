@@ -27,7 +27,9 @@
       "versionCode": 1,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "edgeToEdgeEnabled": true
     },
@@ -37,7 +39,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a45caa0d-ceea-4fd0-a894-c6941000f0fa"
+        "projectId": "41714a65-2f61-4014-9898-a77ea529ee4d"
       }
     },
     "owner": "mrwindle"
