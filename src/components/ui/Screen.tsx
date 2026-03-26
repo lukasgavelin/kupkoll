@@ -1,8 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 type ScreenProps = {
   children: ReactNode;
@@ -11,6 +12,9 @@ type ScreenProps = {
 };
 
 export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   if (!scroll) {
     return (
       <SafeAreaView style={styles.safeArea} edges={[ 'top', 'left', 'right' ]}>
@@ -32,22 +36,24 @@ export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.canvas,
-  },
-  keyboardAvoider: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    width: '100%',
-    maxWidth: 920,
-    alignSelf: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxxxl + theme.spacing.xxl,
-    gap: theme.spacing.xxl,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.canvas,
+    },
+    keyboardAvoider: {
+      flex: 1,
+    },
+    content: {
+      flexGrow: 1,
+      width: '100%',
+      maxWidth: 920,
+      alignSelf: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      paddingTop: theme.spacing.lg,
+      paddingBottom: theme.spacing.xxxxl + theme.spacing.xxl,
+      gap: theme.spacing.xxl,
+    },
+  });
+}

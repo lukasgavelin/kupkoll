@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Alert, Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { buildApiaryMapUrl, formatCoordinates } from '@/lib/mapLinks';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import { Coordinates } from '@/types/domain';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -20,7 +21,9 @@ function formatLocationFromReverseGeocode(result: Location.LocationGeocodedAddre
 }
 
 export function ApiaryLocationField({ location, onLocationChange, coordinates, onCoordinatesChange }: ApiaryLocationFieldProps) {
+  const theme = useTheme();
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const styles = createStyles(theme);
   const mapUrl = buildApiaryMapUrl(location, coordinates);
   const utilityMessage = coordinates
     ? 'Positionen hjälper appen att visa väder för genomgångar och göra råden mer träffsäkra för platsen.'
@@ -126,57 +129,59 @@ export function ApiaryLocationField({ location, onLocationChange, coordinates, o
   );
 }
 
-const styles = StyleSheet.create({
-  fieldGroup: {
-    gap: theme.spacing.sm,
-  },
-  label: {
-    ...theme.textStyles.label,
-    color: theme.colors.textMuted,
-  },
-  input: {
-    minHeight: 56,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-  helperText: {
-    ...theme.textStyles.caption,
-    color: theme.colors.textMuted,
-  },
-  utilityCard: {
-    gap: theme.spacing.xs,
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surfaceMuted,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-  },
-  utilityCardReady: {
-    borderColor: theme.colors.borderStrong,
-    backgroundColor: theme.colors.surface,
-  },
-  utilityTitle: {
-    ...theme.textStyles.label,
-    color: theme.colors.text,
-  },
-  utilityText: {
-    ...theme.textStyles.caption,
-    color: theme.colors.textMuted,
-  },
-  coordinateText: {
-    ...theme.textStyles.caption,
-    color: theme.colors.text,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    fieldGroup: {
+      gap: theme.spacing.sm,
+    },
+    label: {
+      ...theme.textStyles.label,
+      color: theme.colors.textMuted,
+    },
+    input: {
+      minHeight: 56,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+    helperText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.textMuted,
+    },
+    utilityCard: {
+      gap: theme.spacing.xs,
+      borderRadius: theme.radii.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
+    },
+    utilityCardReady: {
+      borderColor: theme.colors.borderStrong,
+      backgroundColor: theme.colors.surface,
+    },
+    utilityTitle: {
+      ...theme.textStyles.label,
+      color: theme.colors.text,
+    },
+    utilityText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.textMuted,
+    },
+    coordinateText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+    },
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
+    },
+  });
+}

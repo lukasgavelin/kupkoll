@@ -7,7 +7,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import { HiveBoxSystem, HiveStrength, HiveTemperament } from '@/types/domain';
 
 const hiveStrengths: HiveStrength[] = ['Svagt', 'Medel', 'Starkt'];
@@ -15,8 +16,10 @@ const hiveTemperaments: HiveTemperament[] = ['Lugnt', 'Vaksamt', 'Hetsigt'];
 const hiveBoxSystems: HiveBoxSystem[] = ['Lågnormal', 'Svea', 'Langstroth', 'Dadant'];
 
 export default function EditHiveScreen() {
+  const theme = useTheme();
   const params = useLocalSearchParams<{ id: string }>();
   const { apiaries, getHiveById, getApiaryById, updateHive } = useKupkoll();
+  const styles = createStyles(theme);
   const hive = getHiveById(params.id);
   const [selectedApiaryId, setSelectedApiaryId] = useState(hive?.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState(hive?.name ?? '');
@@ -160,64 +163,66 @@ export default function EditHiveScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  fieldGroup: {
-    gap: theme.spacing.sm,
-  },
-  label: {
-    ...theme.textStyles.label,
-    color: theme.colors.textMuted,
-  },
-  input: {
-    minHeight: 56,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-  inputMultiline: {
-    minHeight: 120,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-  optionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
-  option: {
-    minHeight: 56,
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-  },
-  largeOption: {
-    width: '48%',
-    maxWidth: '48%',
-  },
-  optionSelected: {
-    backgroundColor: theme.colors.sage,
-    borderColor: theme.colors.sage,
-  },
-  optionLabel: {
-    ...theme.textStyles.bodyStrong,
-    textAlign: 'center',
-    flexShrink: 1,
-  },
-  optionSelectedText: {
-    color: theme.colors.surface,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    fieldGroup: {
+      gap: theme.spacing.sm,
+    },
+    label: {
+      ...theme.textStyles.label,
+      color: theme.colors.textMuted,
+    },
+    input: {
+      minHeight: 56,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+    inputMultiline: {
+      minHeight: 120,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+    optionGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    option: {
+      minHeight: 56,
+      borderRadius: theme.radii.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    largeOption: {
+      width: '48%',
+      maxWidth: '48%',
+    },
+    optionSelected: {
+      backgroundColor: theme.colors.sage,
+      borderColor: theme.colors.sage,
+    },
+    optionLabel: {
+      ...theme.textStyles.bodyStrong,
+      textAlign: 'center',
+      flexShrink: 1,
+    },
+    optionSelectedText: {
+      color: theme.colors.surface,
+    },
+  });
+}

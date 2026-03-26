@@ -5,7 +5,8 @@ import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getRecommendationKindLabel } from '@/lib/recommendations';
 import { formatDateLabel, formatDateTimeLabel } from '@/lib/selectors';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import { Apiary, Hive, Inspection, Recommendation, Task } from '@/types/domain';
 
 function formatInspectionWeather(inspection: Inspection) {
@@ -23,6 +24,9 @@ function formatInspectionWeather(inspection: Inspection) {
 }
 
 export function StatCard({ value, label }: { value: string; label: string }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
+
   return (
     <AppCard style={styles.statCard}>
       <Text style={theme.textStyles.overline}>{label}</Text>
@@ -32,6 +36,9 @@ export function StatCard({ value, label }: { value: string; label: string }) {
 }
 
 export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: number }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
+
   return (
     <Pressable onPress={() => router.push(`/apiaries/${apiary.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
       <AppCard>
@@ -49,6 +56,8 @@ export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: n
 }
 
 export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : 'calm';
 
   return (
@@ -74,6 +83,8 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
 }
 
 export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const tone = task.priority === 'Hög' ? 'critical' : task.priority === 'Medel' ? 'warning' : 'info';
 
   return (
@@ -93,6 +104,8 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
 }
 
 export function RecommendationCard({ recommendation, hiveName }: { recommendation: Recommendation; hiveName: string }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const label = recommendation.severity === 'critical' ? 'Akut' : recommendation.severity === 'warning' ? 'Följ upp' : 'Tips';
   const kindTone = recommendation.kind === 'alert' ? recommendation.severity : recommendation.kind === 'seasonal' ? 'calm' : 'info';
 
@@ -114,6 +127,8 @@ export function RecommendationCard({ recommendation, hiveName }: { recommendatio
 }
 
 export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const varroaTone = inspection.varroaLevel === 'Hög' ? 'critical' : inspection.varroaLevel === 'Förhöjd' ? 'warning' : 'info';
   const weatherSummary = formatInspectionWeather(inspection);
 
@@ -133,51 +148,53 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
   );
 }
 
-const styles = StyleSheet.create({
-  pressable: {
-    borderRadius: theme.radii.xl,
-  },
-  pressed: {
-    opacity: 0.9,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '47%',
-    justifyContent: 'space-between',
-    minHeight: 144,
-  },
-  statValue: {
-    ...theme.textStyles.display,
-    fontSize: 36,
-    lineHeight: 38,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: theme.spacing.lg,
-  },
-  textColumn: {
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  inlineWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
-  badgeColumn: {
-    alignItems: 'flex-end',
-    gap: theme.spacing.xs,
-  },
-  recommendationCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.info,
-  },
-  recommendationCardAlert: {
-    borderLeftColor: theme.colors.danger,
-  },
-  recommendationCardSeasonal: {
-    borderLeftColor: theme.colors.sage,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    pressable: {
+      borderRadius: theme.radii.xl,
+    },
+    pressed: {
+      opacity: 0.9,
+    },
+    statCard: {
+      flex: 1,
+      minWidth: '47%',
+      justifyContent: 'space-between',
+      minHeight: 144,
+    },
+    statValue: {
+      ...theme.textStyles.display,
+      fontSize: 36,
+      lineHeight: 38,
+    },
+    rowBetween: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: theme.spacing.lg,
+    },
+    textColumn: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    inlineWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    badgeColumn: {
+      alignItems: 'flex-end',
+      gap: theme.spacing.xs,
+    },
+    recommendationCard: {
+      borderLeftWidth: 4,
+      borderLeftColor: theme.colors.info,
+    },
+    recommendationCardAlert: {
+      borderLeftColor: theme.colors.danger,
+    },
+    recommendationCardSeasonal: {
+      borderLeftColor: theme.colors.sage,
+    },
+  });
+}

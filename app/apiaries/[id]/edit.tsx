@@ -8,12 +8,15 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import { Coordinates } from '@/types/domain';
 
 export default function EditApiaryScreen() {
+  const theme = useTheme();
   const params = useLocalSearchParams<{ id: string }>();
   const { getApiaryById, updateApiary } = useKupkoll();
+  const styles = createStyles(theme);
   const apiary = getApiaryById(params.id);
   const [name, setName] = useState(apiary?.name ?? '');
   const [location, setLocation] = useState(apiary?.location ?? '');
@@ -91,32 +94,34 @@ export default function EditApiaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  fieldGroup: {
-    gap: theme.spacing.sm,
-  },
-  label: {
-    ...theme.textStyles.label,
-    color: theme.colors.textMuted,
-  },
-  input: {
-    minHeight: 56,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-  inputMultiline: {
-    minHeight: 120,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    fieldGroup: {
+      gap: theme.spacing.sm,
+    },
+    label: {
+      ...theme.textStyles.label,
+      color: theme.colors.textMuted,
+    },
+    input: {
+      minHeight: 56,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+    inputMultiline: {
+      minHeight: 120,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+  });
+}

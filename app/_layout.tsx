@@ -8,9 +8,31 @@ import { Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
 
 import { KupkollAppState, loadKupkollState } from '@/lib/storage';
 import { KupkollProvider } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { ThemeProvider, useTheme, useThemeMode } from '@/store/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
+
+function AppNavigator({ initialData }: { initialData: KupkollAppState }) {
+  const theme = useTheme();
+  const { isDarkMode } = useThemeMode();
+
+  return (
+    <KupkollProvider initialData={initialData}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.canvas } }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="apiaries/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="apiaries/[id]/edit" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="apiaries/[id]" />
+        <Stack.Screen name="hives/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="hives/[id]/edit" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="hives/[id]/inspections" />
+        <Stack.Screen name="hives/[id]" />
+        <Stack.Screen name="inspections/new" options={{ presentation: 'modal' }} />
+      </Stack>
+    </KupkollProvider>
+  );
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -51,20 +73,9 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <KupkollProvider initialData={initialData}>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.canvas } }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="apiaries/new" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="apiaries/[id]/edit" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="apiaries/[id]" />
-          <Stack.Screen name="hives/new" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="hives/[id]/edit" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="hives/[id]/inspections" />
-          <Stack.Screen name="hives/[id]" />
-          <Stack.Screen name="inspections/new" options={{ presentation: 'modal' }} />
-        </Stack>
-      </KupkollProvider>
+      <ThemeProvider>
+        <AppNavigator initialData={initialData} />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

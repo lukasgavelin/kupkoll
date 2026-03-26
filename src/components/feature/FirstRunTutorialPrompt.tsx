@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 type FirstRunTutorialPromptProps = {
   visible: boolean;
@@ -10,6 +11,9 @@ type FirstRunTutorialPromptProps = {
 };
 
 export function FirstRunTutorialPrompt({ visible, onStart, onSkip }: FirstRunTutorialPromptProps) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
+
   if (!visible) {
     return null;
   }
@@ -36,66 +40,68 @@ export function FirstRunTutorialPrompt({ visible, onStart, onSkip }: FirstRunTut
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    zIndex: 24,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(35, 48, 43, 0.40)',
-  },
-  card: {
-    borderColor: theme.colors.borderStrong,
-    backgroundColor: theme.colors.surfaceRaised,
-    gap: theme.spacing.xl,
-  },
-  copyBlock: {
-    gap: theme.spacing.sm,
-  },
-  title: {
-    ...theme.textStyles.title,
-  },
-  description: {
-    ...theme.textStyles.body,
-    color: theme.colors.textMuted,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
-  secondaryAction: {
-    minHeight: 52,
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-  },
-  primaryAction: {
-    minHeight: 52,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.text,
-    borderWidth: 1,
-    borderColor: theme.colors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  secondaryActionLabel: {
-    ...theme.textStyles.label,
-    color: theme.colors.text,
-  },
-  primaryActionLabel: {
-    ...theme.textStyles.label,
-    color: theme.colors.surface,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      zIndex: 24,
+      paddingHorizontal: theme.spacing.xl,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.overlay,
+    },
+    card: {
+      borderColor: theme.colors.borderStrong,
+      backgroundColor: theme.colors.surfaceRaised,
+      gap: theme.spacing.xl,
+    },
+    copyBlock: {
+      gap: theme.spacing.sm,
+    },
+    title: {
+      ...theme.textStyles.title,
+    },
+    description: {
+      ...theme.textStyles.body,
+      color: theme.colors.textMuted,
+    },
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    secondaryAction: {
+      minHeight: 52,
+      borderRadius: theme.radii.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+    },
+    primaryAction: {
+      minHeight: 52,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.text,
+      borderWidth: 1,
+      borderColor: theme.colors.text,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.xl,
+    },
+    secondaryActionLabel: {
+      ...theme.textStyles.label,
+      color: theme.colors.text,
+    },
+    primaryActionLabel: {
+      ...theme.textStyles.label,
+      color: theme.colors.surface,
+    },
+    pressed: {
+      opacity: 0.88,
+    },
+  });
+}

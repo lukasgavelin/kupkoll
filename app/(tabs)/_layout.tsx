@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { FirstRunTutorialPrompt } from '@/components/feature/FirstRunTutorialPrompt';
 import { TabTutorialOverlay } from '@/components/feature/TabTutorialOverlay';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
 
 const tutorialSteps = [
   {
@@ -41,6 +41,7 @@ function TabIcon({ name, color, focused }: { name: keyof typeof Ionicons.glyphMa
 }
 
 export default function TabsLayout() {
+  const theme = useTheme();
   const pathname = usePathname();
   const { completeTabTutorial, skipTabTutorial, startTabTutorial, tabTutorialPromptVisible, tabTutorialReady, tabTutorialVisible } = useKupkoll();
 

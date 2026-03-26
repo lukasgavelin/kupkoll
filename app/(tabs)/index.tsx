@@ -14,11 +14,14 @@ import { sortRecommendations } from '@/lib/recommendations';
 import { formatDateTimeLabel, getSeasonStatus } from '@/lib/selectors';
 import { fetchSeasonWeatherSignal, InspectionWeatherSnapshot } from '@/lib/weather';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 export default function HomeScreen() {
+  const theme = useTheme();
   const { dashboard, hives, apiaries, recommendations, tasks, getHiveById } = useKupkoll();
   const [seasonWeather, setSeasonWeather] = useState<InspectionWeatherSnapshot | undefined>(undefined);
+  const styles = createStyles(theme);
   const quickHive = hives[0];
   const primaryApiary = useMemo(() => apiaries.find((apiary) => apiary.coordinates) ?? apiaries[0], [apiaries]);
   const seasonStatus = getSeasonStatus(new Date(), apiaries, seasonWeather);
@@ -143,62 +146,64 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  heroCard: {
-    backgroundColor: theme.colors.surfaceRaised,
-    borderColor: theme.colors.borderStrong,
-  },
-  heroText: {
-    ...theme.textStyles.body,
-    color: theme.colors.textMuted,
-    maxWidth: 620,
-  },
-  heroChecklist: {
-    gap: theme.spacing.sm,
-  },
-  heroChecklistRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.sm,
-  },
-  heroChecklistDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: theme.colors.accent,
-    marginTop: 7,
-  },
-  heroChecklistText: {
-    ...theme.textStyles.bodyStrong,
-    color: theme.colors.text,
-    flex: 1,
-  },
-  heroMetaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.md,
-  },
-  heroMetaCard: {
-    flex: 1,
-    minWidth: 160,
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  heroMetaValue: {
-    ...theme.textStyles.title,
-    fontSize: 28,
-    lineHeight: 30,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.lg,
-  },
-  sectionList: {
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    heroCard: {
+      backgroundColor: theme.colors.surfaceRaised,
+      borderColor: theme.colors.borderStrong,
+    },
+    heroText: {
+      ...theme.textStyles.body,
+      color: theme.colors.textMuted,
+      maxWidth: 620,
+    },
+    heroChecklist: {
+      gap: theme.spacing.sm,
+    },
+    heroChecklistRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.sm,
+    },
+    heroChecklistDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 999,
+      backgroundColor: theme.colors.accent,
+      marginTop: 7,
+    },
+    heroChecklistText: {
+      ...theme.textStyles.bodyStrong,
+      color: theme.colors.text,
+      flex: 1,
+    },
+    heroMetaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.md,
+    },
+    heroMetaCard: {
+      flex: 1,
+      minWidth: 160,
+      borderRadius: theme.radii.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    heroMetaValue: {
+      ...theme.textStyles.title,
+      fontSize: 28,
+      lineHeight: 30,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.lg,
+    },
+    sectionList: {
+      gap: theme.spacing.lg,
+    },
+  });
+}

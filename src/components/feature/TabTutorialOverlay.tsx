@@ -2,7 +2,8 @@ import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from
 import { useEffect, useRef } from 'react';
 
 import { AppCard } from '@/components/ui/AppCard';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 type TabTutorialOverlayProps = {
   visible: boolean;
@@ -17,7 +18,9 @@ type TabTutorialOverlayProps = {
 };
 
 export function TabTutorialOverlay({ visible, title, description, step, totalSteps, activeIndex, nextLabel, onNext, onClose }: TabTutorialOverlayProps) {
+  const theme = useTheme();
   const { width } = useWindowDimensions();
+  const styles = createStyles(theme);
 
   const tabBarInset = theme.spacing.lg;
   const tabBarInnerPadding = theme.spacing.sm;
@@ -134,124 +137,126 @@ export function TabTutorialOverlay({ visible, title, description, step, totalSte
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    zIndex: 20,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(35, 48, 43, 0.34)',
-  },
-  card: {
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: 150,
-    borderColor: theme.colors.borderStrong,
-    backgroundColor: theme.colors.surfaceRaised,
-    gap: theme.spacing.xl,
-  },
-  tabGlow: {
-    position: 'absolute',
-    bottom: 52,
-    minHeight: 58,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.accent,
-  },
-  tabHighlight: {
-    position: 'absolute',
-    bottom: 52,
-    minHeight: 58,
-    borderRadius: theme.radii.pill,
-    borderWidth: 2,
-    borderColor: theme.colors.accent,
-    backgroundColor: 'rgba(251, 250, 246, 0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 4,
-    ...theme.shadows.floating,
-  },
-  tabHighlightInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(233, 220, 197, 0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabHighlightDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: theme.colors.accent,
-  },
-  stepBadgeText: {
-    ...theme.textStyles.label,
-    color: theme.colors.accent,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: theme.spacing.lg,
-  },
-  textBlock: {
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  title: {
-    ...theme.textStyles.title,
-    fontSize: 28,
-    lineHeight: 32,
-  },
-  stepBadge: {
-    minWidth: 52,
-    minHeight: 40,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.md,
-  },
-  description: {
-    ...theme.textStyles.body,
-    color: theme.colors.textMuted,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
-  secondaryAction: {
-    minHeight: 52,
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-  },
-  primaryAction: {
-    minHeight: 52,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.text,
-    borderWidth: 1,
-    borderColor: theme.colors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  secondaryActionLabel: {
-    ...theme.textStyles.label,
-    color: theme.colors.text,
-  },
-  primaryActionLabel: {
-    ...theme.textStyles.label,
-    color: theme.colors.surface,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'flex-end',
+      zIndex: 20,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.overlaySoft,
+    },
+    card: {
+      marginHorizontal: theme.spacing.xl,
+      marginBottom: 150,
+      borderColor: theme.colors.borderStrong,
+      backgroundColor: theme.colors.surfaceRaised,
+      gap: theme.spacing.xl,
+    },
+    tabGlow: {
+      position: 'absolute',
+      bottom: 52,
+      minHeight: 58,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.accent,
+    },
+    tabHighlight: {
+      position: 'absolute',
+      bottom: 52,
+      minHeight: 58,
+      borderRadius: theme.radii.pill,
+      borderWidth: 2,
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.tutorialHighlight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 4,
+      ...theme.shadows.floating,
+    },
+    tabHighlightInner: {
+      width: '100%',
+      height: '100%',
+      borderRadius: theme.radii.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.tutorialHighlightBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tabHighlightDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 999,
+      backgroundColor: theme.colors.accent,
+    },
+    stepBadgeText: {
+      ...theme.textStyles.label,
+      color: theme.colors.accent,
+    },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: theme.spacing.lg,
+    },
+    textBlock: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    title: {
+      ...theme.textStyles.title,
+      fontSize: 28,
+      lineHeight: 32,
+    },
+    stepBadge: {
+      minWidth: 52,
+      minHeight: 40,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.md,
+    },
+    description: {
+      ...theme.textStyles.body,
+      color: theme.colors.textMuted,
+    },
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    secondaryAction: {
+      minHeight: 52,
+      borderRadius: theme.radii.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+    },
+    primaryAction: {
+      minHeight: 52,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.text,
+      borderWidth: 1,
+      borderColor: theme.colors.text,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.xl,
+    },
+    secondaryActionLabel: {
+      ...theme.textStyles.label,
+      color: theme.colors.text,
+    },
+    primaryActionLabel: {
+      ...theme.textStyles.label,
+      color: theme.colors.surface,
+    },
+    pressed: {
+      opacity: 0.88,
+    },
+  });
+}

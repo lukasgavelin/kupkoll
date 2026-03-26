@@ -8,7 +8,8 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { fetchInspectionWeather } from '@/lib/weather';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import { Coordinates, HiveTemperament, InspectionWeatherCondition, InspectionWeatherWind, VarroaLevel } from '@/types/domain';
 
 type BooleanKey = 'queenSeen' | 'eggsSeen' | 'openBrood' | 'cappedBrood' | 'honey' | 'pollen' | 'queenCells' | 'swarmSigns' | 'actionNeeded';
@@ -122,7 +123,9 @@ function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTem
 }
 
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
+  const theme = useTheme();
   const { addInspection, apiaries, hives } = useKupkoll();
+  const styles = createStyles(theme);
   const [selectedPresetId, setSelectedPresetId] = useState(inspectionPresets[0].id);
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);
@@ -450,133 +453,135 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: theme.spacing.xxl,
-  },
-  summaryCard: {
-    backgroundColor: theme.colors.surfaceMuted,
-  },
-  summaryTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: theme.spacing.lg,
-  },
-  summaryTextBlock: {
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  summaryTitle: {
-    ...theme.textStyles.title,
-    fontSize: 28,
-    lineHeight: 32,
-  },
-  summaryDescription: {
-    ...theme.textStyles.body,
-    color: theme.colors.textMuted,
-  },
-  input: {
-    minHeight: 56,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-  inputMultiline: {
-    minHeight: 96,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    ...theme.textStyles.body,
-  },
-  stack: {
-    gap: theme.spacing.md,
-  },
-  choiceCard: {
-    minHeight: 96,
-    borderRadius: theme.radii.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
-    gap: theme.spacing.sm,
-  },
-  choiceCardSelected: {
-    backgroundColor: theme.colors.sage,
-    borderColor: theme.colors.sage,
-  },
-  choiceCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  choiceCardTitle: {
-    ...theme.textStyles.heading,
-    flex: 1,
-  },
-  choiceCardTitleSelected: {
-    color: theme.colors.surface,
-  },
-  choiceCardMetaSelected: {
-    color: theme.colors.surface,
-    opacity: 0.84,
-  },
-  choiceCardBodySelected: {
-    color: theme.colors.surface,
-    opacity: 0.9,
-  },
-  presetCard: {
-    minHeight: 112,
-  },
-  optionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
-  },
-  option: {
-    minHeight: 56,
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-  },
-  largeOption: {
-    minHeight: 68,
-    width: '48%',
-    maxWidth: '48%',
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  optionSelected: {
-    backgroundColor: theme.colors.sage,
-    borderColor: theme.colors.sage,
-  },
-  optionLabel: {
-    ...theme.textStyles.bodyStrong,
-    textAlign: 'center',
-    flexShrink: 1,
-  },
-  optionSelectedText: {
-    color: theme.colors.surface,
-  },
-  inlineLabel: {
-    ...theme.textStyles.label,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.md,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrapper: {
+      gap: theme.spacing.xxl,
+    },
+    summaryCard: {
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    summaryTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: theme.spacing.lg,
+    },
+    summaryTextBlock: {
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    summaryTitle: {
+      ...theme.textStyles.title,
+      fontSize: 28,
+      lineHeight: 32,
+    },
+    summaryDescription: {
+      ...theme.textStyles.body,
+      color: theme.colors.textMuted,
+    },
+    input: {
+      minHeight: 56,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+    inputMultiline: {
+      minHeight: 96,
+      borderRadius: theme.radii.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      ...theme.textStyles.body,
+    },
+    stack: {
+      gap: theme.spacing.md,
+    },
+    choiceCard: {
+      minHeight: 96,
+      borderRadius: theme.radii.xl,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    choiceCardSelected: {
+      backgroundColor: theme.colors.sage,
+      borderColor: theme.colors.sage,
+    },
+    choiceCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+    },
+    choiceCardTitle: {
+      ...theme.textStyles.heading,
+      flex: 1,
+    },
+    choiceCardTitleSelected: {
+      color: theme.colors.surface,
+    },
+    choiceCardMetaSelected: {
+      color: theme.colors.surface,
+      opacity: 0.84,
+    },
+    choiceCardBodySelected: {
+      color: theme.colors.surface,
+      opacity: 0.9,
+    },
+    presetCard: {
+      minHeight: 112,
+    },
+    optionGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
+    },
+    option: {
+      minHeight: 56,
+      borderRadius: theme.radii.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    largeOption: {
+      minHeight: 68,
+      width: '48%',
+      maxWidth: '48%',
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    optionSelected: {
+      backgroundColor: theme.colors.sage,
+      borderColor: theme.colors.sage,
+    },
+    optionLabel: {
+      ...theme.textStyles.bodyStrong,
+      textAlign: 'center',
+      flexShrink: 1,
+    },
+    optionSelectedText: {
+      color: theme.colors.surface,
+    },
+    inlineLabel: {
+      ...theme.textStyles.label,
+      color: theme.colors.textMuted,
+      marginTop: theme.spacing.md,
+    },
+  });
+}

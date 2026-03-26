@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 type PrimaryButtonProps = {
   label: string;
@@ -13,6 +15,9 @@ type PrimaryButtonProps = {
 };
 
 export function PrimaryButton({ label, onPress, variant = 'primary', size = 'default', iconName, fullWidth = false }: PrimaryButtonProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   return (
     <Pressable
       onPress={onPress}
@@ -33,50 +38,52 @@ export function PrimaryButton({ label, onPress, variant = 'primary', size = 'def
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    alignSelf: 'flex-start',
-    minHeight: 56,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.text,
-    borderWidth: 1,
-    borderColor: theme.colors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  fullWidth: {
-    alignSelf: 'stretch',
-  },
-  buttonCompact: {
-    minHeight: 44,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  secondary: {
-    backgroundColor: theme.colors.surfaceMuted,
-    borderColor: theme.colors.border,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-    borderColor: theme.colors.border,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  label: {
-    ...theme.textStyles.label,
-    color: theme.colors.surface,
-  },
-  labelCompact: {
-    fontSize: 13,
-    lineHeight: 17,
-  },
-  secondaryLabel: {
-    color: theme.colors.text,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    button: {
+      alignSelf: 'flex-start',
+      minHeight: 56,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.text,
+      borderWidth: 1,
+      borderColor: theme.colors.text,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.xl,
+    },
+    fullWidth: {
+      alignSelf: 'stretch',
+    },
+    buttonCompact: {
+      minHeight: 44,
+      paddingHorizontal: theme.spacing.lg,
+    },
+    secondary: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderColor: theme.colors.border,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      borderColor: theme.colors.border,
+    },
+    pressed: {
+      opacity: 0.88,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    label: {
+      ...theme.textStyles.label,
+      color: theme.colors.surface,
+    },
+    labelCompact: {
+      fontSize: 13,
+      lineHeight: 17,
+    },
+    secondaryLabel: {
+      color: theme.colors.text,
+    },
+  });
+}

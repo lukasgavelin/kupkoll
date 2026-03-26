@@ -30,7 +30,7 @@ Appens huvudflikar har olika ansvar.
 - Bigårdar: samlar platserna där kuporna står och gör det lätt att gå vidare till rätt bigård.
 - Kupor: visar varje kupa med status, senaste genomgång och fortsatt uppföljning.
 - Uppgifter: fungerar som arbetslista och grupperar sådant som är bråttom nu, snart på tur och längre fram.
-- Inställningar: innehåller backup och guidning, inte produktförklaring.
+- Inställningar: innehåller mörkt läge, backup och guidning.
 
 Det här upplägget är valt för att användaren först ska mötas av handling och därefter av bakgrund och sammanhang.
 
@@ -42,6 +42,7 @@ Kupkoll är en Expo- och React Native-app med TypeScript och Expo Router.
 - Navigationen är uppdelad i tabbar för huvudflödet och modala vyer för att lägga till eller redigera bigårdar, kupor och genomgångar.
 - Appens tillstånd ligger i en central context-provider som håller både grunddata och härledda vyer som dashboard, uppgifter och rekommendationer.
 - Data sparas lokalt i AsyncStorage och migreras från tidigare lagringsformat när det behövs.
+- Temat växlar mellan ljust och mörkt läge och användarens val sparas lokalt.
 - Export skapar en JSON-fil med schema-version, metadata och hela användarens sparade innehåll.
 - Aktuell väderdata hämtas i första hand från SMHI och faller tillbaka till Open-Meteo om det behövs.
 
@@ -105,6 +106,7 @@ Exporten innehåller samma datamängd tillsammans med antal objekt, tidsstämpel
 - uppgiftsflik med tydlig arbetsordning
 - regelmotor för härledda rekommendationer och uppgifter
 - JSON-export för backup
+- mörkt läge via Inställningar
 - tester för selektorer, regler, lagring, export, väder och tutorials
 
 ## Starta projektet
@@ -152,6 +154,7 @@ npm test
 
 - Skandinavisk och lågmäld visuell ton.
 - Mjuk naturpalett med hög läsbarhet i dagsljus.
+- Mörkt läge med samma lugna formspråk för kvällsarbete och svagare ljus.
 - Luftig layout med tydlig rytm mellan sektioner och kort.
 - Premiumkänsla genom typografi, rundade ytor och avskalad navigation.
 - Svenska biodlingstermer, säsonger och arbetsmoment i hela gränssnittet.

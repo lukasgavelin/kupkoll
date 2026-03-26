@@ -7,11 +7,14 @@ import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import type { Task } from '@/types/domain';
 
 export default function TasksScreen() {
+  const theme = useTheme();
   const { apiaries, hives, tasks, getHiveById, getApiaryById } = useKupkoll();
+  const styles = createStyles(theme);
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
   const today = new Date();
@@ -118,24 +121,26 @@ export default function TasksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  priorityCard: {
-    borderColor: theme.colors.borderStrong,
-  },
-  summaryFacts: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
-  summaryFact: {
-    ...theme.textStyles.caption,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.surfaceMuted,
-    color: theme.colors.text,
-  },
-  sectionList: {
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    priorityCard: {
+      borderColor: theme.colors.borderStrong,
+    },
+    summaryFacts: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+    },
+    summaryFact: {
+      ...theme.textStyles.caption,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.surfaceMuted,
+      color: theme.colors.text,
+    },
+    sectionList: {
+      gap: theme.spacing.lg,
+    },
+  });
+}
