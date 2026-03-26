@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { QuickInspectionForm } from '@/components/feature/QuickInspectionForm';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 
 export default function NewInspectionScreen() {
@@ -9,14 +9,7 @@ export default function NewInspectionScreen() {
 
   return (
     <Screen>
-      <PageHeader
-        actionLabel="Stäng"
-        actionIconName="close"
-        onActionPress={() => router.back()}
-        eyebrow="Snabb genomgång"
-        title="Spara en snabb koll"
-        description="Välj kupa, markera hur läget känns och spara direkt. Tanken är att det ska gå snabbt ute vid kuporna."
-      />
+      <PrimaryButton label="Stäng" iconName="close" onPress={() => router.back()} variant="secondary" size="compact" />
       <QuickInspectionForm initialHiveId={params.hiveId} />
     </Screen>
   );

@@ -52,7 +52,7 @@ export default function TasksScreen() {
     {
       key: 'now',
       title: 'Bråttom nu',
-      description: 'Sådant som är högprioriterat eller borde göras först.',
+      description: 'Det här är bäst att ta först.',
       items: groupedTasks.now,
     },
     {
@@ -74,12 +74,12 @@ export default function TasksScreen() {
       <SectionHeader
         eyebrow="Uppgifter"
         title="Det som behöver göras"
-        description="Här håller du ihop arbetslistan. Börja överst och arbeta dig nedåt när du vill se vad som är viktigast först."
+        description="Här ser du arbetslistan uppdelad efter hur snart något behöver göras."
       />
       {hasHives ? (
         <AppCard style={styles.priorityCard}>
-          <Text style={theme.textStyles.heading}>Arbetsordning</Text>
-          <Text style={theme.textStyles.body}>Börja med det som är bråttom nu. Fortsätt sedan med sådant som snart behöver göras och lämna resten till planeringen längre fram.</Text>
+          <Text style={theme.textStyles.heading}>Snabb överblick</Text>
+          <Text style={theme.textStyles.body}>Överst ligger det som bör tas först. Längre ner ser du det som kan planeras senare.</Text>
           <View style={styles.summaryFacts}>
             <Text style={styles.summaryFact}>Bråttom nu: {groupedTasks.now.length}</Text>
             <Text style={styles.summaryFact}>Snart: {groupedTasks.soon.length}</Text>
@@ -88,7 +88,7 @@ export default function TasksScreen() {
         </AppCard>
       ) : (
         <EmptyStateCard
-          title={hasApiaries ? 'Lägg till första kupan' : 'Skapa först en bigård'}
+          title={hasApiaries ? 'Lägg till första kupan' : 'Lägg till första bigården'}
           description={
             hasApiaries
               ? 'Uppgifter blir relevanta när det finns kupor att följa upp. Lägg till första kupan för att komma vidare.'
@@ -114,7 +114,7 @@ export default function TasksScreen() {
         ))
       ) : (
         <View style={styles.sectionList}>
-          <EmptyStateCard title="Inga uppgifter ännu" description="När du börjar använda appen mer fylls den här listan med sådant du vill göra eller följa upp." />
+          <EmptyStateCard title="Inga uppgifter ännu" description="När du har lagt till kupor och sparat genomgångar samlas sådant att göra och följa upp här." />
         </View>
       )}
     </Screen>

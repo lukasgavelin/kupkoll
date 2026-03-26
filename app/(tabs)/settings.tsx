@@ -117,13 +117,13 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
         <AppCard>
           <View style={styles.backupIntro}>
             <Text style={theme.textStyles.heading}>Backup</Text>
-            <Text style={theme.textStyles.body}>Spara en kopia av det du har lagt in i appen, så att du har informationen kvar även utanför telefonen eller webben.</Text>
+            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar och manuella uppgifter, så att informationen finns kvar även utanför telefonen eller webben.</Text>
           </View>
           <View style={styles.exportFacts}>
             <Text style={styles.exportFact}>Bigårdar: {apiaries.length}</Text>
             <Text style={styles.exportFact}>Kupor: {hives.length}</Text>
             <Text style={styles.exportFact}>Genomgångar: {inspections.length}</Text>
-            <Text style={styles.exportFact}>Uppgifter: {manualTasks.length}</Text>
+            <Text style={styles.exportFact}>Manuella uppgifter: {manualTasks.length}</Text>
           </View>
           <View style={styles.exportAction}>
             <PrimaryButton
@@ -135,7 +135,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               }}
             />
             <View style={styles.exportMeta}>
-              <Text style={theme.textStyles.caption}>Exporten skapas som en JSON-fil och fungerar bäst som säkerhetskopia av det du har sparat.</Text>
+              <Text style={theme.textStyles.caption}>Exporten skapas som en JSON-fil och fungerar bäst som säkerhetskopia av det du själv har sparat i appen.</Text>
               {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
             </View>
           </View>

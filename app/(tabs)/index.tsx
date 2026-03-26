@@ -41,8 +41,10 @@ export default function HomeScreen() {
       ? 'Börja med det som ligger överst i arbetslistan. Därefter ser du vad som nyligen hänt och vad säsongen talar för just nu.'
       : nextRecommendation
         ? 'Du har inget direkt i arbetslistan just nu, men här ser du vad som är klokt att hålla koll på vid nästa besök.'
-        : 'Läget ser lugnt ut just nu. Här under kan du snabbt gå vidare till senaste genomgångar och säsongsläget.'
-    : 'Börja med att lägga till en bigård eller en kupa. Sedan fylls Hem med nästa steg, senaste noteringar och säsongsläge.';
+        : 'Läget ser lugnt ut just nu. Här under kan du gå vidare till senaste genomgångar och säsongsläget.'
+    : hasApiaries
+      ? 'Börja med att lägga till din första kupa. Sedan fylls Hem med nästa steg, senaste noteringar och säsongsläge.'
+      : 'Börja med att lägga till din första bigård. Därefter kan du lägga till kupor och få nästa steg här på Hem.';
 
   useEffect(() => {
     let cancelled = false;
@@ -103,7 +105,7 @@ export default function HomeScreen() {
         {quickHive ? <PrimaryButton label="Logga genomgång" onPress={() => router.push(`/inspections/new?hiveId=${quickHive.id}`)} /> : <PrimaryButton label={hasApiaries ? 'Lägg till första kupan' : 'Lägg till första bigården'} onPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />}
       </AppCard>
 
-      <SectionHeader eyebrow="I dag" title="Närmast att göra" description="Börja här om du vill få en snabb arbetsordning för det som ligger närmast i tiden." />
+      <SectionHeader eyebrow="I dag" title="Närmast att göra" description="Börja här om du vill se vad som ligger närmast i tiden." />
       <View style={styles.sectionList}>
         {tasks.length ? (
           tasks.slice(0, 3).map((task) => (
@@ -123,7 +125,7 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <SectionHeader eyebrow="Senast" title="Senaste genomgångar" description="Använd den här delen för att snabbt minnas vad du såg vid senaste besöken." />
+      <SectionHeader eyebrow="Senast" title="Senaste genomgångar" description="Använd den här delen för att minnas vad du såg vid senaste besöken." />
       <View style={styles.sectionList}>
         {dashboard.latestInspections.length ? (
           dashboard.latestInspections.map((inspection) => <InspectionSnapshot key={inspection.id} inspection={inspection} />)
@@ -135,7 +137,7 @@ export default function HomeScreen() {
       <SectionHeader eyebrow="Säsong" title="Säsongsläge just nu" description="Här får du bakgrunden till varför vissa saker är viktigare just nu än andra." />
       <SeasonStatusCard status={seasonStatus} />
 
-      <SectionHeader title="Översikt" description="En snabb sammanfattning av läget när du vill orientera dig i hela biodlingen." />
+      <SectionHeader title="Översikt" description="En sammanfattning av läget när du vill orientera dig i hela biodlingen." />
       <View style={styles.grid}>
         <StatCard label="Kupor" value={String(dashboard.hiveCount)} />
         <StatCard label="Bigårdar" value={String(dashboard.apiaryCount)} />

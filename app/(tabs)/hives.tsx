@@ -25,7 +25,7 @@ export default function HivesScreen() {
         {hives.length ? (
           hives.map((hive) => <HiveCard key={hive.id} apiaryName={getApiaryById(hive.apiaryId)?.name ?? 'Bigård'} hive={hive} />)
         ) : (
-          <EmptyStateCard title={hasApiaries ? 'Inga kupor ännu' : 'Skapa först en bigård'} description={hasApiaries ? 'Lägg till din första kupa så får du en tydlig överblick över läge, anteckningar och senaste genomgång.' : 'Varje kupa behöver höra till en bigård. Börja därför med att lägga till platsen där kuporna står.'} actionLabel={hasApiaries ? 'Skapa första kupan' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
+          <EmptyStateCard title={hasApiaries ? 'Inga kupor ännu' : 'Lägg till första bigården'} description={hasApiaries ? 'Lägg till din första kupa så får du en tydlig överblick över läge, anteckningar och senaste genomgång.' : 'Varje kupa behöver höra till en bigård. Börja därför med att lägga till platsen där kuporna står.'} actionLabel={hasApiaries ? 'Lägg till första kupan' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
         )}
       </View>
     </Screen>

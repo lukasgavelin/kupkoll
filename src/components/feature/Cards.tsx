@@ -137,8 +137,8 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
       <Text style={theme.textStyles.heading}>{formatDateTimeLabel(inspection.performedAt)}</Text>
       <View style={styles.inlineWrap}>
         <StatusBadge label={inspection.queenSeen ? 'Drottning sedd' : 'Drottning ej sedd'} tone={inspection.queenSeen ? 'calm' : 'warning'} />
-        <StatusBadge label={inspection.eggsSeen ? 'Ägg sedda' : 'Inga ägg'} tone={inspection.eggsSeen ? 'calm' : 'warning'} />
-        <StatusBadge label={inspection.actionNeeded ? 'Behöver följas upp' : 'Ser lugnt ut'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
+        <StatusBadge label={inspection.eggsSeen ? 'Ägg sedda' : 'Ägg ej sedda'} tone={inspection.eggsSeen ? 'calm' : 'warning'} />
+        <StatusBadge label={inspection.actionNeeded ? 'Behöver följas upp' : 'Ingen uppföljning nu'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
         <StatusBadge label={`Varroa: ${inspection.varroaLevel}`} tone={varroaTone} />
       </View>
       {weatherSummary ? <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text> : null}

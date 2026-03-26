@@ -33,7 +33,7 @@ const inspectionPresets: InspectionPreset[] = [
     id: 'stable',
     label: 'Stabilt läge',
     description: 'Bra yngelbild, gott om foder och inget akut att följa upp.',
-    defaultNote: 'Snabb kontroll: kupan känns stabil och i balans.',
+    defaultNote: 'Genomgång: kupan känns stabil och i balans.',
     temperament: 'Lugnt',
     varroaLevel: 'Ej kontrollerad',
     values: {
@@ -52,7 +52,7 @@ const inspectionPresets: InspectionPreset[] = [
     id: 'watch',
     label: 'Följ upp snart',
     description: 'Något avviker, men läget går att bevaka till nästa kontroll.',
-    defaultNote: 'Snabb kontroll: läget är okej men bör följas upp snart.',
+    defaultNote: 'Genomgång: läget är okej men bör följas upp snart.',
     temperament: 'Vaksamt',
     varroaLevel: 'Förhöjd',
     values: {
@@ -71,7 +71,7 @@ const inspectionPresets: InspectionPreset[] = [
     id: 'action',
     label: 'Åtgärd krävs',
     description: 'Tecken på problem eller ingrepp som inte bör vänta.',
-    defaultNote: 'Snabb kontroll: avvikelse upptäckt och åtgärd behövs.',
+    defaultNote: 'Genomgång: avvikelse upptäckt och åtgärd behövs.',
     temperament: 'Hetsigt',
     varroaLevel: 'Hög',
     values: {
@@ -93,7 +93,7 @@ const quickToggleLabels: Array<{ key: Extract<BooleanKey, 'queenSeen' | 'eggsSee
   { key: 'eggsSeen', label: 'Ägg sedda' },
   { key: 'queenCells', label: 'Drottningceller' },
   { key: 'swarmSigns', label: 'Svärmtecken' },
-  { key: 'actionNeeded', label: 'Följ upp direkt' },
+  { key: 'actionNeeded', label: 'Behöver följas upp' },
 ];
 
 const temperaments: HiveTemperament[] = ['Lugnt', 'Vaksamt', 'Hetsigt'];
@@ -264,7 +264,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     router.replace(`/hives/${selectedHiveId}`);
   }
 
-  const summaryLabel = activePreset ? activePreset.label : 'Anpassad logg';
+  const summaryLabel = activePreset ? activePreset.label : 'Egen bedömning';
   const hasApiaries = apiaries.length > 0;
   const weatherSummary = createWeatherSummary({
     condition: weatherCondition,
@@ -286,12 +286,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   if (!hives.length) {
     return (
       <View style={styles.wrapper}>
-        <SectionHeader
-          title="Snabb genomgång"
-          description="Den här vyn blir tillgänglig så fort du har minst en kupa att välja mellan."
-        />
+        <SectionHeader title="Genomgång" description="Den här vyn blir tillgänglig så fort du har minst en kupa att välja mellan." />
         <EmptyStateCard
-          title={hasApiaries ? 'Lägg till första kupan först' : 'Skapa först en bigård'}
+          title={hasApiaries ? 'Lägg till första kupan först' : 'Lägg till första bigården'}
           description={
             hasApiaries
                 ? 'Det finns ännu inga kupor att spara en genomgång för. Lägg till din första kupa och kom sedan tillbaka hit.'
@@ -306,19 +303,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   return (
     <View style={styles.wrapper}>
-      <SectionHeader title="Snabb genomgång" description="Välj kupa, markera hur läget verkar och spara. Du behöver bara ändra det som sticker ut." />
-
-      <AppCard style={styles.summaryCard}>
-        <View style={styles.summaryTopRow}>
-          <View style={styles.summaryTextBlock}>
-            <Text style={theme.textStyles.overline}>Det här sparas</Text>
-            <Text style={styles.summaryTitle}>{selectedHive ? selectedHive.name : 'Välj kupa först'}</Text>
-            <Text style={styles.summaryDescription}>{summaryLabel} • {temperament} • Varroa {varroaLevel}</Text>
-            <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text>
-          </View>
-        </View>
-        <Text style={theme.textStyles.caption}>Appen lägger till en kort notering automatiskt, så att du kan spara snabbt utan att skriva mer än nödvändigt.</Text>
-      </AppCard>
+      <SectionHeader title="Genomgång" description="Välj kupa, markera hur läget verkar och spara. Du behöver bara ändra det som sticker ut." />
 
       <AppCard>
         <Text style={theme.textStyles.heading}>1. Välj kupa</Text>
@@ -358,7 +343,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>3. Justera om något sticker ut</Text>
-        <Text style={theme.textStyles.caption}>Om snabbvalet redan stämmer kan du gå vidare direkt. Här ändrar du bara det som inte passar.</Text>
+        <Text style={theme.textStyles.caption}>Om förvalet redan stämmer kan du gå vidare direkt. Här ändrar du bara det som inte passar.</Text>
         <View style={styles.optionGrid}>
           {quickToggleLabels.map((item) => {
             const selected = values[item.key];
@@ -397,7 +382,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
         <Text style={theme.textStyles.heading}>4. Väder vid genomgången</Text>
         <Text style={theme.textStyles.caption}>Valfritt, men bra om du senare vill minnas hur vädret kan ha påverkat bina.</Text>
         <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
-        {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : 'Hämta om väder'} onPress={() => {
+        {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : 'Uppdatera väder'} onPress={() => {
           if (!selectedApiary.coordinates || autoWeatherStatus === 'loading') {
             return;
           }
@@ -446,6 +431,18 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           textAlignVertical="top"
           value={weatherNote}
         />
+      </AppCard>
+
+      <AppCard style={styles.summaryCard}>
+        <View style={styles.summaryTopRow}>
+          <View style={styles.summaryTextBlock}>
+            <Text style={theme.textStyles.overline}>Sammanfattning</Text>
+            <Text style={styles.summaryTitle}>{selectedHive ? selectedHive.name : 'Välj kupa först'}</Text>
+            <Text style={styles.summaryDescription}>{summaryLabel} • {temperament} • Varroa {varroaLevel}</Text>
+            <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text>
+          </View>
+        </View>
+        <Text style={theme.textStyles.caption}>Appen lägger till en kort notering automatiskt, så att du kan spara utan att skriva mer än nödvändigt.</Text>
       </AppCard>
 
       <PrimaryButton fullWidth label={selectedHive ? `Spara för ${selectedHive.name}` : 'Välj kupa för att spara'} onPress={saveInspection} />

@@ -24,7 +24,7 @@ export default function ApiariesScreen() {
         {apiaries.length ? (
           apiaries.map((apiary) => <ApiaryCard key={apiary.id} apiary={apiary} hiveCount={getHivesByApiary(apiary.id).length} />)
         ) : (
-          <EmptyStateCard title="Inga bigårdar ännu" description="Lägg till din första bigård för att börja samla kupor, anteckningar och genomgångar på rätt plats." actionLabel="Skapa första bigården" onActionPress={() => router.push('/apiaries/new')} />
+          <EmptyStateCard title="Inga bigårdar ännu" description="Lägg till din första bigård för att börja samla kupor, anteckningar och genomgångar på rätt plats." actionLabel="Lägg till första bigården" onActionPress={() => router.push('/apiaries/new')} />
         )}
       </View>
     </Screen>

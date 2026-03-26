@@ -76,7 +76,7 @@ export default function NewHiveScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny kupa"
         title="Lägg till kupa"
-        description={selectedApiaryId ? `Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Du kan fylla på med fler noteringar senare.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
+        description={selectedApiaryId ? `Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Du kan ändra uppgifterna senare om du vill.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
       />
 
       <AppCard>

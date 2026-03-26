@@ -70,7 +70,7 @@ export default function HiveDetailScreen() {
           <MetaItem label="Kupsystem" value={hive.boxSystem} />
         </View>
         <Text style={theme.textStyles.body}>{hive.notes}</Text>
-        <PrimaryButton label="Ny snabb genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hiveId}`)} />
+        <PrimaryButton label="Ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hiveId}`)} />
         <PrimaryButton label="Redigera kupa" onPress={() => router.push(`/hives/${hiveId}/edit`)} variant="secondary" />
         <PrimaryButton label="Ta bort kupa" onPress={confirmDelete} variant="ghost" />
       </AppCard>
