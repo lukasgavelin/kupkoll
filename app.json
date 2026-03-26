@@ -33,6 +33,13 @@
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a45caa0d-ceea-4fd0-a894-c6941000f0fa"
+      }
+    },
+    "owner": "mrwindle"
   }
 }

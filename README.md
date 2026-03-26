@@ -139,6 +139,14 @@ npm test
 
 Projektet har en första EAS-konfiguration för Android-publicering.
 
+För att skapa en testbar APK direkt för Android-enheter:
+
+```bash
+npx eas build --platform android --profile apk
+```
+
+Det skapar en installerbar APK för intern testning. För Google Play-release används i stället produktionsprofilen som bygger en release för distribution.
+
 ```bash
 npx eas build --platform android --profile production
 ```
