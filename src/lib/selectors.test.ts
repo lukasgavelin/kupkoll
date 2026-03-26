@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getApiarySeasonLabel, getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
+import { getApiarySeasonLabel, getRecommendedInspectionCadenceDays, getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
 
 describe('getSeasonLabel', () => {
   it('maps months to biodling seasons', () => {
@@ -23,6 +23,7 @@ describe('getSeasonStatus', () => {
       phaseLabel: 'marsarbete',
       regionLabel: 'Sverige',
     });
+    expect(result.timingLabel).toContain('mars till maj');
     expect(result.summary).toContain('förrädiskt');
     expect(result.focusItems).toContain('gör vårundersökning om vädret tillåter');
   });
@@ -36,6 +37,22 @@ describe('getSeasonStatus', () => {
       phaseLabel: 'högsommar',
     });
     expect(result.focusItems).toContain('skatta och slunga första honungen');
+  });
+
+  it('uses current weather as a signal for slightly earlier seasonal timing', () => {
+    const result = getSeasonStatus(
+      new Date('2026-04-24T12:00:00.000Z'),
+      [],
+      {
+        condition: 'Soligt',
+        wind: 'Lugnt',
+        temperatureC: 18.2,
+        provider: 'SMHI',
+      },
+    );
+
+    expect(result.season).toBe('Svärmperiod');
+    expect(result.weatherSignalLabel).toContain('före normal timing');
   });
 
   it('adapts season status to northern apiaries where spring comes later', () => {
@@ -54,6 +71,7 @@ describe('getSeasonStatus', () => {
 
     expect(result.regionLabel).toBe('Norra Sverige');
     expect(result.season).toBe('Vintertillsyn');
+    expect(result.timingLabel).toContain('januari till mars');
     expect(result.inspectionCadenceDays).toBe(30);
   });
 });
@@ -72,5 +90,28 @@ describe('getApiarySeasonLabel', () => {
     );
 
     expect(result).toBe('Svärmperiod');
+  });
+
+  it('keeps northern apiaries one step later in spring buildup', () => {
+    const result = getApiarySeasonLabel(
+      {
+        id: 'apiary-1',
+        name: 'Nordgården',
+        location: 'Luleå',
+        notes: '',
+        coordinates: { latitude: 65.5848, longitude: 22.1547 },
+      },
+      new Date('2026-05-15T12:00:00.000Z'),
+    );
+
+    expect(result).toBe('Vårutveckling');
+  });
+});
+
+describe('getRecommendedInspectionCadenceDays', () => {
+  it('uses tighter cadence in swarm season and slower cadence in northern spring', () => {
+    expect(getRecommendedInspectionCadenceDays('Svärmperiod', 'Mellansverige')).toBe(7);
+    expect(getRecommendedInspectionCadenceDays('Svärmperiod', 'Norra Sverige')).toBe(10);
+    expect(getRecommendedInspectionCadenceDays('Vårutveckling', 'Norra Sverige')).toBe(14);
   });
 });

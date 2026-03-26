@@ -12,6 +12,8 @@ export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
         <Text style={styles.regionLabel}>{status.locationLabel ? `${status.regionLabel} · ${status.locationLabel}` : status.regionLabel}</Text>
         <Text style={styles.title}>{status.monthLabel} · {status.phaseLabel}</Text>
         <Text style={styles.summary}>{status.summary}</Text>
+        <Text style={styles.timingText}>{status.timingLabel}</Text>
+        {status.weatherSignalLabel ? <Text style={styles.weatherSignal}>{status.weatherSignalLabel}</Text> : null}
       </View>
 
       <View style={styles.focusBlock}>
@@ -51,6 +53,16 @@ const styles = StyleSheet.create({
   summary: {
     ...theme.textStyles.body,
     color: theme.colors.textMuted,
+    maxWidth: 680,
+  },
+  timingText: {
+    ...theme.textStyles.caption,
+    color: theme.colors.textMuted,
+    maxWidth: 680,
+  },
+  weatherSignal: {
+    ...theme.textStyles.caption,
+    color: theme.colors.text,
     maxWidth: 680,
   },
   focusBlock: {

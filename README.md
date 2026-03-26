@@ -1,48 +1,120 @@
 # Kupkoll
 
-Kupkoll är en svensk Expo-app för biodlare som vill få struktur i vardagsarbetet ute i bigården och samtidigt få säsongsanpassat beslutsstöd. Appen är byggd för att vara snabb i fält, tydlig på mobilen och förankrad i svensk biodlingspraxis.
+Kupkoll är en svensk Expo-app för biodlare som vill få ordning på arbetet ute i bigården utan att behöva växla mellan anteckningar, minneslistor och separata väderappar. Appen är byggd för att vara snabb i fält, tydlig på mobilen och anpassad till svenska säsonger och arbetsmönster.
 
-Målet är att kombinera tre saker i samma arbetsyta: enkel journalföring, bra överblick över bigårdar och kupor, samt konkreta rekommendationer om vad som bör följas upp härnäst.
+Syftet är inte bara att lagra data. Kupkoll ska hjälpa användaren att förstå tre saker samtidigt:
 
-Appen startar utan demo- eller mockdata för att motsvara en ren nyinstallation.
+- vad som bör göras nu
+- vad som bör följas upp snart
+- vad som är normalt för säsongen där bigården står
 
-## Vad appen gör nu
+Appen startar utan förifylld data och fungerar som en lokal personlig biodlingslogg utan krav på konto.
 
-- Ger en hemöversikt med säsongsläge, antal kupor och bigårdar, kommande arbetsmoment, signaler att följa upp och senaste genomgångar.
-- Visar ett säsongskort högst upp på startsidan med svensk säsongsfas, fokus just nu och råd som anpassas efter tid på året.
-- Anpassar säsongsstöd efter var bigården ligger i Sverige genom apiary-plats, koordinater och enkel regional logik.
-- Låter dig skapa och redigera bigårdar med namn, platsbeskrivning, valfri GPS-position och snabb länk till karta.
-- Låter dig registrera kupor med samhällsläge, styrka, drottningstatus, kupsystem och koppling till rätt bigård.
-- Ger ett snabbt kupgenomgångsflöde på svenska för mobil användning ute i fält.
-- Hämtar aktuellt väder automatiskt från bigårdens koordinater och låter dig justera eller komplettera väderläge, vind, temperatur och vädernotis per genomgång.
-- Bygger rekommendationer och uppgifter utifrån svensk säsong, senaste genomgångar och historik i kupan, till exempel drottningproblem över tid, varroatrend, svärmtryck och uteblivna kontroller.
-- Prioriterar rekommendationer i tydliga grupper som akuta signaler, säsongsråd, påminnelser och lägesbild.
-- Sparar data lokalt så att appen fungerar som en ren personlig biodlingslogg utan krav på konto.
+## Vad appen är till för
 
-## Produktidé
+Kupkoll kombinerar journalföring, överblick och vägledning i samma arbetsyta.
 
-Kupkoll är tänkt som ett digitalt stöd för svensk biodling snarare än bara ett register. I stället för att enbart visa vad användaren matat in ska appen hjälpa biodlaren att se vad som kräver uppmärksamhet nu, vad som är normalt för säsongen och vilka mönster i kupans historik som bör tas på allvar.
+- Bigårdar samlar plats, läge och eventuella koordinater.
+- Kupor samlar status för varje samhälle.
+- Genomgångar sparar observationer ute i fält.
+- Uppgifter håller ihop arbetslistan.
+- Hem prioriterar vad användaren bör börja med.
 
-Beslutsstödet lutar mot svensk praxis och säsongsråd från svenska källor, med särskilt fokus på hur arbetsbehovet skiftar mellan vårutveckling, dragperiod, svärmning, skattning och invintring.
+Det innebär att appen inte bara visar det som redan har matats in, utan också försöker göra informationen användbar direkt i nästa beslut.
 
-## Funktioner i MVP:n
+## Flöde i appen
 
-- Startsida med säsongsläge, nyckeltal, prioriterade rekommendationer och kommande uppgifter.
-- Bigårdsvyer med platsinformation, koordinater och kartöppning.
-- Kupvyer med status, historik och rekommendationer för varje samhälle.
-- Snabb registrering av genomgångar med fält anpassade för biodlingsarbete.
-- Automatisk och manuellt justerbar väderloggning per genomgång för bättre fältkontext i historiken.
-- Regelmotor för att härleda uppgifter och rekommendationer från säsong, inspektionshistorik och kupstatus.
-- Förstastart utan förifylld data.
+Appens huvudflikar har olika ansvar.
+
+- Hem: visar nästa steg, närmaste uppgifter, sådant att hålla ögonen på, senaste genomgångar, säsongsläge och en kompakt översikt.
+- Bigårdar: samlar platserna där kuporna står och gör det lätt att gå vidare till rätt bigård.
+- Kupor: visar varje kupa med status, senaste genomgång och fortsatt uppföljning.
+- Uppgifter: fungerar som arbetslista och grupperar sådant som är bråttom nu, snart på tur och längre fram.
+- Inställningar: innehåller backup och guidning, inte produktförklaring.
+
+Det här upplägget är valt för att användaren först ska mötas av handling och därefter av bakgrund och sammanhang.
+
+## Hur appen är byggd
+
+Kupkoll är en Expo- och React Native-app med TypeScript och Expo Router.
+
+- Root layout laddar typsnitt, läser lokalt sparad data och startar appen först när det finns ett initialt state.
+- Navigationen är uppdelad i tabbar för huvudflödet och modala vyer för att lägga till eller redigera bigårdar, kupor och genomgångar.
+- Appens tillstånd ligger i en central context-provider som håller både grunddata och härledda vyer som dashboard, uppgifter och rekommendationer.
+- Data sparas lokalt i AsyncStorage och migreras från tidigare lagringsformat när det behövs.
+- Export skapar en JSON-fil med schema-version, metadata och hela användarens sparade innehåll.
+- Aktuell väderdata hämtas i första hand från SMHI och faller tillbaka till Open-Meteo om det behövs.
+
+Det finns ingen backend och ingen inloggning i nuvarande MVP.
+
+## Regler och härledd logik
+
+En viktig del av Kupkoll är att rekommendationer och arbetsuppgifter inte skrivs in för hand i första hand, utan härleds från det användaren registrerar.
+
+Regelmotorn väger samman flera signaler:
+
+- senaste genomgången för kupan
+- historik från tidigare genomgångar
+- kupans styrka och status
+- säsong för bigårdens geografiska läge
+- rekommenderad genomgångstakt för aktuell period
+- väderförhållanden vid genomgången
+
+Exempel på regler som finns i appen just nu:
+
+- återkommande utebliven drottningobservation ger varning och uppföljningsuppgift
+- förhöjt eller högt varroatryck ger rekommendation och prioriterad åtgärd
+- stigande varroatrend över flera genomgångar fångas upp
+- svärmrisk under svärmperiod lyfts bara när förhållandena faktiskt varit tillräckligt bra för en rättvis bedömning
+- kyligt, blåsigt eller regnigt väder vid genomgång kan skapa en påminnelse om att följa upp i bättre flygväder
+- för lång tid sedan senaste genomgång skapar påminnelse utifrån säsong och region
+
+Rekommendationer grupperas i fyra typer: akuta signaler, säsongsråd, påminnelser och lägesbild.
+
+## Säsongslogik
+
+Säsongsstödet bygger på appens egen modell för svensk biodling, inte på fasta kalenderdatum rakt av.
+
+- Sverige delas upp i södra, mellersta och norra Sverige.
+- Varje region har en egen månadsmatris för hur säsongen normalt förskjuts.
+- Varje säsongsfas har egen sammanfattning, fokuslista och rekommenderad kontrolltakt.
+- Aktuell vädersignal kan skjuta tolkningen något framåt eller bakåt när utvecklingen går tidigare eller senare än normalt.
+
+Det gör att samma datum kan tolkas olika beroende på var bigården ligger och hur vädret faktiskt ser ut.
+
+## Data som sparas
+
+Kupkoll sparar följande lokalt på enheten eller i webbläsaren:
+
+- bigårdar
+- kupor
+- genomgångar
+- manuella uppgifter
+
+Exporten innehåller samma datamängd tillsammans med antal objekt, tidsstämpel och schema-version.
+
+## Funktioner i nuvarande MVP
+
+- lokal lagring utan konto
+- förstastart utan förifylld data
+- bigårdar med plats, anteckningar, koordinater och kartlänk
+- kupor med status, drottningläge, styrka, temperament och kupsystem
+- snabb registrering av genomgångar på svenska
+- automatisk och manuellt justerbar väderloggning vid genomgång
+- hemskärm som prioriterar nästa steg före bakgrundsinformation
+- uppgiftsflik med tydlig arbetsordning
+- regelmotor för härledda rekommendationer och uppgifter
+- JSON-export för backup
+- tester för selektorer, regler, lagring, export, väder och tutorials
 
 ## Starta projektet
 
 ```bash
 npm install
-npm run start
+npm run web
 ```
 
-Öppna sedan appen i Expo Go, emulator eller webben beroende på din miljö.
+För andra mål används vanliga Expo-skript enligt nedan.
 
 ## Vanliga kommandon
 
@@ -67,6 +139,15 @@ npm test
 - @expo-google-fonts/manrope
 - @expo-google-fonts/newsreader
 
+## Projektstruktur i korthet
+
+- app/: skärmar och navigation med Expo Router
+- src/components/: återanvändbara UI-komponenter och funktionsspecifika kort/formulär
+- src/store/: central app-state via context
+- src/lib/: selektorer, regelmotor, väder, export och lagring
+- src/data/: säsongsmodell och regional timing
+- src/types/: domäntyper för bigårdar, kupor, genomgångar, uppgifter och rekommendationer
+
 ## Designriktning
 
 - Skandinavisk och lågmäld visuell ton.
@@ -77,7 +158,7 @@ npm test
 
 ## Nästa steg
 
-- Offline-läge och framtida synk mellan enheter.
-- Automatisk väderhämtning kopplad till plats, drag och blomningsläge.
-- Export och import av biodlingsdata.
-- Fler beslutsstöd kopplade till svensk säsong och regionala förutsättningar.
+- import av exporterad data
+- fler regler för historiska mönster och uppföljning över tid
+- tydligare stöd för planerade säsongsinsatser per region
+- eventuell framtida synk mellan enheter

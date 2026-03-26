@@ -45,7 +45,7 @@ export default function NewApiaryScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny bigård"
         title="Lägg till bigård"
-        description="Börja med platsen där kuporna står. Sedan kan du lägga till de kupor som hör hit."
+        description="Börja med platsen där kuporna står. Om du också sparar positionen kan appen ge bättre väderstöd och mer träffsäkra råd för kuporna här."
       />
 
       <AppCard>

@@ -161,6 +161,24 @@ describe('buildDerivedSignals', () => {
     expect(result.tasks.map((item) => item.title)).toContain('Gör förebyggande svärmkontroll');
   });
 
+  it('adds a weather-sensitive follow-up when spring inspection happened in poor fly weather', () => {
+    vi.setSystemTime(new Date('2026-04-18T12:00:00.000Z'));
+
+    const hive = createHive({ strength: 'Medel' });
+    const inspection = createInspection({
+      performedAt: '2026-04-18T10:00:00.000Z',
+      weather: {
+        condition: 'Regn',
+        wind: 'Blåsigt',
+        temperatureC: 7,
+      },
+    });
+    const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
+
+    expect(result.recommendations.map((item) => item.title)).toContain('Följ upp i bättre flygväder');
+    expect(result.tasks.map((item) => item.title)).toContain('Planera väderanpassad uppföljning');
+  });
+
   it('reminds about passive hives when inspection cadence is exceeded for the season', () => {
     vi.setSystemTime(new Date('2026-05-22T12:00:00.000Z'));
 

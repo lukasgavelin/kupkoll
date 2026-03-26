@@ -60,7 +60,7 @@ export default function EditApiaryScreen() {
         onActionPress={() => router.back()}
         eyebrow="Redigera bigård"
         title="Ändra bigård"
-        description="Justera namn, plats och egna anteckningar för den här bigården."
+        description="Justera namn, plats och egna anteckningar. En sparad position gör att appen kan ge bättre väderstöd och mer träffsäkra råd för kuporna här."
       />
 
       <AppCard>

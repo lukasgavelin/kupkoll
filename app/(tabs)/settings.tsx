@@ -64,17 +64,13 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
     <Screen>
       <SectionHeader
         eyebrow="Inställningar"
-        title="Inställningar och hjälp"
-        description="Här kan du ta backup på din information och få en snabb överblick över vad appen hjälper dig med."
+        title="Backup och guidning"
+        description="Här hittar du det som hjälper dig att hantera appen: spara en backup och visa guidningen igen om du vill."
       />
       <View style={{ gap: theme.spacing.lg }}>
         <AppCard>
-          <Text style={theme.textStyles.heading}>Det här kan du göra</Text>
-          <Text style={theme.textStyles.body}>Samla bigårdar och kupor, spara snabba genomgångar och få hjälp att minnas vad som kan vara bra att följa upp.</Text>
-        </AppCard>
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Dataexport</Text>
-          <Text style={theme.textStyles.body}>Skapa en backup av det du har lagt in i appen, så att du har informationen sparad även utanför telefonen eller webben.</Text>
+          <Text style={theme.textStyles.heading}>Backup</Text>
+          <Text style={theme.textStyles.body}>Spara en kopia av det du har lagt in i appen, så att du har informationen kvar även utanför telefonen eller webben.</Text>
           <View style={styles.exportFacts}>
             <Text style={styles.exportFact}>Bigårdar: {apiaries.length}</Text>
             <Text style={styles.exportFact}>Kupor: {hives.length}</Text>
@@ -89,29 +85,12 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               void handleExport();
             }}
           />
+          <Text style={theme.textStyles.caption}>Exporten skapas som en JSON-fil och fungerar bäst som säkerhetskopia av det du har sparat.</Text>
           {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
         </AppCard>
         <AppCard>
-          <Text style={theme.textStyles.heading}>Mer hjälp längre fram</Text>
-          <Text style={theme.textStyles.body}>Appen är byggd för att kunna växa med mer stöd längre fram, till exempel fler väderfunktioner, import och fler sätt att arbeta med kupor.</Text>
-        </AppCard>
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Om exportfilen</Text>
-          <Text style={theme.textStyles.body}>Exporten skapas som en fil med allt du har sparat i appen. Den passar bäst som säkerhetskopia och för framtida import.</Text>
-          <View style={styles.infoList}>
-            <Text style={styles.infoItem}>1. Tryck på Exportera som JSON.</Text>
-            <Text style={styles.infoItem}>2. Spara filen där du lätt hittar den igen, till exempel i Filer, Drive eller mejl.</Text>
-            <Text style={styles.infoItem}>3. Behåll filen som backup om du vill känna dig trygg med att informationen finns kvar.</Text>
-            <Text style={styles.infoItem}>4. Du behöver normalt inte öppna filen, men det går om du vill läsa innehållet.</Text>
-          </View>
-        </AppCard>
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Tänkt för enkel användning</Text>
-          <Text style={theme.textStyles.body}>Gränssnittet är gjort för att vara lätt att läsa ute vid kuporna, med tydliga knappar och enkel svenska.</Text>
-        </AppCard>
-        <AppCard>
           <Text style={theme.textStyles.heading}>Guidning</Text>
-          <Text style={theme.textStyles.body}>Visa den korta guidningen igen om du vill få en påminnelse om vad varje flik används till.</Text>
+          <Text style={theme.textStyles.body}>Visa den korta guidningen igen om du vill få en påminnelse om hur flikarna är tänkta att användas.</Text>
           <PrimaryButton
             fullWidth
             label="Visa flikguide igen"
@@ -139,12 +118,5 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.pill,
     backgroundColor: theme.colors.surfaceMuted,
     color: theme.colors.text,
-  },
-  infoList: {
-    gap: theme.spacing.sm,
-  },
-  infoItem: {
-    ...theme.textStyles.body,
-    color: theme.colors.textMuted,
   },
 });

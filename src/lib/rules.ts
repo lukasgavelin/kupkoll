@@ -118,6 +118,26 @@ function getVarroaDueInDays(inspection: Inspection) {
   return inspection.varroaLevel === 'Hög' ? 1 : 4;
 }
 
+function hasPoorInspectionWeather(inspection: Inspection) {
+  const temperature = inspection.weather?.temperatureC;
+
+  return (
+    (temperature !== undefined && temperature < 12) ||
+    inspection.weather?.wind === 'Blåsigt' ||
+    inspection.weather?.condition === 'Regn'
+  );
+}
+
+function hasGoodInspectionWeather(inspection: Inspection) {
+  const temperature = inspection.weather?.temperatureC;
+
+  if (temperature === undefined) {
+    return true;
+  }
+
+  return temperature >= 14 && inspection.weather?.wind !== 'Blåsigt' && inspection.weather?.condition !== 'Regn';
+}
+
 const decisionRules: DecisionRule[] = [
   {
     id: 'queen-recovered',
@@ -239,7 +259,13 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'seasonal-swarm-risk',
-    shouldApply: ({ season, hive, inspection }) => season === 'Svärmperiod' && hive.strength === 'Starkt' && inspection.eggsSeen && !inspection.queenCells && !inspection.swarmSigns,
+    shouldApply: ({ season, hive, inspection }) =>
+      season === 'Svärmperiod' &&
+      hive.strength === 'Starkt' &&
+      inspection.eggsSeen &&
+      !inspection.queenCells &&
+      !inspection.swarmSigns &&
+      hasGoodInspectionWeather(inspection),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'seasonal-swarm',
@@ -254,6 +280,29 @@ const decisionRules: DecisionRule[] = [
         title: 'Gör förebyggande svärmkontroll',
         description: `Kontrollera ${context.hive.name} för svärmceller, utrymmesbehov och eventuell avläggare medan svärmtrycket byggs upp.`,
         dueInDays: 3,
+        priority: 'Medel',
+      }),
+  },
+  {
+    id: 'follow-up-in-better-weather',
+    shouldApply: ({ season, inspection }) =>
+      (season === 'Vårutveckling' || season === 'Svärmperiod' || season === 'Drag och skattning') &&
+      !inspection.actionNeeded &&
+      hasPoorInspectionWeather(inspection),
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'weather-follow-up',
+        title: 'Följ upp i bättre flygväder',
+        detail: 'Senaste genomgången gjordes i kyligt, regnigt eller blåsigt väder. Planera en kort uppföljning när bina flyger bättre för att få säkrare bild av aktivitet och drag.',
+        severity: 'info',
+        kind: 'reminder',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'weather-follow-up',
+        title: 'Planera väderanpassad uppföljning',
+        description: `Lägg in en kort uppföljning av ${context.hive.name} när vädret är torrare, varmare och lugnare så att flygaktiviteten går att bedöma bättre.`,
+        dueInDays: 2,
         priority: 'Medel',
       }),
   },
@@ -304,6 +353,7 @@ const decisionRules: DecisionRule[] = [
       inspection.honey &&
       (inspection.openBrood || inspection.cappedBrood) &&
       !inspection.actionNeeded &&
+      hasGoodInspectionWeather(inspection) &&
       (season === 'Vårutveckling' || season === 'Svärmperiod' || season === 'Drag och skattning'),
     buildRecommendation: (context) =>
       createRecommendation(context, {

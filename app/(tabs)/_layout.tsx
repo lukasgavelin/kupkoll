@@ -12,7 +12,7 @@ const tutorialSteps = [
   {
     path: '/',
     title: 'Hem',
-    description: 'Här ser du snabbt vad som är viktigast just nu, vad som behöver följas upp och vad du gjorde senast.',
+    description: 'Här börjar du med nästa steg, ser vad som behöver följas upp och påminns om vad som hände senast.',
   },
   {
     path: '/apiaries',
@@ -27,12 +27,12 @@ const tutorialSteps = [
   {
     path: '/tasks',
     title: 'Uppgifter',
-    description: 'Här samlas sådant du vill göra eller följa upp, så att inget viktigt faller mellan stolarna.',
+    description: 'Här håller du ihop arbetslistan, från sådant som är bråttom nu till sådant som kan vänta lite.',
   },
   {
     path: '/settings',
     title: 'Inställningar',
-    description: 'Här hittar du hjälp, guidning och möjligheten att spara en backup av det du lagt in.',
+    description: 'Här hittar du backup av din information och kan visa guidningen igen när du vill.',
   },
 ] as const;
 

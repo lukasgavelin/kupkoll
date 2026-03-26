@@ -22,6 +22,9 @@ function formatLocationFromReverseGeocode(result: Location.LocationGeocodedAddre
 export function ApiaryLocationField({ location, onLocationChange, coordinates, onCoordinatesChange }: ApiaryLocationFieldProps) {
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const mapUrl = buildApiaryMapUrl(location, coordinates);
+  const utilityMessage = coordinates
+    ? 'Positionen hjälper appen att visa väder för genomgångar och göra råden mer träffsäkra för platsen.'
+    : 'Lägg gärna till GPS-positionen också. Då kan appen hämta väder vid genomgångar och anpassa råden bättre för platsen.';
 
   async function captureCurrentLocation() {
     try {
@@ -93,6 +96,10 @@ export function ApiaryLocationField({ location, onLocationChange, coordinates, o
         value={location}
       />
       <Text style={styles.helperText}>Skriv platsen med ord. Lägg gärna till GPS-position också om du vill hitta tillbaka lättare i karta.</Text>
+      <View style={[styles.utilityCard, coordinates && styles.utilityCardReady]}>
+        <Text style={styles.utilityTitle}>{coordinates ? 'Position sparad' : 'Rekommenderat för bästa nytta'}</Text>
+        <Text style={styles.utilityText}>{utilityMessage}</Text>
+      </View>
       {coordinates ? <Text style={styles.coordinateText}>Sparad position: {formatCoordinates(coordinates)}</Text> : null}
       <View style={styles.actions}>
         <PrimaryButton
@@ -138,6 +145,27 @@ const styles = StyleSheet.create({
     ...theme.textStyles.body,
   },
   helperText: {
+    ...theme.textStyles.caption,
+    color: theme.colors.textMuted,
+  },
+  utilityCard: {
+    gap: theme.spacing.xs,
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surfaceMuted,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+  },
+  utilityCardReady: {
+    borderColor: theme.colors.borderStrong,
+    backgroundColor: theme.colors.surface,
+  },
+  utilityTitle: {
+    ...theme.textStyles.label,
+    color: theme.colors.text,
+  },
+  utilityText: {
     ...theme.textStyles.caption,
     color: theme.colors.textMuted,
   },
