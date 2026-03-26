@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Switch, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
@@ -64,19 +64,6 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
     }
   }
 
-  async function openGithub() {
-    const repositoryUrl = 'https://github.com/lukasgavelin/kupkoll';
-
-    const canOpen = await Linking.canOpenURL(repositoryUrl);
-
-    if (!canOpen) {
-      Alert.alert('Kunde inte öppna GitHub', 'Länken gick inte att öppna på enheten just nu.');
-      return;
-    }
-
-    await Linking.openURL(repositoryUrl);
-  }
-
   async function openPrivacyPolicy() {
     const policyUrl = 'https://github.com/lukasgavelin/kupkoll/blob/master/INTEGRITETSPOLICY.md';
 
@@ -139,19 +126,6 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
             </View>
           </View>
-        </AppCard>
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Skapad av Lukas Gavelin</Text>
-          <Text style={theme.textStyles.body}>Kupkoll är skapad av Lukas Gavelin för att vara enkel, tydlig och användbar direkt ute vid kuporna.</Text>
-          <Pressable
-            onPress={() => {
-              void openGithub();
-            }}
-            style={({ pressed }) => [styles.linkRow, pressed && styles.linkPressed]}
-          >
-            <Text style={styles.linkLabel}>GitHub:</Text>
-            <Text style={styles.linkText}>github.com/lukasgavelin/kupkoll</Text>
-          </Pressable>
         </AppCard>
         <AppCard>
           <Text style={theme.textStyles.heading}>Integritet</Text>
@@ -220,23 +194,6 @@ function createStyles(theme: Theme) {
     infoItem: {
       ...theme.textStyles.body,
       color: theme.colors.textMuted,
-    },
-    linkRow: {
-      alignSelf: 'flex-start',
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.xs,
-    },
-    linkLabel: {
-      ...theme.textStyles.caption,
-      color: theme.colors.textMuted,
-    },
-    linkText: {
-      ...theme.textStyles.caption,
-      color: theme.colors.accent,
-    },
-    linkPressed: {
-      opacity: 0.8,
     },
   });
 }
