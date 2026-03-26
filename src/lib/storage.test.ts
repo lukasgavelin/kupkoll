@@ -54,6 +54,12 @@ const inspections = [
     varroaLevel: 'Låg' as const,
     temperament: 'Lugnt' as const,
     actionNeeded: false,
+    weather: {
+      condition: 'Soligt' as const,
+      wind: 'Lugnt' as const,
+      temperatureC: 18,
+      note: 'Bra flygväder',
+    },
     notes: 'Anteckning',
   },
 ];
@@ -166,6 +172,41 @@ describe('parsePersistedKupkollState', () => {
         ...inspection,
         varroaLevel: 'Ej kontrollerad',
       })),
+      manualTasks: tasks,
+    });
+  });
+
+  it('normalizes weather payloads and drops invalid weather values', () => {
+    expect(
+      parsePersistedKupkollState({
+        version: 3,
+        apiaries,
+        hives,
+        inspections: [
+          {
+            ...inspections[0],
+            weather: {
+              condition: 'Storm',
+              wind: 'Blåsigt',
+              temperatureC: '15',
+              note: '  Byigt  ',
+            },
+          },
+        ],
+        manualTasks: tasks,
+      }),
+    ).toEqual({
+      apiaries,
+      hives,
+      inspections: [
+        {
+          ...inspections[0],
+          weather: {
+            wind: 'Blåsigt',
+            note: 'Byigt',
+          },
+        },
+      ],
       manualTasks: tasks,
     });
   });

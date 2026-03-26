@@ -14,6 +14,7 @@ Appen startar utan demo- eller mockdata för att motsvara en ren nyinstallation.
 - Låter dig skapa och redigera bigårdar med namn, platsbeskrivning, valfri GPS-position och snabb länk till karta.
 - Låter dig registrera kupor med samhällsläge, styrka, drottningstatus, kupsystem och koppling till rätt bigård.
 - Ger ett snabbt kupgenomgångsflöde på svenska för mobil användning ute i fält.
+- Hämtar aktuellt väder automatiskt från bigårdens koordinater och låter dig justera eller komplettera väderläge, vind, temperatur och vädernotis per genomgång.
 - Bygger rekommendationer och uppgifter utifrån svensk säsong, senaste genomgångar och historik i kupan, till exempel drottningproblem över tid, varroatrend, svärmtryck och uteblivna kontroller.
 - Prioriterar rekommendationer i tydliga grupper som akuta signaler, säsongsråd, påminnelser och lägesbild.
 - Sparar data lokalt så att appen fungerar som en ren personlig biodlingslogg utan krav på konto.
@@ -30,6 +31,7 @@ Beslutsstödet lutar mot svensk praxis och säsongsråd från svenska källor, m
 - Bigårdsvyer med platsinformation, koordinater och kartöppning.
 - Kupvyer med status, historik och rekommendationer för varje samhälle.
 - Snabb registrering av genomgångar med fält anpassade för biodlingsarbete.
+- Automatisk och manuellt justerbar väderloggning per genomgång för bättre fältkontext i historiken.
 - Regelmotor för att härleda uppgifter och rekommendationer från säsong, inspektionshistorik och kupstatus.
 - Förstastart utan förifylld data.
 
@@ -76,6 +78,6 @@ npm test
 ## Nästa steg
 
 - Offline-läge och framtida synk mellan enheter.
-- Djupare platsanpassning med väder, drag och blomningsläge.
+- Automatisk väderhämtning kopplad till plats, drag och blomningsläge.
 - Export och import av biodlingsdata.
 - Fler beslutsstöd kopplade till svensk säsong och regionala förutsättningar.

@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Apiary, Hive, HiveBoxSystem, Inspection, Task, VarroaLevel } from '@/types/domain';
+import { Apiary, Hive, HiveBoxSystem, Inspection, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, Task, VarroaLevel } from '@/types/domain';
 
 const KUPKOLL_APP_STATE_STORAGE_KEY = 'kupkoll:app-state';
 const LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
-const KUPKOLL_APP_STATE_VERSION = 2;
+const KUPKOLL_APP_STATE_VERSION = 3;
 
 export type KupkollAppState = {
   apiaries: Apiary[];
@@ -50,6 +50,37 @@ function normalizeHiveBoxSystem(value: unknown): HiveBoxSystem {
   return value === 'Lågnormal' || value === 'Svea' || value === 'Langstroth' || value === 'Dadant' ? value : 'Lågnormal';
 }
 
+function normalizeInspectionWeatherCondition(value: unknown): InspectionWeatherCondition | undefined {
+  return value === 'Soligt' || value === 'Växlande molnighet' || value === 'Mulet' || value === 'Duggregn' || value === 'Regn' ? value : undefined;
+}
+
+function normalizeInspectionWeatherWind(value: unknown): InspectionWeatherWind | undefined {
+  return value === 'Lugnt' || value === 'Måttlig vind' || value === 'Blåsigt' ? value : undefined;
+}
+
+function normalizeInspectionWeather(value: unknown): InspectionWeather | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const condition = normalizeInspectionWeatherCondition(candidate.condition);
+  const wind = normalizeInspectionWeatherWind(candidate.wind);
+  const temperatureC = typeof candidate.temperatureC === 'number' && Number.isFinite(candidate.temperatureC) ? candidate.temperatureC : undefined;
+  const note = typeof candidate.note === 'string' && candidate.note.trim() ? candidate.note.trim() : undefined;
+
+  if (condition === undefined && wind === undefined && temperatureC === undefined && note === undefined) {
+    return undefined;
+  }
+
+  return {
+    condition,
+    wind,
+    temperatureC,
+    note,
+  };
+}
+
 function normalizeHive(item: Record<string, unknown>): Hive {
   return {
     ...(item as Hive),
@@ -61,6 +92,7 @@ function normalizeInspection(item: Record<string, unknown>): Inspection {
   return {
     ...(item as Inspection),
     varroaLevel: normalizeVarroaLevel(item.varroaLevel),
+    weather: normalizeInspectionWeather(item.weather),
   };
 }
 
@@ -117,7 +149,7 @@ export function parsePersistedKupkollState(input: unknown): KupkollAppState | nu
     return migrateLegacyState(candidate);
   }
 
-  if (version !== KUPKOLL_APP_STATE_VERSION) {
+  if (version !== 2 && version !== KUPKOLL_APP_STATE_VERSION) {
     return null;
   }
 

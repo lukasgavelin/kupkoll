@@ -9,6 +9,8 @@ export type SeasonLabel = 'Vintertillsyn' | 'Vårutveckling' | 'Svärmperiod' | 
 export type HiveBoxSystem = 'Lågnormal' | 'Svea' | 'Langstroth' | 'Dadant';
 export type TaskSource = 'Egen planering' | 'Beslutsstöd';
 export type VarroaLevel = 'Ej kontrollerad' | 'Låg' | 'Förhöjd' | 'Hög';
+export type InspectionWeatherCondition = 'Soligt' | 'Växlande molnighet' | 'Mulet' | 'Duggregn' | 'Regn';
+export type InspectionWeatherWind = 'Lugnt' | 'Måttlig vind' | 'Blåsigt';
 
 export type Coordinates = {
   latitude: number;
@@ -36,6 +38,13 @@ export type Hive = {
   notes: string;
 };
 
+export type InspectionWeather = {
+  condition?: InspectionWeatherCondition;
+  wind?: InspectionWeatherWind;
+  temperatureC?: number;
+  note?: string;
+};
+
 export type Inspection = {
   id: string;
   hiveId: string;
@@ -51,6 +60,7 @@ export type Inspection = {
   varroaLevel: VarroaLevel;
   temperament: HiveTemperament;
   actionNeeded: boolean;
+  weather?: InspectionWeather;
   notes: string;
 };
 
