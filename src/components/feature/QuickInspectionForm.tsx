@@ -272,16 +272,16 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     temperatureText,
   });
   const autoWeatherHint = !selectedApiary
-    ? 'Välj först vilken kupa du tittar på, så hämtas vädret för rätt plats.'
+    ? 'Välj först vilken kupa du tittar på, så kan vädret hämtas för rätt plats.'
     : !selectedApiary.coordinates
-      ? 'Den här bigården saknar sparad position, så vädret går inte att hämta automatiskt ännu.'
+      ? 'Den här bigården saknar sparad position. Fyll i vädret själv eller lägg till plats på bigården.'
       : autoWeatherStatus === 'loading'
         ? `Hämtar aktuellt väder för ${selectedApiary.name}...`
         : autoWeatherStatus === 'ready'
-          ? `Vädret för ${selectedApiary.name} är hämtat. Justera gärna om något inte stämmer.`
+          ? `Vädret för ${selectedApiary.name} är ifyllt utifrån platsen. Justera om något skiljer sig på plats.`
           : autoWeatherStatus === 'error'
-            ? `Det gick inte att hämta vädret för ${selectedApiary.name}. Du kan fylla i det själv eller försöka igen.`
-            : `Redo att hämta vädret för ${selectedApiary.name}.`;
+            ? `Det gick inte att hämta vädret för ${selectedApiary.name}. Fyll i det själv eller försök hämta igen.`
+            : `Vädret kan hämtas för ${selectedApiary.name}.`;
 
   if (!hives.length) {
     return (
@@ -380,9 +380,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>4. Väder vid genomgången</Text>
-        <Text style={theme.textStyles.caption}>Valfritt, men bra om du senare vill minnas hur vädret kan ha påverkat bina.</Text>
+        <Text style={theme.textStyles.caption}>När bigården har en sparad plats fyller vi i vädret automatiskt. Justera om det inte stämmer där du står.</Text>
         <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
-        {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : 'Uppdatera väder'} onPress={() => {
+        {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : autoWeatherStatus === 'error' ? 'Försök igen' : 'Hämta igen'} onPress={() => {
           if (!selectedApiary.coordinates || autoWeatherStatus === 'loading') {
             return;
           }

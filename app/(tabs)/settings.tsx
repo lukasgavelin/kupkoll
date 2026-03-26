@@ -18,6 +18,12 @@ export default function SettingsScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const styles = createStyles(theme);
+  const exportFacts = [
+    { label: 'Bigårdar', value: apiaries.length, fullWidth: false },
+    { label: 'Kupor', value: hives.length, fullWidth: false },
+    { label: 'Genomgångar', value: inspections.length, fullWidth: true },
+    { label: 'Manuella uppgifter', value: manualTasks.length, fullWidth: true },
+  ];
 
   async function showTutorialAgain() {
     await resetTabTutorial();
@@ -107,10 +113,12 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
             <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar och manuella uppgifter, så att informationen finns kvar även utanför telefonen eller webben.</Text>
           </View>
           <View style={styles.exportFacts}>
-            <Text style={styles.exportFact}>Bigårdar: {apiaries.length}</Text>
-            <Text style={styles.exportFact}>Kupor: {hives.length}</Text>
-            <Text style={styles.exportFact}>Genomgångar: {inspections.length}</Text>
-            <Text style={styles.exportFact}>Manuella uppgifter: {manualTasks.length}</Text>
+            {exportFacts.map((fact) => (
+              <View key={fact.label} style={[styles.exportFactCard, fact.fullWidth && styles.exportFactCardFullWidth]}>
+                <Text style={styles.exportFactLabel}>{fact.label}</Text>
+                <Text style={styles.exportFactValue}>{fact.value}</Text>
+              </View>
+            ))}
           </View>
           <View style={styles.exportAction}>
             <PrimaryButton
@@ -176,6 +184,22 @@ function createStyles(theme: Theme) {
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
     },
+    exportFactCard: {
+      flexGrow: 1,
+      flexBasis: '47%',
+      minWidth: 132,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.radii.pill,
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    exportFactCardFullWidth: {
+      flexBasis: '100%',
+    },
     exportAction: {
       gap: theme.spacing.sm,
       paddingTop: theme.spacing.xs,
@@ -183,13 +207,17 @@ function createStyles(theme: Theme) {
     exportMeta: {
       gap: theme.spacing.xs,
     },
-    exportFact: {
+    exportFactLabel: {
       ...theme.textStyles.caption,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.xs,
-      borderRadius: theme.radii.pill,
-      backgroundColor: theme.colors.surfaceMuted,
+      flex: 1,
       color: theme.colors.text,
+    },
+    exportFactValue: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      fontFamily: theme.fontFamilies.semibold,
+      textAlign: 'right',
+      minWidth: 16,
     },
     infoItem: {
       ...theme.textStyles.body,

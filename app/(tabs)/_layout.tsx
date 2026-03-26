@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, router, usePathname } from 'expo-router';
 import { useMemo } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FirstRunTutorialPrompt } from '@/components/feature/FirstRunTutorialPrompt';
@@ -51,7 +51,7 @@ export default function TabsLayout() {
   const tabBarInnerPadding = theme.spacing.xs;
   const tabBarTopPadding = 4;
   const tabBarBottomPadding = Math.max(theme.spacing.xs, insets.bottom);
-  const tabBarBottomOffset = Math.max(insets.bottom, theme.spacing.sm);
+  const tabBarBottomOffset = Platform.OS === 'ios' ? Math.max(insets.bottom, theme.spacing.sm) : 0;
   const tabBarHeight = 56 + tabBarBottomPadding;
   const tabBarFootprint = tabBarHeight + tabBarBottomOffset;
 
