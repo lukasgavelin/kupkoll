@@ -134,7 +134,6 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const [weatherCondition, setWeatherCondition] = useState<InspectionWeatherCondition | undefined>(undefined);
   const [weatherWind, setWeatherWind] = useState<InspectionWeatherWind | undefined>(undefined);
   const [temperatureText, setTemperatureText] = useState('');
-  const [weatherNote, setWeatherNote] = useState('');
   const [autoWeatherStatus, setAutoWeatherStatus] = useState<AutoWeatherStatus>('idle');
 
   const selectedHive = useMemo(() => hives.find((item) => item.id === selectedHiveId), [hives, selectedHiveId]);
@@ -163,7 +162,6 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     setWeatherCondition(undefined);
     setWeatherWind(undefined);
     setTemperatureText('');
-    setWeatherNote('');
 
     if (!selectedApiary) {
       setAutoWeatherStatus('idle');
@@ -242,12 +240,11 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       return;
     }
 
-    const weather = weatherCondition || weatherWind || parsedTemperature !== undefined || weatherNote.trim()
+    const weather = weatherCondition || weatherWind || parsedTemperature !== undefined
       ? {
           condition: weatherCondition,
           wind: weatherWind,
           temperatureC: parsedTemperature,
-          note: weatherNote.trim() || undefined,
         }
       : undefined;
 
@@ -272,16 +269,16 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     temperatureText,
   });
   const autoWeatherHint = !selectedApiary
-    ? 'Välj först vilken kupa du tittar på, så kan vädret hämtas för rätt plats.'
+    ? 'Välj först vilken kupa du tittar på, så fyller vi i förhållandena för rätt plats.'
     : !selectedApiary.coordinates
-      ? 'Den här bigården saknar sparad position. Fyll i vädret själv eller lägg till plats på bigården.'
+      ? 'Den här bigården saknar sparad position. Fyll i uppgifterna själv eller lägg till plats på bigården.'
       : autoWeatherStatus === 'loading'
-        ? `Hämtar aktuellt väder för ${selectedApiary.name}...`
+        ? `Hämtar aktuella förhållanden för ${selectedApiary.name}...`
         : autoWeatherStatus === 'ready'
-          ? `Vädret för ${selectedApiary.name} är ifyllt utifrån platsen. Justera om något skiljer sig på plats.`
+          ? `Uppgifterna för ${selectedApiary.name} är ifyllda utifrån platsen. Justera om något skiljer sig där du står.`
           : autoWeatherStatus === 'error'
-            ? `Det gick inte att hämta vädret för ${selectedApiary.name}. Fyll i det själv eller försök hämta igen.`
-            : `Vädret kan hämtas för ${selectedApiary.name}.`;
+            ? `Det gick inte att hämta uppgifterna för ${selectedApiary.name}. Fyll i dem själv eller försök igen.`
+            : `Uppgifterna kan hämtas för ${selectedApiary.name}.`;
 
   if (!hives.length) {
     return (
@@ -380,7 +377,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>4. Väder vid genomgången</Text>
-        <Text style={theme.textStyles.caption}>När bigården har en sparad plats fyller vi i vädret automatiskt. Justera om det inte stämmer där du står.</Text>
+        <Text style={theme.textStyles.caption}>När bigården har en sparad plats fyller vi i temperatur, vind och väderläge automatiskt. Justera om det inte stämmer där du står.</Text>
         <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
         {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : autoWeatherStatus === 'error' ? 'Försök igen' : 'Hämta igen'} onPress={() => {
           if (!selectedApiary.coordinates || autoWeatherStatus === 'loading') {
@@ -419,17 +416,6 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           placeholderTextColor={theme.colors.textMuted}
           style={styles.input}
           value={temperatureText}
-        />
-        <Text style={styles.inlineLabel}>Kort notis om vädret</Text>
-        <TextInput
-          multiline
-          numberOfLines={3}
-          onChangeText={setWeatherNote}
-          placeholder="Valfritt: till exempel blåst, stark sol eller annat som påverkade genomgången"
-          placeholderTextColor={theme.colors.textMuted}
-          style={styles.inputMultiline}
-          textAlignVertical="top"
-          value={weatherNote}
         />
       </AppCard>
 
@@ -479,16 +465,6 @@ function createStyles(theme: Theme) {
     },
     input: {
       minHeight: 56,
-      borderRadius: theme.radii.md,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
-      ...theme.textStyles.body,
-    },
-    inputMultiline: {
-      minHeight: 96,
       borderRadius: theme.radii.md,
       borderWidth: 1,
       borderColor: theme.colors.border,
