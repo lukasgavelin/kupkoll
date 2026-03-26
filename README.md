@@ -10,6 +10,11 @@ Syftet är inte bara att lagra data. Kupkoll ska hjälpa användaren att först�
 
 Appen startar utan förifylld data och fungerar som en lokal personlig biodlingslogg utan krav på konto.
 
+## Dokumentation
+
+- [Integritetspolicy](./INTEGRITETSPOLICY.md)
+- [Google Play-release](./GOOGLE_PLAY_RELEASE.md)
+
 ## Vad appen är till för
 
 Kupkoll kombinerar journalföring, överblick och vägledning i samma arbetsyta.
@@ -30,7 +35,7 @@ Appens huvudflikar har olika ansvar.
 - Bigårdar: samlar platserna där kuporna står och gör det lätt att gå vidare till rätt bigård.
 - Kupor: visar varje kupa med status, senaste genomgång och fortsatt uppföljning.
 - Uppgifter: fungerar som arbetslista och grupperar sådant som är bråttom nu, snart på tur och längre fram.
-- Inställningar: innehåller mörkt läge, backup och guidning.
+- Inställningar: innehåller tema, backup, integritetsinformation och guidning.
 
 Det här upplägget är valt för att användaren först ska mötas av handling och därefter av bakgrund och sammanhang.
 
@@ -91,6 +96,7 @@ Kupkoll sparar följande lokalt på enheten eller i webbläsaren:
 - kupor
 - genomgångar
 - manuella uppgifter
+- vissa lokala inställningar, som tema och guidning
 
 Exporten innehåller samma datamängd tillsammans med antal objekt, tidsstämpel och schema-version.
 
@@ -128,6 +134,16 @@ npm run web
 npm run typecheck
 npm test
 ```
+
+## Android-release
+
+Projektet har en första EAS-konfiguration för Android-publicering.
+
+```bash
+npx eas build --platform android --profile production
+```
+
+Se [Google Play-release](./GOOGLE_PLAY_RELEASE.md) för checklista, Data safety-underlag och release-assets.
 
 ## Teknik
 

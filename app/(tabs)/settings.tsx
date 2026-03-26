@@ -77,6 +77,19 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
     await Linking.openURL(repositoryUrl);
   }
 
+  async function openPrivacyPolicy() {
+    const policyUrl = 'https://github.com/lukasgavelin/kupkoll/blob/master/INTEGRITETSPOLICY.md';
+
+    const canOpen = await Linking.canOpenURL(policyUrl);
+
+    if (!canOpen) {
+      Alert.alert('Kunde inte öppna integritetspolicyn', 'Länken gick inte att öppna på enheten just nu.');
+      return;
+    }
+
+    await Linking.openURL(policyUrl);
+  }
+
   return (
     <Screen>
       <SectionHeader
@@ -144,6 +157,18 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
             <Text style={styles.linkLabel}>GitHub:</Text>
             <Text style={styles.linkText}>github.com/lukasgavelin/kupkoll</Text>
           </Pressable>
+        </AppCard>
+        <AppCard>
+          <Text style={theme.textStyles.heading}>Integritet</Text>
+          <Text style={theme.textStyles.body}>Läs hur Kupkoll hanterar lokal lagring, platsuppgifter, väderhämtning, export och länkar till externa tjänster.</Text>
+          <PrimaryButton
+            fullWidth
+            label="Öppna integritetspolicy"
+            onPress={() => {
+              void openPrivacyPolicy();
+            }}
+            variant="secondary"
+          />
         </AppCard>
         <AppCard>
           <Text style={theme.textStyles.heading}>Guidning</Text>

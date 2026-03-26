@@ -3,7 +3,7 @@
     "name": "Kupkoll",
     "slug": "kupkoll",
     "scheme": "kupkoll",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "experiments": {
@@ -23,6 +23,12 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.lukasgavelin.kupkoll",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "edgeToEdgeEnabled": true
     },
     "web": {
