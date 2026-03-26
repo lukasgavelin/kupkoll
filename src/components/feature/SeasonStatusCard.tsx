@@ -15,7 +15,7 @@ export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
       </View>
 
       <View style={styles.focusBlock}>
-        <Text style={styles.focusTitle}>Rekommenderat just nu</Text>
+        <Text style={styles.focusTitle}>Bra att fokusera på nu</Text>
         <View style={styles.focusList}>
           {status.focusItems.map((item) => (
             <View key={item} style={styles.focusRow}>

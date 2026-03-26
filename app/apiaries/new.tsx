@@ -30,7 +30,7 @@ export default function NewApiaryScreen() {
     const apiary = addApiary({
       name: trimmedName,
       location: trimmedLocation,
-      notes: notes.trim() || 'Ingen anteckning ännu.',
+      notes: notes.trim() || 'Lägg gärna till en anteckning om platsen senare om du vill.',
       coordinates,
     });
 
@@ -45,7 +45,7 @@ export default function NewApiaryScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny bigård"
         title="Lägg till bigård"
-        description="Registrera platsen först. Därefter kan du lägga till kupor som hör till samma bigårdsläge."
+        description="Börja med platsen där kuporna står. Sedan kan du lägga till de kupor som hör hit."
       />
 
       <AppCard>
@@ -62,7 +62,7 @@ export default function NewApiaryScreen() {
             multiline
             numberOfLines={4}
             onChangeText={setNotes}
-            placeholder="Valfritt: läge, dragförutsättningar eller annat som är bra att minnas"
+            placeholder="Valfritt: hur platsen känns, hur du hittar hit eller annat som är bra att minnas"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.inputMultiline}
             textAlignVertical="top"

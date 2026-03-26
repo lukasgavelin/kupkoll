@@ -50,7 +50,7 @@ export default function NewHiveScreen() {
       strength,
       temperament,
       boxSystem,
-      notes: notes.trim() || 'Ingen anteckning ännu.',
+      notes: notes.trim() || 'Lägg gärna till en anteckning om kupan senare om du vill.',
     });
 
     router.replace(`/hives/${hive.id}`);
@@ -60,7 +60,7 @@ export default function NewHiveScreen() {
     return (
       <Screen>
         <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => router.back()} eyebrow="Ny kupa" title="Lägg till kupa" description="Först behöver du skapa en bigård som kupan kan placeras i." />
-        <EmptyStateCard title="Ingen bigård att välja" description="Skapa en bigård först och lägg sedan till kupor som tillhör platsen." actionLabel="Lägg till bigård" onActionPress={() => router.replace('/apiaries/new')} />
+        <EmptyStateCard title="Ingen bigård att välja" description="Lägg först till platsen där kupan står. Sedan kan du skapa kupan härifrån." actionLabel="Lägg till bigård" onActionPress={() => router.replace('/apiaries/new')} />
       </Screen>
     );
   }
@@ -73,7 +73,7 @@ export default function NewHiveScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny kupa"
         title="Lägg till kupa"
-        description={selectedApiaryId ? `Kupan kopplas till ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Första genomgången kan loggas senare.` : 'Välj bigård och grunduppgifter för kupan.'}
+        description={selectedApiaryId ? `Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Du kan fylla på med fler noteringar senare.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
       />
 
       <AppCard>
@@ -148,7 +148,7 @@ export default function NewHiveScreen() {
             multiline
             numberOfLines={4}
             onChangeText={setNotes}
-            placeholder="Valfritt: temperament, drottningläge, ursprung eller annat att minnas"
+            placeholder="Valfritt: hur kupan brukar vara, något att hålla koll på eller annat du vill minnas"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.inputMultiline}
             textAlignVertical="top"

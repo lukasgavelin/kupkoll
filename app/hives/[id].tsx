@@ -56,9 +56,9 @@ export default function HiveDetailScreen() {
         actionLabel="Tillbaka"
         actionIconName="chevron-back"
         onActionPress={() => router.back()}
-        eyebrow="Kupdetalj"
+        eyebrow="Kupa"
         title={hive.name}
-        description={apiary ? `${apiary.name} · ${hive.lastInspectionAt ? `Senaste genomgång ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång registrerad ännu'}` : undefined}
+        description={apiary ? `${apiary.name} · ${hive.lastInspectionAt ? `Senast genomgången ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång ännu'}` : undefined}
       />
 
       <AppCard>
@@ -81,17 +81,17 @@ export default function HiveDetailScreen() {
           <PrimaryButton label="Tidigare genomgångar" onPress={() => router.push(`/hives/${hiveId}/inspections`)} variant="secondary" />
         </View>
       ) : (
-        <EmptyStateCard title="Ingen genomgång ännu" description="När du loggar första genomgången visas observationer, rekommendationer och relaterade arbetsmoment här." />
+        <EmptyStateCard title="Ingen genomgång ännu" description="När du sparar den första genomgången ser du här vad som noterades och vad som kan vara bra att följa upp." />
       )}
 
-      <SectionHeader eyebrow="Beslutsstöd" title="Rekommendationer" />
+      <SectionHeader eyebrow="Råd" title="Att hålla koll på" />
       <View style={styles.sectionList}>
-        {recommendations.length ? <RecommendationSections recommendations={recommendations} getHiveName={() => hive.name} /> : <EmptyStateCard title="Inga rekommendationer ännu" description="Beslutsstödet aktiveras när kupan har minst en sparad genomgång." />}
+        {recommendations.length ? <RecommendationSections recommendations={recommendations} getHiveName={() => hive.name} /> : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång börjar appen lyfta fram sådant som kan vara bra att titta närmare på." />}
       </View>
 
-      <SectionHeader eyebrow="Åtgärder" title="Relaterade arbetsmoment" />
+      <SectionHeader eyebrow="Att göra" title="Saker kopplade till den här kupan" />
       <View style={styles.sectionList}>
-        {tasks.length ? tasks.map((task) => <TaskCard key={task.id} hiveName={hive.name} task={task} />) : <EmptyStateCard title="Inga arbetsmoment ännu" description="Uppföljningar och beslutstödsuppgifter dyker upp här efter första genomgången." />}
+        {tasks.length ? tasks.map((task) => <TaskCard key={task.id} hiveName={hive.name} task={task} />) : <EmptyStateCard title="Inga uppgifter ännu" description="När något behöver följas upp i den här kupan visas det här." />}
       </View>
     </Screen>
   );

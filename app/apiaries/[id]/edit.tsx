@@ -45,7 +45,7 @@ export default function EditApiaryScreen() {
     updateApiary(apiaryId, {
       name: trimmedName,
       location: trimmedLocation,
-      notes: notes.trim() || 'Ingen anteckning ännu.',
+      notes: notes.trim() || 'Lägg gärna till en anteckning om platsen senare om du vill.',
       coordinates,
     });
 
@@ -59,8 +59,8 @@ export default function EditApiaryScreen() {
         actionIconName="close"
         onActionPress={() => router.back()}
         eyebrow="Redigera bigård"
-        title="Uppdatera bigård"
-        description="Justera namn, plats och anteckningar för bigården."
+        title="Ändra bigård"
+        description="Justera namn, plats och egna anteckningar för den här bigården."
       />
 
       <AppCard>
@@ -77,7 +77,7 @@ export default function EditApiaryScreen() {
             multiline
             numberOfLines={4}
             onChangeText={setNotes}
-            placeholder="Valfritt: läge, dragförutsättningar eller annat som är bra att minnas"
+            placeholder="Valfritt: hur platsen känns, hur du hittar hit eller annat som är bra att minnas"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.inputMultiline}
             textAlignVertical="top"

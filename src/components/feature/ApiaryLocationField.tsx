@@ -92,7 +92,7 @@ export function ApiaryLocationField({ location, onLocationChange, coordinates, o
         style={styles.input}
         value={location}
       />
-      <Text style={styles.helperText}>Skriv en platsbeskrivning och komplettera gärna med GPS-position för säkrare kartöppning.</Text>
+      <Text style={styles.helperText}>Skriv platsen med ord. Lägg gärna till GPS-position också om du vill hitta tillbaka lättare i karta.</Text>
       {coordinates ? <Text style={styles.coordinateText}>Sparad position: {formatCoordinates(coordinates)}</Text> : null}
       <View style={styles.actions}>
         <PrimaryButton

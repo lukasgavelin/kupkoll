@@ -16,15 +16,15 @@ export default function ApiariesScreen() {
     <Screen>
       <SectionHeader
         eyebrow="Bigårdar"
-        title="Dina bigårdslägen"
-        description="Varje bigård visar läge, dragförutsättningar och hur många samhällen som står där, utan onödigt brus."
+        title="Dina bigårdar"
+        description="Här samlar du platserna där dina kupor står, så att du lätt hittar rätt och håller ordning på varje ställe."
       />
       <PrimaryButton fullWidth label="Lägg till bigård" onPress={() => router.push('/apiaries/new')} />
       <View style={{ gap: theme.spacing.lg }}>
         {apiaries.length ? (
           apiaries.map((apiary) => <ApiaryCard key={apiary.id} apiary={apiary} hiveCount={getHivesByApiary(apiary.id).length} />)
         ) : (
-          <EmptyStateCard title="Inga bigårdar ännu" description="Appen är nu rensad från demo-data. Dina egna bigårdslägen kommer att listas här när du börjar registrera dem." actionLabel="Skapa första bigården" onActionPress={() => router.push('/apiaries/new')} />
+          <EmptyStateCard title="Inga bigårdar ännu" description="Lägg till din första bigård för att börja samla kupor, anteckningar och genomgångar på rätt plats." actionLabel="Skapa första bigården" onActionPress={() => router.push('/apiaries/new')} />
         )}
       </View>
     </Screen>

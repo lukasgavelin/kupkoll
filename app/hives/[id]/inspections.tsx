@@ -36,14 +36,14 @@ export default function HiveInspectionHistoryScreen() {
         onActionPress={() => router.back()}
         eyebrow="Genomgångar"
         title={`Historik för ${hive.name}`}
-        description="Alla sparade genomgångar visas här med senaste posten först."
+        description="Här kan du gå tillbaka och se vad du har noterat tidigare, med senaste genomgången överst."
       />
 
       <View style={styles.list}>
         {inspections.length ? (
           inspections.map((inspection) => <InspectionSnapshot key={inspection.id} inspection={inspection} />)
         ) : (
-          <EmptyStateCard title="Ingen historik ännu" description="När kupan har flera sparade genomgångar visas hela historiken här, med senaste överst." />
+          <EmptyStateCard title="Ingen historik ännu" description="När du har sparat genomgångar för kupan samlas de här i den ordning de gjordes." />
         )}
       </View>
     </Screen>

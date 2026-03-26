@@ -12,27 +12,27 @@ const tutorialSteps = [
   {
     path: '/',
     title: 'Hem',
-    description: 'Här får du dagens lägesbild för biodlingen med viktiga varningar, närmaste arbetsmoment och senaste genomgångar.',
+    description: 'Här ser du snabbt vad som är viktigast just nu, vad som behöver följas upp och vad du gjorde senast.',
   },
   {
     path: '/apiaries',
     title: 'Bigårdar',
-    description: 'Här ser du varje bigårdsläge med anteckningar om plats, dragförutsättningar och hur många samhällen som står där.',
+    description: 'Här samlar du dina platser och ser vilka kupor som står i varje bigård.',
   },
   {
     path: '/hives',
     title: 'Kupor',
-    description: 'Här får du överblick över samhällsstyrka, drottningstatus, kupsystem och senaste genomgång för varje kupa.',
+    description: 'Här får du en enkel överblick över varje kupa och hur läget verkar just nu.',
   },
   {
     path: '/tasks',
     title: 'Uppgifter',
-    description: 'Här samlas egen planering och beslutstöd, till exempel vårgenomgång, svärmkontroll, stödfodring och invintring.',
+    description: 'Här samlas sådant du vill göra eller följa upp, så att inget viktigt faller mellan stolarna.',
   },
   {
     path: '/settings',
     title: 'Inställningar',
-    description: 'Här ser du appens biodlingsprofil och vad som redan stöds eller är förberett för senare versioner.',
+    description: 'Här hittar du hjälp, guidning och möjligheten att spara en backup av det du lagt in.',
   },
 ] as const;
 

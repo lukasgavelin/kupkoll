@@ -8,6 +8,20 @@ import { formatDateLabel, formatDateTimeLabel } from '@/lib/selectors';
 import { theme } from '@/theme';
 import { Apiary, Hive, Inspection, Recommendation, Task } from '@/types/domain';
 
+function formatInspectionWeather(inspection: Inspection) {
+  if (!inspection.weather) {
+    return null;
+  }
+
+  const segments = [
+    inspection.weather.condition,
+    inspection.weather.wind,
+    inspection.weather.temperatureC !== undefined ? `${inspection.weather.temperatureC} °C` : undefined,
+  ].filter(Boolean);
+
+  return segments.length ? segments.join(' · ') : null;
+}
+
 export function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <AppCard style={styles.statCard}>
@@ -53,7 +67,7 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
           <Text style={theme.textStyles.caption}>Temperament: {hive.temperament}</Text>
           <Text style={theme.textStyles.caption}>Kupsystem: {hive.boxSystem}</Text>
         </View>
-        <Text style={theme.textStyles.caption}>{hive.lastInspectionAt ? `Senaste genomgång ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång registrerad ännu'}</Text>
+        <Text style={theme.textStyles.caption}>{hive.lastInspectionAt ? `Senast genomgången ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång sparad ännu'}</Text>
       </AppCard>
     </Pressable>
   );
@@ -67,7 +81,7 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
       <View style={styles.rowBetween}>
         <View style={styles.textColumn}>
           <Text style={theme.textStyles.heading}>{task.title}</Text>
-          <Text style={theme.textStyles.caption}>Planerad senast {formatDateLabel(task.dueDate)}</Text>
+          <Text style={theme.textStyles.caption}>Bra att göra senast {formatDateLabel(task.dueDate)}</Text>
         </View>
         <StatusBadge label={task.priority} tone={tone} />
       </View>
@@ -101,6 +115,7 @@ export function RecommendationCard({ recommendation, hiveName }: { recommendatio
 
 export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
   const varroaTone = inspection.varroaLevel === 'Hög' ? 'critical' : inspection.varroaLevel === 'Förhöjd' ? 'warning' : 'info';
+  const weatherSummary = formatInspectionWeather(inspection);
 
   return (
     <AppCard>
@@ -108,9 +123,11 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
       <View style={styles.inlineWrap}>
         <StatusBadge label={inspection.queenSeen ? 'Drottning sedd' : 'Drottning ej sedd'} tone={inspection.queenSeen ? 'calm' : 'warning'} />
         <StatusBadge label={inspection.eggsSeen ? 'Ägg sedda' : 'Inga ägg'} tone={inspection.eggsSeen ? 'calm' : 'warning'} />
-        <StatusBadge label={inspection.actionNeeded ? 'Åtgärd behövs' : 'Normalläge'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
+        <StatusBadge label={inspection.actionNeeded ? 'Behöver följas upp' : 'Ser lugnt ut'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
         <StatusBadge label={`Varroa: ${inspection.varroaLevel}`} tone={varroaTone} />
       </View>
+      {weatherSummary ? <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text> : null}
+      {inspection.weather?.note ? <Text style={theme.textStyles.caption}>Vädernotis: {inspection.weather.note}</Text> : null}
       <Text style={theme.textStyles.body}>{inspection.notes}</Text>
     </AppCard>
   );

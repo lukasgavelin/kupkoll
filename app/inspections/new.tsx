@@ -13,9 +13,9 @@ export default function NewInspectionScreen() {
         actionLabel="Stäng"
         actionIconName="close"
         onActionPress={() => router.back()}
-        eyebrow="30-sekundersflöde"
-        title="Logga genomgång snabbt"
-        description="Välj kupa, tryck in läget och spara. Flödet är anpassat för stora tryckytor och få beslut ute i fält."
+        eyebrow="Snabb genomgång"
+        title="Spara en snabb koll"
+        description="Välj kupa, markera hur läget känns och spara direkt. Tanken är att det ska gå snabbt ute vid kuporna."
       />
       <QuickInspectionForm initialHiveId={params.hiveId} />
     </Screen>

@@ -57,7 +57,7 @@ export default function EditHiveScreen() {
       strength,
       temperament,
       boxSystem,
-      notes: notes.trim() || 'Ingen anteckning ännu.',
+      notes: notes.trim() || 'Lägg gärna till en anteckning om kupan senare om du vill.',
     });
 
     router.replace(`/hives/${hiveId}`);
@@ -70,8 +70,8 @@ export default function EditHiveScreen() {
         actionIconName="close"
         onActionPress={() => router.back()}
         eyebrow="Redigera kupa"
-        title="Uppdatera kupa"
-        description={selectedApiaryId ? `Kupan tillhör ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}.` : 'Justera grunduppgifter för kupan.'}
+        title="Ändra kupa"
+        description={selectedApiaryId ? `Kupan hör till ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Här kan du ändra det viktigaste.` : 'Justera grunduppgifter för kupan.'}
       />
 
       <AppCard>
@@ -146,7 +146,7 @@ export default function EditHiveScreen() {
             multiline
             numberOfLines={4}
             onChangeText={setNotes}
-            placeholder="Valfritt: temperament, drottningläge, ursprung eller annat att minnas"
+            placeholder="Valfritt: hur kupan brukar vara, något att hålla koll på eller annat du vill minnas"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.inputMultiline}
             textAlignVertical="top"

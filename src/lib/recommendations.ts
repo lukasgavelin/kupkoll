@@ -22,20 +22,20 @@ const kindOrder: Record<RecommendationKind, number> = {
 
 const groupMeta: Record<RecommendationKind, Omit<RecommendationGroup, 'items' | 'kind'>> = {
   alert: {
-    title: 'Akuta signaler',
-    description: 'Historik eller senaste genomgång visar lägen som bör bedömas först.',
+    title: 'Viktigt just nu',
+    description: 'Här syns sådant som kan vara klokt att titta på först.',
   },
   seasonal: {
     title: 'Säsongsråd',
-    description: 'Råd som blir relevanta i aktuell fas av biodlingsåret.',
+    description: 'Råd som ofta passar bra just nu på året.',
   },
   reminder: {
     title: 'Påminnelser',
-    description: 'Saker som riskerar att falla mellan genomgångarna om de inte lyfts fram.',
+    description: 'Saker som är lätta att glömma om de inte lyfts fram i tid.',
   },
   status: {
     title: 'Lägesbild',
-    description: 'Lugnare besked som bekräftar att något återgått till stabilt läge.',
+    description: 'Lugnare besked som visar att något verkar vara på rätt väg.',
   },
 };
 

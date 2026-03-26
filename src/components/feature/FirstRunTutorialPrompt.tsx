@@ -20,8 +20,8 @@ export function FirstRunTutorialPrompt({ visible, onStart, onSkip }: FirstRunTut
       <AppCard style={styles.card}>
         <View style={styles.copyBlock}>
           <Text style={theme.textStyles.overline}>Första gången</Text>
-          <Text style={styles.title}>Vill du ha en snabb guidning av flikarna?</Text>
-          <Text style={styles.description}>Du kan gå igenom Hem, Bigårdar, Kupor, Uppgifter och Inställningar steg för steg, eller hoppa över direkt.</Text>
+          <Text style={styles.title}>Vill du få en kort rundtur i appen?</Text>
+          <Text style={styles.description}>Du kan gå igenom Hem, Bigårdar, Kupor, Uppgifter och Inställningar steg för steg, eller hoppa över och börja direkt.</Text>
         </View>
         <View style={styles.actions}>
           <Pressable onPress={onSkip} style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}>

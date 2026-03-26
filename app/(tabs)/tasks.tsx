@@ -20,12 +20,12 @@ export default function TasksScreen() {
       <SectionHeader
         eyebrow="Uppgifter"
         title="Det som behöver göras"
-        description="Egen planering och beslutstöd för vårgenomgång, stödfodring, skattning och invintring."
+        description="Här samlas sådant du vill komma ihåg att göra, både egna noteringar och råd från det du sett i kuporna."
       />
       {hasHives ? (
         <AppCard style={styles.priorityCard}>
           <Text style={theme.textStyles.heading}>Prioriterat idag</Text>
-          <Text style={theme.textStyles.body}>Fokusera först på samhällen med hög svärmrisk, svag utveckling, tunt foderläge eller osäker drottningstatus.</Text>
+          <Text style={theme.textStyles.body}>Börja gärna med det som känns mest brådskande, till exempel svaga samhällen, osäkert drottningläge eller kupor som behöver mer mat.</Text>
         </AppCard>
       ) : (
         <EmptyStateCard
@@ -33,7 +33,7 @@ export default function TasksScreen() {
           description={
             hasApiaries
               ? 'Uppgifter och beslutstöd blir relevanta när det finns kupor att följa upp. Lägg till första kupan för att komma vidare.'
-              : 'Den här fliken fylls med planering och råd när du har skapat din första bigård och sedan lagt till kupor.'
+              : 'Den här fliken fylls med sådant att göra när du först har lagt till en bigård och sedan dina kupor.'
           }
           actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
           onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')}
@@ -50,16 +50,16 @@ export default function TasksScreen() {
             />
           ))
         ) : (
-          <EmptyStateCard title="Ingen planering ännu" description="Egna uppgifter och automatiska uppföljningar visas här när appen innehåller bigårdar, kupor och genomgångar." />
+          <EmptyStateCard title="Inga uppgifter ännu" description="När du börjar använda appen mer fylls den här listan med sådant du vill göra eller följa upp." />
         )}
       </View>
 
-      <SectionHeader eyebrow="Råd" title="Säsongsanpassat beslutsstöd" />
+      <SectionHeader eyebrow="Råd" title="Förslag att titta på" />
       <View style={styles.sectionList}>
         {recommendations.length ? (
           <RecommendationSections recommendations={recommendations} getHiveName={(hiveId) => getHiveById(hiveId)?.name ?? 'Kupa'} />
         ) : (
-          <EmptyStateCard title="Inga råd ännu" description="Beslutsstödet börjar ge råd när det finns sparade observationer att räkna på." />
+          <EmptyStateCard title="Inga råd ännu" description="När du har sparat några genomgångar börjar appen hjälpa dig att lyfta fram sådant som kan vara värt att kolla närmare." />
         )}
       </View>
     </Screen>

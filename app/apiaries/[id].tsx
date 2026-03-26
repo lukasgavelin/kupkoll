@@ -72,9 +72,9 @@ export default function ApiaryDetailScreen() {
 
   return (
     <Screen>
-      <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={() => router.back()} eyebrow="Bigårdsdetalj" title={apiary.name} description={apiary.location} />
+      <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={() => router.back()} eyebrow="Bigård" title={apiary.name} description={apiary.location} />
       <AppCard>
-        <Text style={theme.textStyles.heading}>Läge och förutsättningar</Text>
+        <Text style={theme.textStyles.heading}>Om platsen</Text>
         {apiary.coordinates ? <Text style={theme.textStyles.caption}>GPS-position: {formatCoordinates(apiary.coordinates)}</Text> : null}
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
         {mapUrl ? <PrimaryButton fullWidth label="Öppna plats i karta" onPress={() => {
@@ -85,7 +85,7 @@ export default function ApiaryDetailScreen() {
         <PrimaryButton fullWidth label="Ta bort bigård" onPress={confirmDelete} variant="ghost" />
       </AppCard>
       <View style={styles.sectionList}>
-        {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryName={apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor i bigården ännu" description="Lägg till första kupan för att börja logga genomgångar och få beslutstöd för platsen." />}
+        {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryName={apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor här ännu" description="Lägg till den första kupan i bigården så blir det lättare att följa upp platsen över tid." />}
       </View>
     </Screen>
   );
