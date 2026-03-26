@@ -2,6 +2,7 @@ import { ReactNode, useMemo } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useFloatingTabBarSpacing } from '@/store/FloatingTabBarContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
 
@@ -13,7 +14,8 @@ type ScreenProps = {
 
 export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const floatingTabBarSpacing = useFloatingTabBarSpacing();
+  const styles = useMemo(() => createStyles(theme, floatingTabBarSpacing), [theme, floatingTabBarSpacing]);
 
   if (!scroll) {
     return (
@@ -36,7 +38,10 @@ export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
   );
 }
 
-function createStyles(theme: Theme) {
+function createStyles(theme: Theme, floatingTabBarSpacing: number) {
+  const baseBottomPadding = theme.spacing.xxxxl + theme.spacing.xxl;
+  const bottomPadding = Math.max(baseBottomPadding, floatingTabBarSpacing + theme.spacing.xl);
+
   return StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -52,7 +57,7 @@ function createStyles(theme: Theme) {
       alignSelf: 'center',
       paddingHorizontal: theme.spacing.xl,
       paddingTop: theme.spacing.lg,
-      paddingBottom: theme.spacing.xxxxl + theme.spacing.xxl,
+      paddingBottom: bottomPadding,
       gap: theme.spacing.xxl,
     },
   });
