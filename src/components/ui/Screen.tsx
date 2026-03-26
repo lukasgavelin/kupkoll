@@ -1,4 +1,5 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useEffect, useMemo, useRef } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,12 +11,32 @@ type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
+  resetScrollOnFocus?: boolean;
 };
 
-export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
+export function Screen({ children, scroll = true, contentStyle, resetScrollOnFocus = true }: ScreenProps) {
   const theme = useTheme();
   const floatingTabBarSpacing = useFloatingTabBarSpacing();
+  const isFocused = useIsFocused();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const hasBeenFocusedRef = useRef(false);
   const styles = useMemo(() => createStyles(theme, floatingTabBarSpacing), [theme, floatingTabBarSpacing]);
+
+  useEffect(() => {
+    if (!scroll || !resetScrollOnFocus) {
+      return;
+    }
+
+    if (isFocused && hasBeenFocusedRef.current) {
+      requestAnimationFrame(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+      });
+    }
+
+    if (isFocused) {
+      hasBeenFocusedRef.current = true;
+    }
+  }, [isFocused, resetScrollOnFocus, scroll]);
 
   if (!scroll) {
     return (
@@ -30,7 +51,7 @@ export function Screen({ children, scroll = true, contentStyle }: ScreenProps) {
   return (
     <SafeAreaView style={styles.safeArea} edges={[ 'top', 'left', 'right' ]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoider}>
-        <ScrollView contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollViewRef} contentContainerStyle={[styles.content, contentStyle]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
