@@ -7,8 +7,8 @@ Det här dokumentet beskriver vad som är klart i projektet, vad som återstår 
 Följande releasegrund är nu satt i projektet:
 
 - Android package name: `com.lukasgavelin.kupkoll`
-- Android `versionCode`: `1`
-- Appversion i Expo synkad till `1.2.0`
+- Android `versionCode`: `2`
+- Appversion i Expo synkad till `1.2.1`
 - EAS Build-konfiguration finns i `eas.json`
 
 Det här räcker för att påbörja en riktig Android-releasekedja, men inte för att publicera i Google Play utan ytterligare material och kontokonfiguration.
@@ -19,7 +19,7 @@ Före första publika release bör ni bekräfta följande:
 
 1. Att package name `com.lukasgavelin.kupkoll` är det ni vill behålla permanent.
 2. Att appen ska släppas enbart för Android.
-3. Att appversion `1.2.0` är rätt första releaseetikett.
+3. Att appversion `1.2.1` är rätt nästa releaseetikett.
 4. Att Google Play-kontot ska ägas av rätt person eller företag från början.
 
 Package name och Play-appens identitet bör ses som permanenta beslut.
