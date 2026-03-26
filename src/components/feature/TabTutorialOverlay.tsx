@@ -12,23 +12,45 @@ type TabTutorialOverlayProps = {
   step: number;
   totalSteps: number;
   activeIndex: number;
+  tabBarBottomOffset: number;
+  tabBarHeight: number;
+  tabBarHorizontalInset: number;
+  tabBarInnerPadding: number;
+  tabBarTopPadding: number;
+  tabBarBottomPadding: number;
   nextLabel: string;
   onNext: () => void;
   onClose: () => void;
 };
 
-export function TabTutorialOverlay({ visible, title, description, step, totalSteps, activeIndex, nextLabel, onNext, onClose }: TabTutorialOverlayProps) {
+export function TabTutorialOverlay({
+  visible,
+  title,
+  description,
+  step,
+  totalSteps,
+  activeIndex,
+  tabBarBottomOffset,
+  tabBarHeight,
+  tabBarHorizontalInset,
+  tabBarInnerPadding,
+  tabBarTopPadding,
+  tabBarBottomPadding,
+  nextLabel,
+  onNext,
+  onClose,
+}: TabTutorialOverlayProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, tabBarBottomOffset, tabBarHeight);
 
-  const tabBarInset = theme.spacing.lg;
-  const tabBarInnerPadding = theme.spacing.sm;
-  const tabBarOuterWidth = width - theme.spacing.lg * 2;
+  const tabBarOuterWidth = width - tabBarHorizontalInset * 2;
   const tabBarInnerWidth = tabBarOuterWidth - tabBarInnerPadding * 2;
   const tabSlotWidth = tabBarInnerWidth / totalSteps;
   const highlightWidth = Math.max(tabSlotWidth - theme.spacing.md, 52);
-  const highlightLeft = tabBarInset + tabBarInnerPadding + activeIndex * tabSlotWidth + (tabSlotWidth - highlightWidth) / 2;
+  const highlightHeight = Math.max(tabBarHeight - tabBarTopPadding - tabBarBottomPadding - 8, 46);
+  const highlightBottom = tabBarBottomOffset + Math.max((tabBarHeight - highlightHeight) / 2, 4);
+  const highlightLeft = tabBarHorizontalInset + tabBarInnerPadding + activeIndex * tabSlotWidth + (tabSlotWidth - highlightWidth) / 2;
   const animatedLeft = useRef(new Animated.Value(highlightLeft)).current;
   const animatedWidth = useRef(new Animated.Value(highlightWidth)).current;
   const ringScale = useRef(new Animated.Value(1)).current;
@@ -105,8 +127,14 @@ export function TabTutorialOverlay({ visible, title, description, step, totalSte
   return (
     <View pointerEvents="box-none" style={styles.overlay}>
       <Pressable onPress={onClose} style={styles.backdrop} />
-      <Animated.View pointerEvents="none" style={[styles.tabGlow, { width: animatedWidth, left: animatedLeft, transform: [{ scale: ringScale }], opacity: ringOpacity }]} />
-      <Animated.View pointerEvents="none" style={[styles.tabHighlight, { width: animatedWidth, left: animatedLeft }]}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.tabGlow,
+          { width: animatedWidth, height: highlightHeight, left: animatedLeft, bottom: highlightBottom, transform: [{ scale: ringScale }], opacity: ringOpacity },
+        ]}
+      />
+      <Animated.View pointerEvents="none" style={[styles.tabHighlight, { width: animatedWidth, height: highlightHeight, left: animatedLeft, bottom: highlightBottom }]}>
         <View style={styles.tabHighlightInner}>
           <View style={styles.tabHighlightDot} />
         </View>
@@ -137,7 +165,7 @@ export function TabTutorialOverlay({ visible, title, description, step, totalSte
   );
 }
 
-function createStyles(theme: Theme) {
+function createStyles(theme: Theme, tabBarBottomOffset: number, tabBarHeight: number) {
   return StyleSheet.create({
     overlay: {
       ...StyleSheet.absoluteFillObject,
@@ -150,22 +178,18 @@ function createStyles(theme: Theme) {
     },
     card: {
       marginHorizontal: theme.spacing.xl,
-      marginBottom: 150,
+      marginBottom: tabBarBottomOffset + tabBarHeight + theme.spacing.xl,
       borderColor: theme.colors.borderStrong,
       backgroundColor: theme.colors.surfaceRaised,
       gap: theme.spacing.xl,
     },
     tabGlow: {
       position: 'absolute',
-      bottom: 52,
-      minHeight: 58,
       borderRadius: theme.radii.pill,
       backgroundColor: theme.colors.accent,
     },
     tabHighlight: {
       position: 'absolute',
-      bottom: 52,
-      minHeight: 58,
       borderRadius: theme.radii.pill,
       borderWidth: 2,
       borderColor: theme.colors.accent,

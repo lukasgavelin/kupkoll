@@ -47,8 +47,12 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const { completeTabTutorial, skipTabTutorial, startTabTutorial, tabTutorialPromptVisible, tabTutorialReady, tabTutorialVisible } = useKupkoll();
+  const tabBarHorizontalInset = theme.spacing.lg;
+  const tabBarInnerPadding = theme.spacing.xs;
+  const tabBarTopPadding = 4;
+  const tabBarBottomPadding = Math.max(theme.spacing.xs, insets.bottom);
   const tabBarBottomOffset = Math.max(insets.bottom, theme.spacing.sm);
-  const tabBarHeight = 66 + insets.bottom;
+  const tabBarHeight = 56 + tabBarBottomPadding;
   const tabBarFootprint = tabBarHeight + tabBarBottomOffset;
 
   const activeTutorialIndex = useMemo(() => tutorialSteps.findIndex((step) => step.path === pathname), [pathname]);
@@ -81,13 +85,13 @@ export default function TabsLayout() {
             tabBarHideOnKeyboard: true,
             tabBarStyle: {
               position: 'absolute',
-              left: theme.spacing.lg,
-              right: theme.spacing.lg,
+              left: tabBarHorizontalInset,
+              right: tabBarHorizontalInset,
               bottom: tabBarBottomOffset,
               height: tabBarHeight,
-              paddingTop: theme.spacing.xs,
-              paddingBottom: Math.max(theme.spacing.xs, insets.bottom),
-              paddingHorizontal: theme.spacing.sm,
+              paddingTop: tabBarTopPadding,
+              paddingBottom: tabBarBottomPadding,
+              paddingHorizontal: tabBarInnerPadding,
               borderTopWidth: 0,
               borderWidth: 1,
               borderColor: theme.colors.border,
@@ -130,6 +134,12 @@ export default function TabsLayout() {
           step={activeTutorialIndex + 1}
           totalSteps={tutorialSteps.length}
           activeIndex={Math.max(activeTutorialIndex, 0)}
+          tabBarBottomOffset={tabBarBottomOffset}
+          tabBarHeight={tabBarHeight}
+          tabBarHorizontalInset={tabBarHorizontalInset}
+          tabBarInnerPadding={tabBarInnerPadding}
+          tabBarTopPadding={tabBarTopPadding}
+          tabBarBottomPadding={tabBarBottomPadding}
           nextLabel={activeTutorialIndex === tutorialSteps.length - 1 ? 'Klar' : 'Nästa flik'}
           onNext={goToNextTutorialStep}
           onClose={() => {
