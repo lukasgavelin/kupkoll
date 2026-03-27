@@ -2,11 +2,13 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useEffect, useState } from 'react';
 
+import { QueenProfileFields } from '@/components/feature/QueenProfileFields';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
+import { buildQueenInput, createQueenHistoryDraftEntry, createQueenProfileDraft } from '@/lib/queen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -26,6 +28,7 @@ export default function NewHiveScreen() {
   const [strength, setStrength] = useState<HiveStrength>('Medel');
   const [temperament, setTemperament] = useState<HiveTemperament>('Lugnt');
   const [boxSystem, setBoxSystem] = useState<HiveBoxSystem>('Lågnormal');
+  const [queen, setQueen] = useState(() => createQueenProfileDraft());
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -47,9 +50,17 @@ export default function NewHiveScreen() {
       return;
     }
 
+    const queenInput = buildQueenInput(queen);
+
+    if (queenInput.error || !queenInput.value) {
+      Alert.alert('Kontrollera drottninguppgifter', queenInput.error ?? 'Drottninguppgifterna kunde inte sparas.');
+      return;
+    }
+
     const hive = addHive({
       apiaryId: selectedApiaryId,
       name: trimmedName,
+      ...queenInput.value,
       strength,
       temperament,
       boxSystem,
@@ -76,7 +87,7 @@ export default function NewHiveScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny kupa"
         title="Lägg till kupa"
-        description={selectedApiaryId ? `Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Du kan ändra uppgifterna senare om du vill.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
+        description={selectedApiaryId ? `Steg 2 av 3. Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Fyll också i aktuell drottning så blir nästa steg tydligt om du senare behöver logga ett byte.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
       />
 
       <AppCard>
@@ -144,6 +155,13 @@ export default function NewHiveScreen() {
             })}
           </View>
         </View>
+
+        <QueenProfileFields
+          value={queen}
+          onChange={setQueen}
+          onAddHistoryEntry={() => setQueen((current) => ({ ...current, queenHistory: [...current.queenHistory, createQueenHistoryDraftEntry()] }))}
+          onRemoveHistoryEntry={(entryId) => setQueen((current) => ({ ...current, queenHistory: current.queenHistory.filter((entry) => entry.id !== entryId) }))}
+        />
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Anteckning</Text>

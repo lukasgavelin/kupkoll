@@ -2,10 +2,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
+import { QueenProfileFields } from '@/components/feature/QueenProfileFields';
 import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
+import { buildQueenInput, createQueenHistoryDraftEntry, createQueenProfileDraft } from '@/lib/queen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -26,6 +28,7 @@ export default function EditHiveScreen() {
   const [strength, setStrength] = useState<HiveStrength>(hive?.strength ?? 'Medel');
   const [temperament, setTemperament] = useState<HiveTemperament>(hive?.temperament ?? 'Lugnt');
   const [boxSystem, setBoxSystem] = useState<HiveBoxSystem>(hive?.boxSystem ?? 'Lågnormal');
+  const [queen, setQueen] = useState(() => createQueenProfileDraft(hive));
   const [notes, setNotes] = useState(hive?.notes ?? '');
 
   if (!hive) {
@@ -54,9 +57,17 @@ export default function EditHiveScreen() {
       return;
     }
 
+    const queenInput = buildQueenInput(queen);
+
+    if (queenInput.error || !queenInput.value) {
+      Alert.alert('Kontrollera drottninguppgifter', queenInput.error ?? 'Drottninguppgifterna kunde inte sparas.');
+      return;
+    }
+
     updateHive(hiveId, {
       apiaryId: selectedApiaryId,
       name: trimmedName,
+      ...queenInput.value,
       strength,
       temperament,
       boxSystem,
@@ -142,6 +153,13 @@ export default function EditHiveScreen() {
             })}
           </View>
         </View>
+
+        <QueenProfileFields
+          value={queen}
+          onChange={setQueen}
+          onAddHistoryEntry={() => setQueen((current) => ({ ...current, queenHistory: [...current.queenHistory, createQueenHistoryDraftEntry()] }))}
+          onRemoveHistoryEntry={(entryId) => setQueen((current) => ({ ...current, queenHistory: current.queenHistory.filter((entry) => entry.id !== entryId) }))}
+        />
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Anteckning</Text>

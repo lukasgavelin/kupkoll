@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { getRelatedTaskForRecommendation } from '@/lib/recommendations';
 import { formatDateLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
@@ -36,6 +37,7 @@ export default function HiveDetailScreen() {
   const latestEvent = events[0];
   const recommendations = getRecommendationsForHive(hive.id);
   const tasks = getTasksForHive(hive.id);
+  const queenHistory = [...hive.queenHistory].sort((left, right) => right.year.localeCompare(left.year));
 
   function confirmDelete() {
     Alert.alert('Ta bort kupa?', 'Kupan tas bort tillsammans med sparade genomgångar, händelser och manuella uppgifter.', [
@@ -65,16 +67,40 @@ export default function HiveDetailScreen() {
       <AppCard>
         <View style={styles.metaGrid}>
           <MetaItem label="Status" value={hive.status} />
-          <MetaItem label="Drottningstatus" value={hive.queenStatus} />
           <MetaItem label="Samhällsstyrka" value={hive.strength} />
           <MetaItem label="Temperament" value={hive.temperament} />
           <MetaItem label="Kupsystem" value={hive.boxSystem} />
         </View>
         <Text style={theme.textStyles.body}>{hive.notes}</Text>
+        {apiary ? <PrimaryButton label={`Öppna ${apiary.name}`} onPress={() => router.push(`/apiaries/${apiary.id}`)} variant="secondary" /> : null}
         <PrimaryButton label="Ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hiveId}`)} />
         <PrimaryButton label="Ny händelse" onPress={() => router.push(`/events/new?hiveId=${hiveId}` as never)} variant="secondary" />
         <PrimaryButton label="Redigera kupa" onPress={() => router.push(`/hives/${hiveId}/edit`)} variant="secondary" />
         <PrimaryButton label="Ta bort kupa" onPress={confirmDelete} variant="ghost" />
+      </AppCard>
+
+      <SectionHeader eyebrow="Drottning" title="Nuvarande drottning och historik" />
+      <AppCard>
+        <View style={styles.metaGrid}>
+          <MetaItem label="Drottningstatus" value={hive.queenStatus} />
+          <MetaItem label="Drottningens år" value={hive.queenYear ?? 'Inte angivet'} />
+          <MetaItem label="Märkningsfärg" value={hive.queenMarkingColor ?? 'Inte angivet'} />
+          <MetaItem label="Ursprung" value={hive.queenOrigin ?? 'Inte angivet'} />
+          <MetaItem label="Införd" value={hive.queenIntroducedAt ? formatDateLabel(hive.queenIntroducedAt) : 'Inte angivet'} />
+        </View>
+        {queenHistory.length ? (
+          <View style={styles.queenHistoryList}>
+            {queenHistory.map((entry) => (
+              <View key={entry.id} style={styles.queenHistoryItem}>
+                <Text style={theme.textStyles.bodyStrong}>{entry.year}</Text>
+                <Text style={theme.textStyles.body}>{entry.note}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={theme.textStyles.caption}>Ingen drottninghistorik sparad ännu. Lägg till byten eller milstolpar när du redigerar kupan.</Text>
+        )}
+        <PrimaryButton fullWidth label="Logga drottningbyte" onPress={() => router.push(`/events/new?hiveId=${hiveId}&type=Drottning bytt` as never)} />
       </AppCard>
 
       <SectionHeader eyebrow="Historik" title="Senaste noteringar" />
@@ -90,7 +116,17 @@ export default function HiveDetailScreen() {
 
       <SectionHeader eyebrow="Råd" title="Att hålla koll på" />
       <View style={styles.sectionList}>
-        {recommendations.length ? <RecommendationSections recommendations={recommendations} getHiveName={() => hive.name} /> : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång börjar appen lyfta fram sådant som kan vara bra att titta närmare på." />}
+        {recommendations.length ? (
+          <RecommendationSections
+            recommendations={recommendations}
+            getHiveName={() => hive.name}
+            getRelatedTaskLabel={(recommendation) => {
+              const relatedTask = getRelatedTaskForRecommendation(recommendation, tasks);
+
+              return relatedTask ? `${relatedTask.title} senast ${formatDateLabel(relatedTask.dueDate)}` : undefined;
+            }}
+          />
+        ) : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång börjar appen lyfta fram sådant som kan vara bra att titta närmare på." />}
       </View>
 
       <SectionHeader eyebrow="Att göra" title="Saker kopplade till den här kupan" />
@@ -122,5 +158,14 @@ const styles = StyleSheet.create({
   },
   sectionList: {
     gap: theme.spacing.lg,
+  },
+  queenHistoryList: {
+    gap: theme.spacing.md,
+  },
+  queenHistoryItem: {
+    gap: theme.spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.md,
   },
 });

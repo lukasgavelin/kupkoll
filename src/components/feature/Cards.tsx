@@ -99,6 +99,11 @@ function getHiveEventDetailLabels(event: HiveEvent) {
   const labels = [
     event.details.mergedWithHiveName ? `Förenat med: ${event.details.mergedWithHiveName}` : undefined,
     event.details.queenYear ? `Årgång: ${event.details.queenYear}` : undefined,
+    event.details.queenMarkingColor ? `Märkningsfärg: ${event.details.queenMarkingColor}` : undefined,
+    event.details.queenOrigin ? `Ursprung: ${event.details.queenOrigin}` : undefined,
+    event.details.queenIntroducedAt ? `Införd: ${formatDateLabel(event.details.queenIntroducedAt)}` : undefined,
+    event.details.queenStatus ? `Drottningstatus: ${event.details.queenStatus}` : undefined,
+    event.details.queenHistoryNote ? `Historik: ${event.details.queenHistoryNote}` : undefined,
     event.details.markingNote ? `Märkning: ${event.details.markingNote}` : undefined,
     event.details.honeySuperCount !== undefined ? `Skattlådor: ${event.details.honeySuperCount}` : undefined,
     event.details.harvestSummary ? `Skattning: ${event.details.harvestSummary}` : undefined,
@@ -144,6 +149,11 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
   const theme = useTheme();
   const styles = createStyles(theme);
   const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : 'calm';
+  const queenSegments = [
+    `Drottning: ${hive.queenStatus}`,
+    hive.queenYear ? `Årgång ${hive.queenYear}` : undefined,
+    hive.queenMarkingColor ? `Märkning ${hive.queenMarkingColor.toLowerCase()}` : undefined,
+  ].filter((segment): segment is string => Boolean(segment));
 
   return (
     <Pressable onPress={() => router.push(`/hives/${hive.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
@@ -156,7 +166,7 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
           <StatusBadge label={hive.status} tone={statusTone} />
         </View>
         <View style={styles.inlineWrap}>
-          <Text style={theme.textStyles.caption}>Drottning: {hive.queenStatus}</Text>
+          <Text style={theme.textStyles.caption}>{queenSegments.join(' · ')}</Text>
           <Text style={theme.textStyles.caption}>Styrka: {hive.strength}</Text>
           <Text style={theme.textStyles.caption}>Temperament: {hive.temperament}</Text>
           <Text style={theme.textStyles.caption}>Kupsystem: {hive.boxSystem}</Text>
@@ -188,7 +198,7 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
   );
 }
 
-export function RecommendationCard({ recommendation, hiveName }: { recommendation: Recommendation; hiveName: string }) {
+export function RecommendationCard({ recommendation, hiveName, relatedTaskLabel }: { recommendation: Recommendation; hiveName: string; relatedTaskLabel?: string }) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const label = getRecommendationSeverityLabel(recommendation);
@@ -207,6 +217,7 @@ export function RecommendationCard({ recommendation, hiveName }: { recommendatio
         </View>
       </View>
       <Text style={theme.textStyles.body}>{recommendation.detail}</Text>
+      {relatedTaskLabel ? <Text style={theme.textStyles.caption}>Finns redan som uppgift: {relatedTaskLabel}</Text> : null}
     </AppCard>
   );
 }

@@ -83,6 +83,12 @@ function getTaskSignalKey(taskId: string) {
   return taskId.startsWith('task-') ? taskId.slice(5) : taskId;
 }
 
+export function getRelatedTaskForRecommendation(recommendation: Recommendation, tasks: Task[]) {
+  const recommendationSignalKey = getRecommendationSignalKey(recommendation.id);
+
+  return tasks.find((task) => getTaskSignalKey(task.id) === recommendationSignalKey);
+}
+
 export function filterRecommendationsWithoutTask(recommendations: Recommendation[], tasks: Task[]) {
   const taskSignalKeys = new Set(tasks.map((task) => getTaskSignalKey(task.id)));
 

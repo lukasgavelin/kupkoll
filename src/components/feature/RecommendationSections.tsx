@@ -6,7 +6,7 @@ import { Recommendation } from '@/types/domain';
 import { RecommendationCard } from './Cards';
 import { SectionHeader } from '../ui/SectionHeader';
 
-export function RecommendationSections({ recommendations, getHiveName }: { recommendations: Recommendation[]; getHiveName: (hiveId: string) => string }) {
+export function RecommendationSections({ recommendations, getHiveName, getRelatedTaskLabel }: { recommendations: Recommendation[]; getHiveName: (hiveId: string) => string; getRelatedTaskLabel?: (recommendation: Recommendation) => string | undefined }) {
   const groups = groupRecommendations(recommendations);
 
   return (
@@ -16,7 +16,7 @@ export function RecommendationSections({ recommendations, getHiveName }: { recom
           <SectionHeader title={group.title} description={group.description} />
           <View style={styles.list}>
             {group.items.map((recommendation) => (
-              <RecommendationCard key={recommendation.id} hiveName={getHiveName(recommendation.hiveId)} recommendation={recommendation} />
+              <RecommendationCard key={recommendation.id} hiveName={getHiveName(recommendation.hiveId)} recommendation={recommendation} relatedTaskLabel={getRelatedTaskLabel?.(recommendation)} />
             ))}
           </View>
         </View>

@@ -1,9 +1,10 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
+import { applyHiveEventToHive } from '@/lib/queenEvents';
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { KupkollAppState, saveKupkollState } from '@/lib/storage';
-import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, QueenHistoryEntry, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
@@ -45,6 +46,27 @@ function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'que
     queenStatus,
     temperament: input.temperament,
   };
+}
+
+function buildQueenHistoryEntries(entries?: NewHiveInput['queenHistory']): QueenHistoryEntry[] {
+  const timestamp = Date.now();
+
+  return (entries ?? [])
+    .map((entry, index) => {
+      const year = entry.year.trim();
+      const note = entry.note.trim();
+
+      if (!year || !note) {
+        return null;
+      }
+
+      return {
+        id: `queen-history-${timestamp}-${index}`,
+        year,
+        note,
+      };
+    })
+    .filter((entry): entry is QueenHistoryEntry => Boolean(entry));
 }
 
 export function KupkollProvider({ children, initialData }: { children: ReactNode; initialData: KupkollAppState }) {
@@ -98,8 +120,8 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     const hive: Hive = {
       id: `hive-${Date.now()}`,
       status: 'Under uppbyggnad',
-      queenStatus: 'Behöver följas upp',
       ...input,
+      queenHistory: buildQueenHistoryEntries(input.queenHistory),
     };
 
     setHives((current) => [hive, ...current]);
@@ -132,6 +154,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     const updatedHive: Hive = {
       ...currentHive,
       ...input,
+      queenHistory: buildQueenHistoryEntries(input.queenHistory),
     };
 
     setHives((current) => current.map((hive) => (hive.id === hiveId ? updatedHive : hive)));
@@ -185,6 +208,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     };
 
     setEvents((current) => [event, ...current]);
+    setHives((current) => current.map((hive) => applyHiveEventToHive(hive, event)));
   }
 
   const value = useMemo<KupkollContextValue>(
