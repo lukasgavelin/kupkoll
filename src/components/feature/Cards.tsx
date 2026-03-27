@@ -9,6 +9,22 @@ import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
 import { Apiary, Hive, Inspection, Recommendation, Task } from '@/types/domain';
 
+function getTaskSourceLabel(source: Task['source']) {
+  return source === 'Beslutsstöd' ? 'Föreslaget från dina senaste noteringar' : 'Egen planering';
+}
+
+function getRecommendationSeverityLabel(recommendation: Recommendation) {
+  if (recommendation.severity === 'critical') {
+    return 'Risk';
+  }
+
+  if (recommendation.severity === 'warning') {
+    return recommendation.kind === 'alert' ? 'Var uppmärksam' : 'Håll koll';
+  }
+
+  return 'Bra att veta';
+}
+
 function formatInspectionWeather(inspection: Inspection) {
   if (!inspection.weather) {
     return null;
@@ -92,13 +108,13 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
       <View style={styles.rowBetween}>
         <View style={styles.textColumn}>
           <Text style={theme.textStyles.heading}>{task.title}</Text>
-          <Text style={theme.textStyles.caption}>Bra att göra senast {formatDateLabel(task.dueDate)}</Text>
+          <Text style={theme.textStyles.caption}>Planera senast {formatDateLabel(task.dueDate)}</Text>
         </View>
         <StatusBadge label={task.priority} tone={tone} />
       </View>
       {hiveName ? <Text style={theme.textStyles.caption}>{hiveName}</Text> : null}
       <Text style={theme.textStyles.body}>{task.description}</Text>
-      <Text style={theme.textStyles.caption}>{task.source}</Text>
+      <Text style={theme.textStyles.caption}>{getTaskSourceLabel(task.source)}</Text>
     </AppCard>
   );
 }
@@ -106,7 +122,7 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
 export function RecommendationCard({ recommendation, hiveName }: { recommendation: Recommendation; hiveName: string }) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const label = recommendation.severity === 'critical' ? 'Akut' : recommendation.severity === 'warning' ? 'Följ upp' : 'Tips';
+  const label = getRecommendationSeverityLabel(recommendation);
   const kindTone = recommendation.kind === 'alert' ? recommendation.severity : recommendation.kind === 'seasonal' ? 'calm' : 'info';
 
   return (

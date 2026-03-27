@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { AppState, StyleSheet, Text, View } from 'react-native';
 
 import { InspectionSnapshot, StatCard, TaskCard } from '@/components/feature/Cards';
 import { RecommendationSections } from '@/components/feature/RecommendationSections';
@@ -10,9 +10,9 @@ import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { sortRecommendations } from '@/lib/recommendations';
+import { filterRecommendationsWithoutTask, sortRecommendations } from '@/lib/recommendations';
 import { formatDateTimeLabel, getSeasonStatus } from '@/lib/selectors';
-import { fetchSeasonWeatherSignal, InspectionWeatherSnapshot } from '@/lib/weather';
+import { applySeasonTipSelection, getSeasonTipSelection, SeasonTipSelection } from '@/lib/seasonTipRotation';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -20,12 +20,19 @@ import { Theme } from '@/theme';
 export default function HomeScreen() {
   const theme = useTheme();
   const { dashboard, hives, apiaries, recommendations, tasks, getHiveById } = useKupkoll();
-  const [seasonWeather, setSeasonWeather] = useState<InspectionWeatherSnapshot | undefined>(undefined);
+  const [seasonDate, setSeasonDate] = useState(() => new Date());
+  const [seasonTipSelection, setSeasonTipSelection] = useState<SeasonTipSelection>({
+    focusStartIndex: 0,
+    watchStartIndex: 0,
+  });
   const styles = createStyles(theme);
   const quickHive = hives[0];
-  const primaryApiary = useMemo(() => apiaries.find((apiary) => apiary.coordinates) ?? apiaries[0], [apiaries]);
-  const seasonStatus = getSeasonStatus(new Date(), apiaries, seasonWeather);
-  const prioritizedRecommendations = sortRecommendations(recommendations).slice(0, 4);
+  const baseSeasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
+  const seasonStatus = useMemo(() => applySeasonTipSelection(baseSeasonStatus, seasonTipSelection), [baseSeasonStatus, seasonTipSelection]);
+  const prioritizedRecommendations = useMemo(
+    () => sortRecommendations(filterRecommendationsWithoutTask(recommendations, tasks)).slice(0, 4),
+    [recommendations, tasks],
+  );
   const hasApiaries = apiaries.length > 0;
   const nextTask = tasks[0];
   const nextRecommendation = prioritizedRecommendations[0];
@@ -38,9 +45,9 @@ export default function HomeScreen() {
   ].filter((item): item is string => Boolean(item));
   const heroText = quickHive
     ? nextTask
-      ? 'Börja med det som ligger överst i arbetslistan. Därefter ser du vad som nyligen hänt och vad säsongen talar för just nu.'
+      ? 'Börja med det som ligger överst i arbetslistan. Längre ned ser du sådant som ger sammanhang inför nästa besök.'
       : nextRecommendation
-        ? 'Du har inget direkt i arbetslistan just nu, men här ser du vad som är klokt att hålla koll på vid nästa besök.'
+        ? 'Du har inget direkt att göra just nu, men här ser du vad som kan vara bra att ha med sig till nästa besök.'
         : 'Läget ser lugnt ut just nu. Här under kan du gå vidare till senaste genomgångar och säsongsläget.'
     : hasApiaries
       ? 'Börja med att lägga till din första kupa. Sedan fylls Hem med nästa steg, senaste noteringar och säsongsläge.'
@@ -48,39 +55,37 @@ export default function HomeScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    const coordinates = primaryApiary?.coordinates;
-
-    if (!coordinates) {
-      setSeasonWeather(undefined);
-      return () => {
-        cancelled = true;
-      };
-    }
 
     void (async () => {
-      try {
-        const signal = await fetchSeasonWeatherSignal(coordinates);
+      const selection = await getSeasonTipSelection(baseSeasonStatus, seasonDate);
 
-        if (!cancelled) {
-          setSeasonWeather(signal);
-        }
-      } catch {
-        if (!cancelled) {
-          setSeasonWeather(undefined);
-        }
+      if (!cancelled) {
+        setSeasonTipSelection(selection);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [primaryApiary?.coordinates?.latitude, primaryApiary?.coordinates?.longitude, primaryApiary?.id]);
+  }, [baseSeasonStatus, seasonDate]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        setSeasonDate(new Date());
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return (
     <Screen>
       <AppCard style={styles.heroCard}>
         <Text style={theme.textStyles.overline}>Hem</Text>
-        <Text style={theme.textStyles.display}>Nästa steg idag.</Text>
+        <Text style={theme.textStyles.display}>Det viktigaste just nu.</Text>
         <Text style={styles.heroText}>{heroText}</Text>
         <View style={styles.heroMetaRow}>
           <View style={styles.heroMetaCard}>
@@ -105,7 +110,7 @@ export default function HomeScreen() {
         {quickHive ? <PrimaryButton label="Logga genomgång" onPress={() => router.push(`/inspections/new?hiveId=${quickHive.id}`)} /> : <PrimaryButton label={hasApiaries ? 'Lägg till första kupan' : 'Lägg till första bigården'} onPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />}
       </AppCard>
 
-      <SectionHeader eyebrow="I dag" title="Närmast att göra" description="Börja här om du vill se vad som ligger närmast i tiden." />
+      <SectionHeader eyebrow="Gör först" title="Det här väntar på dig" description="Här ligger konkreta nästa steg som är värda att planera eller göra först." />
       <View style={styles.sectionList}>
         {tasks.length ? (
           tasks.slice(0, 3).map((task) => (
@@ -116,14 +121,14 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <SectionHeader eyebrow="Kolla upp" title="Bra att hålla ögonen på" description="Här syns sådant som kan vara klokt att ta med sig till nästa besök i bigården." />
-      <View style={styles.sectionList}>
-        {prioritizedRecommendations.length ? (
-          <RecommendationSections recommendations={prioritizedRecommendations} getHiveName={(hiveId) => getHiveById(hiveId)?.name ?? 'Kupa'} />
-        ) : (
-          <EmptyStateCard title="Inget särskilt att följa upp" description="När du har lagt till kupor och gjort genomgångar lyfts sådant fram här som kan vara bra att titta närmare på." actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
-        )}
-      </View>
+      {prioritizedRecommendations.length ? (
+        <>
+          <SectionHeader eyebrow="Ha med dig" title="Det här är bra att känna till" description="Här syns råd och lägesbilder som ger sammanhang, men som inte redan ligger som uppgift." />
+          <View style={styles.sectionList}>
+            <RecommendationSections recommendations={prioritizedRecommendations} getHiveName={(hiveId) => getHiveById(hiveId)?.name ?? 'Kupa'} />
+          </View>
+        </>
+      ) : null}
 
       <SectionHeader eyebrow="Senast" title="Senaste genomgångar" description="Använd den här delen för att minnas vad du såg vid senaste besöken." />
       <View style={styles.sectionList}>

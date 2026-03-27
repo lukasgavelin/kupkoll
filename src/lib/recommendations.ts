@@ -1,4 +1,4 @@
-import { Recommendation, RecommendationKind, RecommendationSeverity } from '@/types/domain';
+import { Recommendation, RecommendationKind, RecommendationSeverity, Task } from '@/types/domain';
 
 export type RecommendationGroup = {
   kind: RecommendationKind;
@@ -73,6 +73,20 @@ export function groupRecommendations(recommendations: Recommendation[]): Recomme
       ...groupMeta[kind],
       items,
     }));
+}
+
+function getRecommendationSignalKey(recommendationId: string) {
+  return recommendationId.startsWith('rec-') ? recommendationId.slice(4) : recommendationId;
+}
+
+function getTaskSignalKey(taskId: string) {
+  return taskId.startsWith('task-') ? taskId.slice(5) : taskId;
+}
+
+export function filterRecommendationsWithoutTask(recommendations: Recommendation[], tasks: Task[]) {
+  const taskSignalKeys = new Set(tasks.map((task) => getTaskSignalKey(task.id)));
+
+  return recommendations.filter((recommendation) => !taskSignalKeys.has(getRecommendationSignalKey(recommendation.id)));
 }
 
 export function getRecommendationKindLabel(kind: RecommendationKind) {

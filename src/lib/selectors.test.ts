@@ -20,12 +20,13 @@ describe('getSeasonStatus', () => {
     expect(result).toMatchObject({
       season: 'Vårutveckling',
       monthLabel: 'Mars',
-      phaseLabel: 'marsarbete',
+      phaseLabel: 'första vårkollen',
       regionLabel: 'Sverige',
     });
     expect(result.timingLabel).toContain('mars till maj');
-    expect(result.summary).toContain('förrädiskt');
-    expect(result.focusItems).toContain('gör vårundersökning om vädret tillåter');
+    expect(result.summary).toContain('skifta snabbt');
+    expect(result.focusItems).toContain('gör vårundersökning när temperaturen tillåter flygväder');
+    expect(result.watchItems).toContain('håll flusterskydd kvar länge om snö och stark vårsol riskerar att locka ut bina för tidigt');
   });
 
   it('returns a stronger production-oriented profile in summer', () => {
@@ -34,25 +35,9 @@ describe('getSeasonStatus', () => {
     expect(result).toMatchObject({
       season: 'Drag och skattning',
       monthLabel: 'Juli',
-      phaseLabel: 'högsommar',
+      phaseLabel: 'första skattningen',
     });
-    expect(result.focusItems).toContain('skatta och slunga första honungen');
-  });
-
-  it('uses current weather as a signal for slightly earlier seasonal timing', () => {
-    const result = getSeasonStatus(
-      new Date('2026-04-24T12:00:00.000Z'),
-      [],
-      {
-        condition: 'Soligt',
-        wind: 'Lugnt',
-        temperatureC: 18.2,
-        provider: 'SMHI',
-      },
-    );
-
-    expect(result.season).toBe('Svärmperiod');
-    expect(result.weatherSignalLabel).toContain('före normal timing');
+    expect(result.focusItems).toContain('skatta och slunga första honungen utan att ta allt från bina');
   });
 
   it('adapts season status to northern apiaries where spring comes later', () => {
