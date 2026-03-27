@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Alert, Linking, StyleSheet, Switch, Text, View } from 'react-native';
-import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -14,7 +13,7 @@ import { Theme } from '@/theme';
 export default function SettingsScreen() {
   const theme = useTheme();
   const { isDarkMode, toggleThemeMode } = useThemeMode();
-  const { apiaries, hives, inspections, manualTasks, resetTabTutorial } = useKupkoll();
+  const { apiaries, hives, inspections, manualTasks } = useKupkoll();
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const styles = createStyles(theme);
@@ -24,12 +23,6 @@ export default function SettingsScreen() {
     { label: 'Genomgångar', value: inspections.length, fullWidth: true },
     { label: 'Manuella uppgifter', value: manualTasks.length, fullWidth: true },
   ];
-
-  async function showTutorialAgain() {
-    await resetTabTutorial();
-    router.navigate('/');
-    Alert.alert('Guidning återställd', 'När du kommer tillbaka till Hem visas rundturen igen, så att du kan gå igenom flikarna på nytt om du vill.');
-  }
 
   async function handleExport() {
     if (isExporting) {
@@ -87,8 +80,8 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
     <Screen>
       <SectionHeader
         eyebrow="Inställningar"
-        title="Backup och guidning"
-        description="Här hittar du det som hjälper dig att hantera appen: spara en backup och visa guidningen igen om du vill."
+        title="Backup och appval"
+        description="Här hittar du det som hjälper dig att hantera appen: tema, backup och information om hur Kupkoll hanterar dina uppgifter."
       />
       <View style={{ gap: theme.spacing.lg }}>
         <AppCard>
@@ -143,18 +136,6 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
             label="Öppna integritetspolicy"
             onPress={() => {
               void openPrivacyPolicy();
-            }}
-            variant="secondary"
-          />
-        </AppCard>
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Guidning</Text>
-          <Text style={theme.textStyles.body}>Visa den korta guidningen igen om du vill få en påminnelse om hur flikarna är tänkta att användas.</Text>
-          <PrimaryButton
-            fullWidth
-            label="Visa flikguide igen"
-            onPress={() => {
-              void showTutorialAgain();
             }}
             variant="secondary"
           />

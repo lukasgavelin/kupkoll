@@ -22,8 +22,6 @@ export type ColorPalette = {
   shadowStrong: string;
   overlay: string;
   overlaySoft: string;
-  tutorialHighlight: string;
-  tutorialHighlightBorder: string;
 };
 
 export const lightColors: ColorPalette = {
@@ -50,8 +48,6 @@ export const lightColors: ColorPalette = {
   shadowStrong: 'rgba(31, 39, 35, 0.14)',
   overlay: 'rgba(35, 48, 43, 0.40)',
   overlaySoft: 'rgba(35, 48, 43, 0.34)',
-  tutorialHighlight: 'rgba(251, 250, 246, 0.12)',
-  tutorialHighlightBorder: 'rgba(233, 220, 197, 0.92)',
 };
 
 export const darkColors: ColorPalette = {
@@ -78,8 +74,6 @@ export const darkColors: ColorPalette = {
   shadowStrong: 'rgba(0, 0, 0, 0.36)',
   overlay: 'rgba(5, 8, 7, 0.58)',
   overlaySoft: 'rgba(5, 8, 7, 0.50)',
-  tutorialHighlight: 'rgba(243, 239, 228, 0.08)',
-  tutorialHighlightBorder: 'rgba(200, 154, 91, 0.72)',
 };
 
 export function getColors(mode: 'light' | 'dark'): ColorPalette {

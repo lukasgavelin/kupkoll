@@ -1,14 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { KupkollAppState, saveKupkollState } from '@/lib/storage';
-import { deriveTabTutorialViewState } from '@/lib/tutorialState';
 import { Apiary, Hive, Inspection, NewApiaryInput, NewHiveInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
-
-const KUPKOLL_TAB_TUTORIAL_STORAGE_KEY = 'kupkoll:first-run-tab-tutorial';
-const LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY = 'beehaven:first-run-tab-tutorial';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
@@ -21,9 +16,6 @@ type KupkollContextValue = {
   tasks: Task[];
   latestInspectionMap: Record<string, Inspection>;
   dashboard: DashboardSnapshot;
-  tabTutorialReady: boolean;
-  tabTutorialPromptVisible: boolean;
-  tabTutorialVisible: boolean;
   addApiary: (input: NewApiaryInput) => Apiary;
   addHive: (input: NewHiveInput) => Hive;
   updateApiary: (apiaryId: string, input: UpdateApiaryInput) => Apiary | undefined;
@@ -31,10 +23,6 @@ type KupkollContextValue = {
   deleteApiary: (apiaryId: string) => void;
   deleteHive: (hiveId: string) => void;
   addInspection: (input: NewInspectionInput) => void;
-  completeTabTutorial: () => Promise<void>;
-  resetTabTutorial: () => Promise<void>;
-  startTabTutorial: () => Promise<void>;
-  skipTabTutorial: () => Promise<void>;
   getApiaryById: (id: string) => Apiary | undefined;
   getHiveById: (id: string) => Hive | undefined;
   getHivesByApiary: (apiaryId: string) => Hive[];
@@ -61,9 +49,6 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
   const [hives, setHives] = useState(initialData.hives);
   const [inspections, setInspections] = useState(initialData.inspections);
   const [manualTasks, setManualTasks] = useState(initialData.manualTasks);
-  const [tabTutorialReady, setTabTutorialReady] = useState(false);
-  const [tabTutorialPromptVisible, setTabTutorialPromptVisible] = useState(false);
-  const [tabTutorialVisible, setTabTutorialVisible] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -78,42 +63,6 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       }
     })();
   }, [apiaries, hives, inspections, manualTasks]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadTabTutorialState() {
-      try {
-        const currentValue = await AsyncStorage.getItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY);
-        const legacyValue = currentValue ? null : await AsyncStorage.getItem(LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY);
-        const storedValue = currentValue ?? legacyValue;
-        const viewState = deriveTabTutorialViewState(storedValue);
-
-        if (!currentValue && legacyValue) {
-          await AsyncStorage.setItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY, legacyValue);
-          await AsyncStorage.removeItem(LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY);
-        }
-
-        if (!cancelled) {
-          setTabTutorialPromptVisible(viewState.promptVisible);
-          setTabTutorialVisible(viewState.tutorialVisible);
-          setTabTutorialReady(true);
-        }
-      } catch {
-        if (!cancelled) {
-          setTabTutorialPromptVisible(true);
-          setTabTutorialVisible(false);
-          setTabTutorialReady(true);
-        }
-      }
-    }
-
-    loadTabTutorialState();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const derived = useMemo(() => buildDerivedSignals(apiaries, hives, inspections), [apiaries, hives, inspections]);
   const tasks = useMemo(() => getUpcomingTasks([...manualTasks, ...derived.tasks]), [manualTasks, derived.tasks]);
@@ -221,43 +170,6 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     );
   }
 
-  async function completeTabTutorial() {
-    setTabTutorialPromptVisible(false);
-    setTabTutorialVisible(false);
-
-    try {
-      await AsyncStorage.setItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY, 'done');
-    } catch {
-    }
-  }
-
-  async function resetTabTutorial() {
-    setTabTutorialPromptVisible(true);
-    setTabTutorialVisible(false);
-    setTabTutorialReady(true);
-
-    try {
-      await AsyncStorage.removeItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY);
-      await AsyncStorage.removeItem(LEGACY_BEEHAVEN_TAB_TUTORIAL_STORAGE_KEY);
-    } catch {
-    }
-  }
-
-  async function startTabTutorial() {
-    setTabTutorialPromptVisible(false);
-    setTabTutorialVisible(true);
-    setTabTutorialReady(true);
-
-    try {
-      await AsyncStorage.setItem(KUPKOLL_TAB_TUTORIAL_STORAGE_KEY, 'active');
-    } catch {
-    }
-  }
-
-  async function skipTabTutorial() {
-    await completeTabTutorial();
-  }
-
   const value = useMemo<KupkollContextValue>(
     () => ({
       apiaries,
@@ -268,9 +180,6 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       tasks,
       latestInspectionMap,
       dashboard,
-      tabTutorialReady,
-      tabTutorialPromptVisible,
-      tabTutorialVisible,
       addApiary,
       addHive,
       updateApiary,
@@ -278,10 +187,6 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       deleteApiary,
       deleteHive,
       addInspection,
-      completeTabTutorial,
-      resetTabTutorial,
-      startTabTutorial,
-      skipTabTutorial,
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),
       getHiveById: (id) => hives.find((hive) => hive.id === id),
       getHivesByApiary: (apiaryId) => hives.filter((hive) => hive.apiaryId === apiaryId),
@@ -292,7 +197,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       getRecommendationsForHive: (hiveId) => derived.recommendations.filter((item) => item.hiveId === hiveId),
       getTasksForHive: (hiveId) => tasks.filter((task) => task.hiveId === hiveId),
     }),
-    [apiaries, hives, inspections, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard, tabTutorialReady, tabTutorialPromptVisible, tabTutorialVisible],
+    [apiaries, hives, inspections, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard],
   );
 
   return <KupkollContext.Provider value={value}>{children}</KupkollContext.Provider>;

@@ -55,7 +55,6 @@ Kupkoll sparar även viss teknisk information lokalt för att appen ska fungera 
 
 - lokalt apptillstånd för bigårdar, kupor, genomgångar och uppgifter
 - valt tema, till exempel mörkt eller ljust läge
-- status för om guidningen i appen har visats eller återställts
 
 ### Platsuppgifter
 
@@ -77,7 +76,7 @@ Kupkoll behandlar information för att kunna:
 - hämta väder kopplat till en plats när du använder den funktionen
 - visa kartlänk för en sparad plats
 - skapa en exportfil för backup
-- komma ihåg dina lokala inställningar, som tema och guidning
+- komma ihåg dina lokala inställningar, som tema
 
 ## 6. Hur och var data lagras
 
