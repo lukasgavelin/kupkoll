@@ -3,7 +3,7 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useState } fr
 import { buildDerivedSignals } from '@/lib/rules';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { KupkollAppState, saveKupkollState } from '@/lib/storage';
-import { Apiary, Hive, Inspection, NewApiaryInput, NewHiveInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput } from '@/types/domain';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
@@ -11,6 +11,7 @@ type KupkollContextValue = {
   apiaries: Apiary[];
   hives: Hive[];
   inspections: Inspection[];
+  events: HiveEvent[];
   manualTasks: Task[];
   recommendations: Recommendation[];
   tasks: Task[];
@@ -23,10 +24,12 @@ type KupkollContextValue = {
   deleteApiary: (apiaryId: string) => void;
   deleteHive: (hiveId: string) => void;
   addInspection: (input: NewInspectionInput) => void;
+  addEvent: (input: NewHiveEventInput) => void;
   getApiaryById: (id: string) => Apiary | undefined;
   getHiveById: (id: string) => Hive | undefined;
   getHivesByApiary: (apiaryId: string) => Hive[];
   getInspectionsForHive: (hiveId: string) => Inspection[];
+  getEventsForHive: (hiveId: string) => HiveEvent[];
   getRecommendationsForHive: (hiveId: string) => Recommendation[];
   getTasksForHive: (hiveId: string) => Task[];
 };
@@ -48,6 +51,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
   const [apiaries, setApiaries] = useState(initialData.apiaries);
   const [hives, setHives] = useState(initialData.hives);
   const [inspections, setInspections] = useState(initialData.inspections);
+  const [events, setEvents] = useState(initialData.events);
   const [manualTasks, setManualTasks] = useState(initialData.manualTasks);
 
   useEffect(() => {
@@ -57,12 +61,13 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
           apiaries,
           hives,
           inspections,
+          events,
           manualTasks,
         });
       } catch {
       }
     })();
-  }, [apiaries, hives, inspections, manualTasks]);
+  }, [apiaries, hives, inspections, events, manualTasks]);
 
   const derived = useMemo(() => buildDerivedSignals(apiaries, hives, inspections), [apiaries, hives, inspections]);
   const tasks = useMemo(() => getUpcomingTasks([...manualTasks, ...derived.tasks]), [manualTasks, derived.tasks]);
@@ -136,6 +141,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
   function deleteHive(hiveId: string) {
     setHives((current) => current.filter((hive) => hive.id !== hiveId));
     setInspections((current) => current.filter((inspection) => inspection.hiveId !== hiveId));
+    setEvents((current) => current.filter((event) => event.hiveId !== hiveId));
     setManualTasks((current) => current.filter((task) => task.hiveId !== hiveId));
   }
 
@@ -145,6 +151,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     setApiaries((current) => current.filter((apiary) => apiary.id !== apiaryId));
     setHives((current) => current.filter((hive) => hive.apiaryId !== apiaryId));
     setInspections((current) => current.filter((inspection) => !hiveIds.includes(inspection.hiveId)));
+    setEvents((current) => current.filter((event) => !hiveIds.includes(event.hiveId)));
     setManualTasks((current) => current.filter((task) => task.apiaryId !== apiaryId && (!task.hiveId || !hiveIds.includes(task.hiveId))));
   }
 
@@ -170,11 +177,22 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     );
   }
 
+  function addEvent(input: NewHiveEventInput) {
+    const event: HiveEvent = {
+      id: `event-${Date.now()}`,
+      performedAt: new Date().toISOString(),
+      ...input,
+    };
+
+    setEvents((current) => [event, ...current]);
+  }
+
   const value = useMemo<KupkollContextValue>(
     () => ({
       apiaries,
       hives,
       inspections,
+      events,
       manualTasks,
       recommendations: derived.recommendations,
       tasks,
@@ -187,6 +205,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       deleteApiary,
       deleteHive,
       addInspection,
+      addEvent,
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),
       getHiveById: (id) => hives.find((hive) => hive.id === id),
       getHivesByApiary: (apiaryId) => hives.filter((hive) => hive.apiaryId === apiaryId),
@@ -194,10 +213,14 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
         [...inspections]
           .filter((inspection) => inspection.hiveId === hiveId)
           .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime()),
+      getEventsForHive: (hiveId) =>
+        [...events]
+          .filter((event) => event.hiveId === hiveId)
+          .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime()),
       getRecommendationsForHive: (hiveId) => derived.recommendations.filter((item) => item.hiveId === hiveId),
       getTasksForHive: (hiveId) => tasks.filter((task) => task.hiveId === hiveId),
     }),
-    [apiaries, hives, inspections, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard],
+    [apiaries, hives, inspections, events, manualTasks, derived.recommendations, tasks, latestInspectionMap, dashboard],
   );
 
   return <KupkollContext.Provider value={value}>{children}</KupkollContext.Provider>;

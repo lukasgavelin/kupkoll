@@ -9,8 +9,28 @@ export type SeasonLabel = 'Vintertillsyn' | 'Vårutveckling' | 'Svärmperiod' | 
 export type HiveBoxSystem = 'Lågnormal' | 'Svea' | 'Langstroth' | 'Dadant';
 export type TaskSource = 'Egen planering' | 'Beslutsstöd';
 export type VarroaLevel = 'Ej kontrollerad' | 'Låg' | 'Förhöjd' | 'Hög';
+export type VarroaControlMethod = 'Nedfall' | 'Skakprov' | 'Sockerprov' | 'Alkoholprov' | 'Annan metod';
 export type InspectionWeatherCondition = 'Soligt' | 'Växlande molnighet' | 'Mulet' | 'Duggregn' | 'Regn';
 export type InspectionWeatherWind = 'Lugnt' | 'Måttlig vind' | 'Blåsigt';
+export type InspectionMode = 'Snabb genomgång' | 'Fördjupad genomgång';
+export type QueenChangeStatus = 'Inte aktuell' | 'Planerat' | 'Genomfört';
+
+export const hiveEventTypes = [
+  'Avläggare skapad',
+  'Samhälle förenat',
+  'Drottning bytt',
+  'Drottning märkt/årgång',
+  'Skattlåda påsatt',
+  'Skattning/slungning',
+  'Invintring startad',
+  'Invintring slutförd',
+  'Stödfodring',
+  'Vinterförlust',
+  'Rensningsflyg observerad',
+  'Samhälle dött/avvecklat',
+] as const;
+
+export type HiveEventType = (typeof hiveEventTypes)[number];
 
 export type Coordinates = {
   latitude: number;
@@ -45,10 +65,36 @@ export type InspectionWeather = {
   note?: string;
 };
 
+export type InspectionAdvancedDetails = {
+  treatment?: string;
+  feeding?: string;
+  honeySuperOn?: boolean;
+  splitMade?: boolean;
+  queenChangeStatus?: QueenChangeStatus;
+};
+
+export type InspectionVarroaDetails = {
+  checked: boolean;
+  controlMethod?: VarroaControlMethod;
+  measurementValue?: string;
+  treatmentPerformed?: boolean;
+  treatmentNote?: string;
+};
+
+export type HiveEventDetails = {
+  mergedWithHiveName?: string;
+  queenYear?: string;
+  markingNote?: string;
+  honeySuperCount?: number;
+  harvestSummary?: string;
+  feedingSummary?: string;
+};
+
 export type Inspection = {
   id: string;
   hiveId: string;
   performedAt: string;
+  mode: InspectionMode;
   queenSeen: boolean;
   eggsSeen: boolean;
   openBrood: boolean;
@@ -58,10 +104,21 @@ export type Inspection = {
   queenCells: boolean;
   swarmSigns: boolean;
   varroaLevel: VarroaLevel;
+  varroaDetails?: InspectionVarroaDetails;
   temperament: HiveTemperament;
   actionNeeded: boolean;
   weather?: InspectionWeather;
+  advancedDetails?: InspectionAdvancedDetails;
   notes: string;
+};
+
+export type HiveEvent = {
+  id: string;
+  hiveId: string;
+  type: HiveEventType;
+  performedAt: string;
+  notes: string;
+  details?: HiveEventDetails;
 };
 
 export type Task = {
@@ -88,6 +145,7 @@ export type Recommendation = {
 };
 
 export type NewInspectionInput = Omit<Inspection, 'id' | 'performedAt'>;
+export type NewHiveEventInput = Omit<HiveEvent, 'id' | 'performedAt'>;
 export type NewApiaryInput = Omit<Apiary, 'id'>;
 export type NewHiveInput = Pick<Hive, 'apiaryId' | 'name' | 'strength' | 'temperament' | 'boxSystem' | 'notes'>;
 export type UpdateApiaryInput = NewApiaryInput;

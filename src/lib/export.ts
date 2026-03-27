@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 import { KupkollAppState } from '@/lib/storage';
 
-const KUPKOLL_EXPORT_SCHEMA_VERSION = 2;
+const KUPKOLL_EXPORT_SCHEMA_VERSION = 5;
 
 export type KupkollExportBundle = {
   app: 'Kupkoll';
@@ -14,6 +14,7 @@ export type KupkollExportBundle = {
     apiaries: number;
     hives: number;
     inspections: number;
+    events: number;
     manualTasks: number;
   };
   data: KupkollAppState;
@@ -32,7 +33,16 @@ function cloneState(state: KupkollAppState): KupkollAppState {
       coordinates: apiary.coordinates ? { ...apiary.coordinates } : undefined,
     })),
     hives: state.hives.map((hive) => ({ ...hive })),
-    inspections: state.inspections.map((inspection) => ({ ...inspection })),
+    inspections: state.inspections.map((inspection) => ({
+      ...inspection,
+      varroaDetails: inspection.varroaDetails ? { ...inspection.varroaDetails } : undefined,
+      weather: inspection.weather ? { ...inspection.weather } : undefined,
+      advancedDetails: inspection.advancedDetails ? { ...inspection.advancedDetails } : undefined,
+    })),
+    events: state.events.map((event) => ({
+      ...event,
+      details: event.details ? { ...event.details } : undefined,
+    })),
     manualTasks: state.manualTasks.map((task) => ({ ...task })),
   };
 }
@@ -48,6 +58,7 @@ export function buildKupkollExport(state: KupkollAppState, exportedAt = new Date
       apiaries: data.apiaries.length,
       hives: data.hives.length,
       inspections: data.inspections.length,
+      events: data.events.length,
       manualTasks: data.manualTasks.length,
     },
     data,

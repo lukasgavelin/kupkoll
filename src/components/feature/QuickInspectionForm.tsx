@@ -10,7 +10,7 @@ import { fetchInspectionWeather } from '@/lib/weather';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import { Coordinates, HiveTemperament, InspectionWeatherCondition, InspectionWeatherWind, VarroaLevel } from '@/types/domain';
+import { Coordinates, HiveEventType, HiveTemperament, InspectionAdvancedDetails, InspectionMode, InspectionWeatherCondition, InspectionWeatherWind, VarroaControlMethod, VarroaLevel } from '@/types/domain';
 
 type BooleanKey = 'queenSeen' | 'eggsSeen' | 'openBrood' | 'cappedBrood' | 'honey' | 'pollen' | 'queenCells' | 'swarmSigns' | 'actionNeeded';
 
@@ -96,10 +96,33 @@ const quickToggleLabels: Array<{ key: Extract<BooleanKey, 'queenSeen' | 'eggsSee
   { key: 'actionNeeded', label: 'Behöver följas upp' },
 ];
 
+const detailedToggleLabels: Array<{ key: Extract<BooleanKey, 'openBrood' | 'cappedBrood' | 'honey' | 'pollen'>; label: string }> = [
+  { key: 'openBrood', label: 'Öppet yngel' },
+  { key: 'cappedBrood', label: 'Täckt yngel' },
+  { key: 'honey', label: 'Honung/foderkrans' },
+  { key: 'pollen', label: 'Pollen' },
+];
+
+const inspectionModes: Array<{ value: InspectionMode; label: string; description: string }> = [
+  {
+    value: 'Snabb genomgång',
+    label: 'Snabb genomgång',
+    description: 'Dagens preset-flöde med några viktiga toggles och direkt sparning.',
+  },
+  {
+    value: 'Fördjupad genomgång',
+    label: 'Fördjupad genomgång',
+    description: 'Samma grund men med fler biodlingsfält, anteckning och åtgärdsdetaljer.',
+  },
+];
+
 const temperaments: HiveTemperament[] = ['Lugnt', 'Vaksamt', 'Hetsigt'];
 const varroaLevels: VarroaLevel[] = ['Ej kontrollerad', 'Låg', 'Förhöjd', 'Hög'];
+const measuredVarroaLevels: Exclude<VarroaLevel, 'Ej kontrollerad'>[] = ['Låg', 'Förhöjd', 'Hög'];
+const varroaControlMethods: VarroaControlMethod[] = ['Nedfall', 'Skakprov', 'Sockerprov', 'Alkoholprov', 'Annan metod'];
 const weatherConditions: InspectionWeatherCondition[] = ['Soligt', 'Växlande molnighet', 'Mulet', 'Duggregn', 'Regn'];
 const weatherWinds: InspectionWeatherWind[] = ['Lugnt', 'Måttlig vind', 'Blåsigt'];
+const eventShortcutTypes: HiveEventType[] = ['Drottning bytt', 'Avläggare skapad', 'Skattlåda påsatt', 'Stödfodring', 'Samhälle förenat'];
 
 type AutoWeatherStatus = 'idle' | 'loading' | 'ready' | 'unavailable' | 'error';
 
@@ -122,23 +145,47 @@ function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTem
   );
 }
 
+function buildQuickInspectionNote(activePreset?: InspectionPreset) {
+  return activePreset?.defaultNote ?? 'Genomgång: egen bedömning sparad efter att förvalet justerats.';
+}
+
+function buildDetailedInspectionNote(input: { noteText: string; activePreset?: InspectionPreset }) {
+  const trimmedNote = input.noteText.trim();
+
+  if (trimmedNote) {
+    return trimmedNote;
+  }
+
+  if (input.activePreset) {
+    return `${input.activePreset.defaultNote} Fördjupad genomgång sparad.`;
+  }
+
+  return 'Fördjupad genomgång sparad utan fri anteckning.';
+}
+
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
   const theme = useTheme();
   const { addInspection, apiaries, hives } = useKupkoll();
   const styles = createStyles(theme);
-  const [selectedPresetId, setSelectedPresetId] = useState(inspectionPresets[0].id);
+  const [inspectionMode, setInspectionMode] = useState<InspectionMode>('Snabb genomgång');
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);
   const [varroaLevel, setVarroaLevel] = useState<VarroaLevel>(inspectionPresets[0].varroaLevel);
-  const [values, setValues] = useState<Record<BooleanKey, boolean>>(inspectionPresets[0].values);
+  const [varroaChecked, setVarroaChecked] = useState(false);
+  const [varroaControlMethod, setVarroaControlMethod] = useState<VarroaControlMethod | undefined>(undefined);
+  const [varroaMeasurementValue, setVarroaMeasurementValue] = useState('');
+  const [varroaTreatmentPerformed, setVarroaTreatmentPerformed] = useState(false);
+  const [varroaTreatmentNote, setVarroaTreatmentNote] = useState('');
+  const [values, setValues] = useState<Record<BooleanKey, boolean>>({ ...inspectionPresets[0].values });
   const [weatherCondition, setWeatherCondition] = useState<InspectionWeatherCondition | undefined>(undefined);
   const [weatherWind, setWeatherWind] = useState<InspectionWeatherWind | undefined>(undefined);
   const [temperatureText, setTemperatureText] = useState('');
   const [autoWeatherStatus, setAutoWeatherStatus] = useState<AutoWeatherStatus>('idle');
+  const [noteText, setNoteText] = useState('');
+  const [treatmentText, setTreatmentText] = useState('');
 
   const selectedHive = useMemo(() => hives.find((item) => item.id === selectedHiveId), [hives, selectedHiveId]);
   const selectedApiary = useMemo(() => apiaries.find((item) => item.id === selectedHive?.apiaryId), [apiaries, selectedHive?.apiaryId]);
-  const selectedPreset = useMemo(() => inspectionPresets.find((preset) => preset.id === selectedPresetId) ?? inspectionPresets[0], [selectedPresetId]);
   const activePreset = useMemo(() => inspectionPresets.find((preset) => matchesPreset(values, temperament, varroaLevel, preset)), [temperament, values, varroaLevel]);
 
   async function loadAutoWeather(coordinates: Coordinates) {
@@ -213,10 +260,27 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   }, [selectedApiary?.coordinates?.latitude, selectedApiary?.coordinates?.longitude, selectedApiary?.id]);
 
   function applyPreset(preset: InspectionPreset) {
-    setSelectedPresetId(preset.id);
     setTemperament(preset.temperament);
     setVarroaLevel(preset.varroaLevel);
-    setValues(preset.values);
+    setVarroaChecked(preset.varroaLevel !== 'Ej kontrollerad');
+    setValues({ ...preset.values });
+  }
+
+  function updateVarroaChecked(nextValue: boolean) {
+    setVarroaChecked(nextValue);
+
+    if (!nextValue) {
+      setVarroaLevel('Ej kontrollerad');
+      setVarroaControlMethod(undefined);
+      setVarroaMeasurementValue('');
+      setVarroaTreatmentPerformed(false);
+      setVarroaTreatmentNote('');
+      return;
+    }
+
+    if (varroaLevel === 'Ej kontrollerad') {
+      setVarroaLevel('Låg');
+    }
   }
 
   function toggleValue(key: BooleanKey) {
@@ -224,6 +288,16 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       ...current,
       [key]: !current[key],
     }));
+  }
+
+  function openEventShortcut(type?: HiveEventType) {
+    if (!selectedHiveId) {
+      Alert.alert('Välj kupa först', 'Välj först vilken kupa du går igenom, så kan du logga en händelse för rätt samhälle.');
+      return;
+    }
+
+    const query = type ? `?hiveId=${selectedHiveId}&type=${encodeURIComponent(type)}` : `?hiveId=${selectedHiveId}`;
+    router.push(`/events/new${query}` as never);
   }
 
   function saveInspection() {
@@ -240,6 +314,11 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       return;
     }
 
+    if (varroaChecked && varroaLevel === 'Ej kontrollerad') {
+      Alert.alert('Komplettera varroa', 'Om varroa är kontrollerad behöver du också ange om nivån var låg, förhöjd eller hög.');
+      return;
+    }
+
     const weather = weatherCondition || weatherWind || parsedTemperature !== undefined
       ? {
           condition: weatherCondition,
@@ -248,12 +327,38 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
         }
       : undefined;
 
+    const advancedDetails: InspectionAdvancedDetails | undefined = inspectionMode === 'Fördjupad genomgång'
+      ? {
+          treatment: treatmentText.trim() || undefined,
+        }
+      : undefined;
+
+    const varroaDetails = varroaChecked
+      ? {
+          checked: true,
+          controlMethod: varroaControlMethod,
+          measurementValue: varroaMeasurementValue.trim() || undefined,
+          treatmentPerformed: varroaTreatmentPerformed,
+          treatmentNote: varroaTreatmentNote.trim() || undefined,
+        }
+      : undefined;
+
+    const notes = inspectionMode === 'Snabb genomgång'
+      ? buildQuickInspectionNote(activePreset)
+      : buildDetailedInspectionNote({
+          noteText,
+          activePreset,
+        });
+
     addInspection({
       hiveId: selectedHiveId,
+      mode: inspectionMode,
       temperament,
-      varroaLevel,
+      varroaLevel: varroaChecked ? varroaLevel : 'Ej kontrollerad',
+      varroaDetails,
       weather,
-      notes: selectedPreset.defaultNote,
+      advancedDetails,
+      notes,
       ...values,
     });
 
@@ -268,6 +373,8 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     wind: weatherWind,
     temperatureText,
   });
+  const varroaSummary = varroaChecked ? `Varroa ${varroaLevel}` : 'Varroa ej kontrollerad';
+  const summaryNote = inspectionMode === 'Snabb genomgång' ? buildQuickInspectionNote(activePreset) : buildDetailedInspectionNote({ noteText, activePreset });
   const autoWeatherHint = !selectedApiary
     ? 'Välj först vilken kupa du tittar på, så fyller vi i förhållandena för rätt plats.'
     : !selectedApiary.coordinates
@@ -300,10 +407,30 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   return (
     <View style={styles.wrapper}>
-      <SectionHeader title="Genomgång" description="Välj kupa, markera hur läget verkar och spara. Du behöver bara ändra det som sticker ut." />
+      <SectionHeader
+        title="Genomgång"
+        description={inspectionMode === 'Snabb genomgång'
+          ? 'Snabbläget låter dig välja kupa, bekräfta läget och spara direkt.'
+          : 'Fördjupat läge lägger till fler observationsfält, fri anteckning och detaljer från själva genomgången.'}
+      />
 
       <AppCard>
-        <Text style={theme.textStyles.heading}>1. Välj kupa</Text>
+        <Text style={theme.textStyles.heading}>1. Välj genomgång</Text>
+        <View style={styles.stack}>
+          {inspectionModes.map((mode) => {
+            const selected = inspectionMode === mode.value;
+            return (
+              <Pressable key={mode.value} onPress={() => setInspectionMode(mode.value)} style={[styles.choiceCard, selected && styles.choiceCardSelected]}>
+                <Text style={[styles.choiceCardTitle, selected && styles.choiceCardTitleSelected]}>{mode.label}</Text>
+                <Text style={[theme.textStyles.body, selected && styles.choiceCardBodySelected]}>{mode.description}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </AppCard>
+
+      <AppCard>
+        <Text style={theme.textStyles.heading}>2. Välj kupa</Text>
         <View style={styles.stack}>
           {hives.map((hive) => {
             const selected = hive.id === selectedHiveId;
@@ -321,7 +448,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       </AppCard>
 
       <AppCard>
-        <Text style={theme.textStyles.heading}>2. Hur känns läget?</Text>
+        <Text style={theme.textStyles.heading}>3. Hur känns läget?</Text>
         <View style={styles.stack}>
           {inspectionPresets.map((preset) => {
             const selected = activePreset?.id === preset.id;
@@ -339,8 +466,12 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       </AppCard>
 
       <AppCard>
-        <Text style={theme.textStyles.heading}>3. Justera om något sticker ut</Text>
-        <Text style={theme.textStyles.caption}>Om förvalet redan stämmer kan du gå vidare direkt. Här ändrar du bara det som inte passar.</Text>
+        <Text style={theme.textStyles.heading}>4. Justera det som sticker ut</Text>
+        <Text style={theme.textStyles.caption}>
+          {inspectionMode === 'Snabb genomgång'
+            ? 'Om förvalet redan stämmer kan du gå vidare direkt. Här ändrar du bara det som inte passar.'
+            : 'Utgå från förvalet och fyll sedan på med fler fält i nästa steg om du vill dokumentera mer.'}
+        </Text>
         <View style={styles.optionGrid}>
           {quickToggleLabels.map((item) => {
             const selected = values[item.key];
@@ -362,21 +493,137 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             );
           })}
         </View>
-        <Text style={styles.inlineLabel}>Hur ser varroaläget ut?</Text>
+        <Text style={styles.inlineLabel}>Varroa kontrollerad?</Text>
         <View style={styles.optionGrid}>
-          {varroaLevels.map((value) => {
-            const selected = value === varroaLevel;
-            return (
-              <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
-              </Pressable>
-            );
-          })}
+          <Pressable onPress={() => updateVarroaChecked(true)} style={[styles.option, styles.largeOption, varroaChecked && styles.optionSelected]}>
+            <Text style={[styles.optionLabel, varroaChecked && styles.optionSelectedText]}>Ja</Text>
+          </Pressable>
+          <Pressable onPress={() => updateVarroaChecked(false)} style={[styles.option, styles.largeOption, !varroaChecked && styles.optionSelected]}>
+            <Text style={[styles.optionLabel, !varroaChecked && styles.optionSelectedText]}>Nej</Text>
+          </Pressable>
         </View>
+        {varroaChecked ? (
+          <>
+            <Text style={styles.inlineLabel}>Hur ser varroaläget ut?</Text>
+            <View style={styles.optionGrid}>
+              {measuredVarroaLevels.map((value) => {
+                const selected = value === varroaLevel;
+                return (
+                  <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        ) : (
+          <Text style={theme.textStyles.caption}>Varroa lämnas som ej kontrollerad tills du faktiskt gör en kontroll.</Text>
+        )}
       </AppCard>
 
+      {inspectionMode === 'Fördjupad genomgång' ? (
+        <AppCard>
+          <Text style={theme.textStyles.heading}>5. Fördjupa genomgången</Text>
+          <Text style={theme.textStyles.caption}>Lägg till mer av det som är relevant för just den här kupan. Här hör sådant hemma som beskriver läget i samhället under besöket.</Text>
+
+          <Text style={styles.inlineLabel}>Yngel och resurser</Text>
+          <View style={styles.optionGrid}>
+            {detailedToggleLabels.map((item) => {
+              const selected = values[item.key];
+              return (
+                <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                  <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.inlineLabel}>Fördjupad varroakontroll</Text>
+          <Text style={theme.textStyles.caption}>Fyll bara i detta när varroa faktiskt är kontrollerad och du vill kunna följa upp metod och behandling.</Text>
+          {varroaChecked ? (
+            <>
+              <View style={styles.optionGrid}>
+                {varroaControlMethods.map((value) => {
+                  const selected = value === varroaControlMethod;
+                  return (
+                    <Pressable key={value} onPress={() => setVarroaControlMethod(selected ? undefined : value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                      <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.inlineLabel}>Mätvärde</Text>
+              <TextInput
+                onChangeText={setVarroaMeasurementValue}
+                placeholder="Till exempel 6 kvalster/24 h eller 3%"
+                placeholderTextColor={theme.colors.textMuted}
+                style={styles.input}
+                value={varroaMeasurementValue}
+              />
+
+              <Text style={styles.inlineLabel}>Behandling utförd?</Text>
+              <View style={styles.optionGrid}>
+                <Pressable onPress={() => setVarroaTreatmentPerformed(true)} style={[styles.option, styles.largeOption, varroaTreatmentPerformed && styles.optionSelected]}>
+                  <Text style={[styles.optionLabel, varroaTreatmentPerformed && styles.optionSelectedText]}>Ja</Text>
+                </Pressable>
+                <Pressable onPress={() => setVarroaTreatmentPerformed(false)} style={[styles.option, styles.largeOption, !varroaTreatmentPerformed && styles.optionSelected]}>
+                  <Text style={[styles.optionLabel, !varroaTreatmentPerformed && styles.optionSelectedText]}>Nej</Text>
+                </Pressable>
+              </View>
+
+              <Text style={styles.inlineLabel}>Behandlingsnotering</Text>
+              <TextInput
+                multiline
+                onChangeText={setVarroaTreatmentNote}
+                placeholder="Till exempel vad som gjorts, varför det avvaktas eller när du vill följa upp"
+                placeholderTextColor={theme.colors.textMuted}
+                style={[styles.input, styles.textArea]}
+                textAlignVertical="top"
+                value={varroaTreatmentNote}
+              />
+            </>
+          ) : (
+            <Text style={theme.textStyles.caption}>Aktivera först att varroa är kontrollerad i genomgången ovan.</Text>
+          )}
+
+          <Text style={styles.inlineLabel}>Åtgärd eller behandling under besöket</Text>
+          <TextInput
+            onChangeText={setTreatmentText}
+            placeholder="Till exempel myrsyra, oxalsyra, rambyte eller att ingen åtgärd gjordes"
+            placeholderTextColor={theme.colors.textMuted}
+            style={styles.input}
+            value={treatmentText}
+          />
+
+          <View style={styles.eventGuidanceCard}>
+            <Text style={theme.textStyles.bodyStrong}>Sådant som passar bättre som händelse</Text>
+            <Text style={theme.textStyles.caption}>Det som ändrar samhällets säsongshistorik sparas tydligare som en egen händelse än som en del av en genomgång.</Text>
+            <View style={styles.optionGrid}>
+              {eventShortcutTypes.map((type) => (
+                <Pressable key={type} onPress={() => openEventShortcut(type)} style={styles.option}>
+                  <Text style={styles.optionLabel}>{type}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <PrimaryButton label="Öppna alla händelser" onPress={() => openEventShortcut()} variant="secondary" size="compact" />
+          </View>
+
+          <Text style={styles.inlineLabel}>Fria anteckningar</Text>
+          <TextInput
+            multiline
+            onChangeText={setNoteText}
+            placeholder="Skriv det du vill minnas från genomgången"
+            placeholderTextColor={theme.colors.textMuted}
+            style={[styles.input, styles.textArea]}
+            textAlignVertical="top"
+            value={noteText}
+          />
+        </AppCard>
+      ) : null}
+
       <AppCard>
-        <Text style={theme.textStyles.heading}>4. Väder vid genomgången</Text>
+        <Text style={theme.textStyles.heading}>{inspectionMode === 'Snabb genomgång' ? '5. Väder vid genomgången' : '6. Väder vid genomgången'}</Text>
         <Text style={theme.textStyles.caption}>När bigården har en sparad plats fyller vi i temperatur, vind och väderläge automatiskt. Justera om det inte stämmer där du står.</Text>
         <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
         {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : autoWeatherStatus === 'error' ? 'Försök igen' : 'Hämta igen'} onPress={() => {
@@ -424,11 +671,11 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <View style={styles.summaryTextBlock}>
             <Text style={theme.textStyles.overline}>Sammanfattning</Text>
             <Text style={styles.summaryTitle}>{selectedHive ? selectedHive.name : 'Välj kupa först'}</Text>
-            <Text style={styles.summaryDescription}>{summaryLabel} • {temperament} • Varroa {varroaLevel}</Text>
+            <Text style={styles.summaryDescription}>{inspectionMode} • {summaryLabel} • {temperament} • {varroaSummary}</Text>
             <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text>
           </View>
         </View>
-        <Text style={theme.textStyles.caption}>Appen lägger till en kort notering automatiskt, så att du kan spara utan att skriva mer än nödvändigt.</Text>
+        <Text style={theme.textStyles.caption}>{summaryNote}</Text>
       </AppCard>
 
       <PrimaryButton fullWidth label={selectedHive ? `Spara för ${selectedHive.name}` : 'Välj kupa för att spara'} onPress={saveInspection} />
@@ -472,6 +719,17 @@ function createStyles(theme: Theme) {
       paddingHorizontal: theme.spacing.lg,
       paddingVertical: theme.spacing.md,
       ...theme.textStyles.body,
+    },
+    textArea: {
+      minHeight: 128,
+    },
+    eventGuidanceCard: {
+      gap: theme.spacing.md,
+      borderRadius: theme.radii.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surfaceMuted,
+      padding: theme.spacing.lg,
     },
     stack: {
       gap: theme.spacing.md,

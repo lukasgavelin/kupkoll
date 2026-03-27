@@ -53,6 +53,7 @@ const state = {
       id: 'insp-1',
       hiveId: 'hive-1',
       performedAt: '2026-03-20T10:15:00.000Z',
+      mode: 'Fördjupad genomgång' as const,
       queenSeen: true,
       eggsSeen: true,
       openBrood: true,
@@ -62,6 +63,13 @@ const state = {
       queenCells: false,
       swarmSigns: false,
       varroaLevel: 'Låg' as const,
+      varroaDetails: {
+        checked: true,
+        controlMethod: 'Sockerprov' as const,
+        measurementValue: '3 %',
+        treatmentPerformed: false,
+        treatmentNote: 'Ny mätning planerad om en vecka',
+      },
       temperament: 'Lugnt' as const,
       actionNeeded: false,
       weather: {
@@ -69,7 +77,26 @@ const state = {
         wind: 'Lugnt' as const,
         temperatureC: 18,
       },
+      advancedDetails: {
+        treatment: 'Oxalsyra planerad',
+        feeding: 'Ingen utfodring',
+        honeySuperOn: true,
+        splitMade: false,
+        queenChangeStatus: 'Planerat' as const,
+      },
       notes: 'Anteckning',
+    },
+  ],
+  events: [
+    {
+      id: 'event-1',
+      hiveId: 'hive-1',
+      type: 'Stödfodring' as const,
+      performedAt: '2026-03-21T07:00:00.000Z',
+      notes: 'Kompletterande stödutfodring genomförd.',
+      details: {
+        feedingSummary: '5 liter sockerlösning',
+      },
     },
   ],
   manualTasks: [
@@ -93,11 +120,12 @@ describe('buildKupkollExport', () => {
     expect(buildKupkollExport(state, exportedAt)).toEqual({
       app: 'Kupkoll',
       exportedAt,
-      schemaVersion: 2,
+      schemaVersion: 5,
       counts: {
         apiaries: 1,
         hives: 1,
         inspections: 1,
+        events: 1,
         manualTasks: 1,
       },
       data: state,
@@ -116,8 +144,11 @@ describe('serializeKupkollExport', () => {
     const serialized = serializeKupkollExport(buildKupkollExport(state, '2026-03-26T10:30:00.000Z'));
 
     expect(serialized).toContain('"app": "Kupkoll"');
-    expect(serialized).toContain('"schemaVersion": 2');
+    expect(serialized).toContain('"schemaVersion": 5');
     expect(serialized).toContain('"apiaries"');
     expect(serialized).toContain('"weather"');
+    expect(serialized).toContain('"advancedDetails"');
+    expect(serialized).toContain('"varroaDetails"');
+    expect(serialized).toContain('"events"');
   });
 });

@@ -43,6 +43,7 @@ const inspections = [
     id: 'insp-1',
     hiveId: 'hive-1',
     performedAt: '2026-03-20T10:15:00.000Z',
+    mode: 'Fördjupad genomgång' as const,
     queenSeen: true,
     eggsSeen: true,
     openBrood: true,
@@ -52,6 +53,13 @@ const inspections = [
     queenCells: false,
     swarmSigns: false,
     varroaLevel: 'Låg' as const,
+    varroaDetails: {
+      checked: true,
+      controlMethod: 'Skakprov' as const,
+      measurementValue: '12 kvalster',
+      treatmentPerformed: true,
+      treatmentNote: 'Myrsyra enligt plan',
+    },
     temperament: 'Lugnt' as const,
     actionNeeded: false,
     weather: {
@@ -60,7 +68,28 @@ const inspections = [
       temperatureC: 18,
       note: 'Bra flygväder',
     },
+    advancedDetails: {
+      treatment: 'Oxalsyra',
+      feeding: '2 liter 50/50',
+      honeySuperOn: true,
+      splitMade: false,
+      queenChangeStatus: 'Planerat' as const,
+    },
     notes: 'Anteckning',
+  },
+];
+
+const events = [
+  {
+    id: 'event-1',
+    hiveId: 'hive-1',
+    type: 'Drottning märkt/årgång' as const,
+    performedAt: '2026-03-21T08:00:00.000Z',
+    notes: 'Drottningen märktes och årgången verifierades.',
+    details: {
+      queenYear: '2025',
+      markingNote: 'Vit märkfärg',
+    },
   },
 ];
 
@@ -85,6 +114,7 @@ describe('createSeedKupkollState', () => {
       apiaries: [],
       hives: [],
       inspections: [],
+      events: [],
       manualTasks: [],
     });
   });
@@ -98,22 +128,25 @@ describe('parsePersistedKupkollState', () => {
         apiaries,
         hives,
         inspections,
+        events,
         manualTasks: tasks,
       }),
     ).toBeNull();
 
     expect(
       parsePersistedKupkollState({
-        version: 2,
+        version: 6,
         apiaries,
         hives,
         inspections,
+        events,
         manualTasks: tasks,
       }),
     ).toEqual({
       apiaries,
       hives,
       inspections,
+      events,
       manualTasks: tasks,
     });
   });
@@ -135,6 +168,7 @@ describe('parsePersistedKupkollState', () => {
           },
         ],
         inspections,
+        events,
         manualTasks: tasks,
       }),
     ).toEqual({
@@ -151,6 +185,7 @@ describe('parsePersistedKupkollState', () => {
         },
       ],
       inspections,
+      events,
       manualTasks: tasks,
     });
   });
@@ -172,6 +207,7 @@ describe('parsePersistedKupkollState', () => {
         ...inspection,
         varroaLevel: 'Ej kontrollerad',
       })),
+      events: [],
       manualTasks: tasks,
     });
   });
@@ -179,7 +215,7 @@ describe('parsePersistedKupkollState', () => {
   it('normalizes weather payloads and drops invalid weather values', () => {
     expect(
       parsePersistedKupkollState({
-        version: 3,
+        version: 5,
         apiaries,
         hives,
         inspections: [
@@ -190,6 +226,30 @@ describe('parsePersistedKupkollState', () => {
               wind: 'Blåsigt',
               temperatureC: '15',
               note: '  Byigt  ',
+            },
+            advancedDetails: {
+              treatment: '  Oxalsyra  ',
+              feeding: ' ',
+              honeySuperOn: 'ja',
+              splitMade: false,
+              queenChangeStatus: 'Genomfört',
+            },
+            varroaDetails: {
+              checked: true,
+              controlMethod: 'Alkoholprov',
+              measurementValue: ' 4,2 % ',
+              treatmentPerformed: false,
+              treatmentNote: '  Avvaktar efter skattning  ',
+            },
+          },
+        ],
+        events: [
+          {
+            ...events[0],
+            details: {
+              queenYear: ' 2025 ',
+              markingNote: '  Vit märkfärg  ',
+              honeySuperCount: '1',
             },
           },
         ],
@@ -205,8 +265,47 @@ describe('parsePersistedKupkollState', () => {
             wind: 'Blåsigt',
             note: 'Byigt',
           },
+          advancedDetails: {
+            treatment: 'Oxalsyra',
+            splitMade: false,
+            queenChangeStatus: 'Genomfört',
+          },
+          varroaDetails: {
+            checked: true,
+            controlMethod: 'Alkoholprov',
+            measurementValue: '4,2 %',
+            treatmentPerformed: false,
+            treatmentNote: 'Avvaktar efter skattning',
+          },
         },
       ],
+      events: [
+        {
+          ...events[0],
+          details: {
+            queenYear: '2025',
+            markingNote: 'Vit märkfärg',
+          },
+        },
+      ],
+      manualTasks: tasks,
+    });
+  });
+
+  it('defaults missing events to an empty list for older saved state', () => {
+    expect(
+      parsePersistedKupkollState({
+        version: 5,
+        apiaries,
+        hives,
+        inspections,
+        manualTasks: tasks,
+      }),
+    ).toEqual({
+      apiaries,
+      hives,
+      inspections,
+      events: [],
       manualTasks: tasks,
     });
   });
@@ -218,6 +317,7 @@ describe('parsePersistedKupkollState', () => {
         apiaries,
         hives,
         inspections,
+        events,
         manualTasks: tasks,
       }),
     ).toBeNull();
@@ -228,6 +328,7 @@ describe('parsePersistedKupkollState', () => {
         apiaries: 'invalid',
         hives,
         inspections,
+        events,
         manualTasks: tasks,
       }),
     ).toBeNull();

@@ -1,15 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Apiary, Hive, HiveBoxSystem, Inspection, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, Task, VarroaLevel } from '@/types/domain';
+import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, Task, VarroaControlMethod, VarroaLevel } from '@/types/domain';
 
 const KUPKOLL_APP_STATE_STORAGE_KEY = 'kupkoll:app-state';
 const LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
-const KUPKOLL_APP_STATE_VERSION = 3;
+const KUPKOLL_APP_STATE_VERSION = 6;
 
 export type KupkollAppState = {
   apiaries: Apiary[];
   hives: Hive[];
   inspections: Inspection[];
+  events: HiveEvent[];
   manualTasks: Task[];
 };
 
@@ -21,6 +22,7 @@ type LegacyPersistedKupkollAppState = {
   apiaries?: unknown;
   hives?: unknown;
   inspections?: unknown;
+  events?: unknown;
   tasks?: unknown;
   manualTasks?: unknown;
   version?: unknown;
@@ -58,6 +60,22 @@ function normalizeInspectionWeatherWind(value: unknown): InspectionWeatherWind |
   return value === 'Lugnt' || value === 'Måttlig vind' || value === 'Blåsigt' ? value : undefined;
 }
 
+function normalizeVarroaControlMethod(value: unknown): VarroaControlMethod | undefined {
+  return value === 'Nedfall' || value === 'Skakprov' || value === 'Sockerprov' || value === 'Alkoholprov' || value === 'Annan metod' ? value : undefined;
+}
+
+function normalizeInspectionMode(value: unknown): InspectionMode {
+  return value === 'Fördjupad genomgång' ? value : 'Snabb genomgång';
+}
+
+function normalizeQueenChangeStatus(value: unknown): QueenChangeStatus | undefined {
+  return value === 'Inte aktuell' || value === 'Planerat' || value === 'Genomfört' ? value : undefined;
+}
+
+function normalizeHiveEventType(value: unknown): HiveEventType | undefined {
+  return typeof value === 'string' && hiveEventTypes.includes(value as HiveEventType) ? (value as HiveEventType) : undefined;
+}
+
 function normalizeInspectionWeather(value: unknown): InspectionWeather | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -81,6 +99,90 @@ function normalizeInspectionWeather(value: unknown): InspectionWeather | undefin
   };
 }
 
+function normalizeInspectionAdvancedDetails(value: unknown): InspectionAdvancedDetails | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const treatment = typeof candidate.treatment === 'string' && candidate.treatment.trim() ? candidate.treatment.trim() : undefined;
+  const feeding = typeof candidate.feeding === 'string' && candidate.feeding.trim() ? candidate.feeding.trim() : undefined;
+  const queenChangeStatus = normalizeQueenChangeStatus(candidate.queenChangeStatus);
+  const honeySuperOn = typeof candidate.honeySuperOn === 'boolean' ? candidate.honeySuperOn : undefined;
+  const splitMade = typeof candidate.splitMade === 'boolean' ? candidate.splitMade : undefined;
+
+  if (treatment === undefined && feeding === undefined && queenChangeStatus === undefined && honeySuperOn === undefined && splitMade === undefined) {
+    return undefined;
+  }
+
+  return {
+    treatment,
+    feeding,
+    queenChangeStatus,
+    honeySuperOn,
+    splitMade,
+  };
+}
+
+function normalizeInspectionVarroaDetails(value: unknown, varroaLevel: VarroaLevel): InspectionVarroaDetails | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return varroaLevel === 'Ej kontrollerad' ? undefined : { checked: true };
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const controlMethod = normalizeVarroaControlMethod(candidate.controlMethod);
+  const measurementValue = typeof candidate.measurementValue === 'string' && candidate.measurementValue.trim() ? candidate.measurementValue.trim() : undefined;
+  const treatmentPerformed = typeof candidate.treatmentPerformed === 'boolean' ? candidate.treatmentPerformed : undefined;
+  const treatmentNote = typeof candidate.treatmentNote === 'string' && candidate.treatmentNote.trim() ? candidate.treatmentNote.trim() : undefined;
+  const checked = typeof candidate.checked === 'boolean' ? candidate.checked : varroaLevel !== 'Ej kontrollerad';
+
+  if (!checked && controlMethod === undefined && measurementValue === undefined && treatmentPerformed === undefined && treatmentNote === undefined) {
+    return undefined;
+  }
+
+  return {
+    checked,
+    controlMethod,
+    measurementValue,
+    treatmentPerformed,
+    treatmentNote,
+  };
+}
+
+function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const mergedWithHiveName = typeof candidate.mergedWithHiveName === 'string' && candidate.mergedWithHiveName.trim() ? candidate.mergedWithHiveName.trim() : undefined;
+  const queenYear = typeof candidate.queenYear === 'string' && candidate.queenYear.trim() ? candidate.queenYear.trim() : undefined;
+  const markingNote = typeof candidate.markingNote === 'string' && candidate.markingNote.trim() ? candidate.markingNote.trim() : undefined;
+  const honeySuperCount = typeof candidate.honeySuperCount === 'number' && Number.isFinite(candidate.honeySuperCount) ? candidate.honeySuperCount : undefined;
+  const harvestSummary = typeof candidate.harvestSummary === 'string' && candidate.harvestSummary.trim() ? candidate.harvestSummary.trim() : undefined;
+  const feedingSummary = typeof candidate.feedingSummary === 'string' && candidate.feedingSummary.trim() ? candidate.feedingSummary.trim() : undefined;
+
+  if (
+    mergedWithHiveName === undefined &&
+    queenYear === undefined &&
+    markingNote === undefined &&
+    honeySuperCount === undefined &&
+    harvestSummary === undefined &&
+    feedingSummary === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    mergedWithHiveName,
+    queenYear,
+    markingNote,
+    honeySuperCount,
+    harvestSummary,
+    feedingSummary,
+  };
+}
+
 function normalizeHive(item: Record<string, unknown>): Hive {
   return {
     ...(item as Hive),
@@ -89,10 +191,32 @@ function normalizeHive(item: Record<string, unknown>): Hive {
 }
 
 function normalizeInspection(item: Record<string, unknown>): Inspection {
+  const varroaLevel = normalizeVarroaLevel(item.varroaLevel);
+
   return {
     ...(item as Inspection),
-    varroaLevel: normalizeVarroaLevel(item.varroaLevel),
+    mode: normalizeInspectionMode(item.mode),
+    varroaLevel,
+    varroaDetails: normalizeInspectionVarroaDetails(item.varroaDetails, varroaLevel),
     weather: normalizeInspectionWeather(item.weather),
+    advancedDetails: normalizeInspectionAdvancedDetails(item.advancedDetails),
+  };
+}
+
+function normalizeHiveEvent(item: Record<string, unknown>): HiveEvent | null {
+  const type = normalizeHiveEventType(item.type);
+
+  if (!type || typeof item.id !== 'string' || typeof item.hiveId !== 'string' || typeof item.performedAt !== 'string') {
+    return null;
+  }
+
+  return {
+    id: item.id,
+    hiveId: item.hiveId,
+    type,
+    performedAt: item.performedAt,
+    notes: typeof item.notes === 'string' ? item.notes.trim() : '',
+    details: normalizeHiveEventDetails(item.details),
   };
 }
 
@@ -100,12 +224,14 @@ function createParsedState(candidate: {
   apiaries: unknown;
   hives: unknown;
   inspections: unknown;
+  events?: unknown;
   manualTasks: unknown;
 }): KupkollAppState | null {
   if (
     !isObjectArray(candidate.apiaries) ||
     !isObjectArray(candidate.hives) ||
     !isObjectArray(candidate.inspections) ||
+    (candidate.events !== undefined && !isObjectArray(candidate.events)) ||
     !isObjectArray(candidate.manualTasks)
   ) {
     return null;
@@ -115,6 +241,7 @@ function createParsedState(candidate: {
     apiaries: candidate.apiaries as Apiary[],
     hives: candidate.hives.map(normalizeHive),
     inspections: candidate.inspections.map(normalizeInspection),
+    events: (candidate.events ?? []).map((item) => normalizeHiveEvent(item)).filter((item): item is HiveEvent => Boolean(item)),
     manualTasks: candidate.manualTasks as Task[],
   };
 }
@@ -124,6 +251,7 @@ function migrateLegacyState(candidate: LegacyPersistedKupkollAppState): KupkollA
     apiaries: candidate.apiaries,
     hives: candidate.hives,
     inspections: candidate.inspections,
+    events: candidate.events ?? [],
     manualTasks: candidate.manualTasks ?? candidate.tasks ?? [],
   });
 }
@@ -133,6 +261,7 @@ export function createSeedKupkollState(): KupkollAppState {
     apiaries: [],
     hives: [],
     inspections: [],
+    events: [],
     manualTasks: [],
   };
 }
@@ -149,7 +278,7 @@ export function parsePersistedKupkollState(input: unknown): KupkollAppState | nu
     return migrateLegacyState(candidate);
   }
 
-  if (version !== 2 && version !== KUPKOLL_APP_STATE_VERSION) {
+  if (version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== KUPKOLL_APP_STATE_VERSION) {
     return null;
   }
 
@@ -157,6 +286,7 @@ export function parsePersistedKupkollState(input: unknown): KupkollAppState | nu
     apiaries: candidate.apiaries,
     hives: candidate.hives,
     inspections: candidate.inspections,
+    events: candidate.events ?? [],
     manualTasks: candidate.manualTasks,
   });
 }
