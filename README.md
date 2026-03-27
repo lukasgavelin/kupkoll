@@ -13,17 +13,20 @@ Appen fungerar utan konto och sparar data lokalt.
 
 - Hemvy som visar vad som behöver göras nu
 - Bigårdar och kupor anpassade för svensk biodling
+- Drottningprofil per kupa med status, årgång, märkning, ursprung och historikrader
 - Genomgångar i snabb eller fördjupad form med observationer, varroakontroll, väder och uppföljning
 - Händelselogg för viktiga biodlingsmoment som drottningbyte, avläggare, skattning och stödfodring
+- Drottningbyten och märkning kan uppdatera kupans drottningkort och historik direkt från händelseflödet
 - Historik per kupa som samlar både genomgångar och händelser i tidsordning
 - Uppgifter och rekommendationer från regelmotor
 - Lokal lagring, mörkt läge och JSON-export för backup av bigårdar, kupor, genomgångar, händelser och uppgifter
 
 ## Arbetsflöden
 
+- Grundflöde: lägg till bigård, lägg sedan till kupa och fyll i aktuell drottning, logga därefter genomgångar och större händelser från kupans vy
 - Snabb genomgång för ett snabbt lägesbesked direkt i bigården
 - Fördjupad genomgång när du vill spara mer detaljer om varroa, åtgärder och anteckningar
-- Separata händelser för sådant som ändrar samhällets säsongshistorik
+- Separata händelser för sådant som ändrar samhällets säsongshistorik, särskilt drottningbyten och märkning
 - Export till JSON för att kunna spara en lokal backup utanför appen
 
 ## Teknik
