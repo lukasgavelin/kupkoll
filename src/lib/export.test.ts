@@ -44,6 +44,17 @@ const state = {
       strength: 'Medel' as const,
       temperament: 'Lugnt' as const,
       boxSystem: 'Svea' as const,
+      queenYear: '2025',
+      queenMarkingColor: 'Vit' as const,
+      queenOrigin: 'Avläggare från egen bigård',
+      queenIntroducedAt: '2025-06-10',
+      queenHistory: [
+        {
+          id: 'queen-history-1',
+          year: '2025',
+          note: 'Ursprunglig drottning',
+        },
+      ],
       lastInspectionAt: '2026-03-20T10:15:00.000Z',
       notes: 'Anteckning',
     },
@@ -120,7 +131,7 @@ describe('buildKupkollExport', () => {
     expect(buildKupkollExport(state, exportedAt)).toEqual({
       app: 'Kupkoll',
       exportedAt,
-      schemaVersion: 5,
+      schemaVersion: 7,
       counts: {
         apiaries: 1,
         hives: 1,
@@ -144,11 +155,12 @@ describe('serializeKupkollExport', () => {
     const serialized = serializeKupkollExport(buildKupkollExport(state, '2026-03-26T10:30:00.000Z'));
 
     expect(serialized).toContain('"app": "Kupkoll"');
-    expect(serialized).toContain('"schemaVersion": 5');
+    expect(serialized).toContain('"schemaVersion": 7');
     expect(serialized).toContain('"apiaries"');
     expect(serialized).toContain('"weather"');
     expect(serialized).toContain('"advancedDetails"');
     expect(serialized).toContain('"varroaDetails"');
     expect(serialized).toContain('"events"');
+    expect(serialized).toContain('"queenHistory"');
   });
 });

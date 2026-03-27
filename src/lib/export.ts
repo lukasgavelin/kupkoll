@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 import { KupkollAppState } from '@/lib/storage';
 
-const KUPKOLL_EXPORT_SCHEMA_VERSION = 5;
+const KUPKOLL_EXPORT_SCHEMA_VERSION = 7;
 
 export type KupkollExportBundle = {
   app: 'Kupkoll';
@@ -32,7 +32,10 @@ function cloneState(state: KupkollAppState): KupkollAppState {
       ...apiary,
       coordinates: apiary.coordinates ? { ...apiary.coordinates } : undefined,
     })),
-    hives: state.hives.map((hive) => ({ ...hive })),
+    hives: state.hives.map((hive) => ({
+      ...hive,
+      queenHistory: hive.queenHistory.map((entry) => ({ ...entry })),
+    })),
     inspections: state.inspections.map((inspection) => ({
       ...inspection,
       varroaDetails: inspection.varroaDetails ? { ...inspection.varroaDetails } : undefined,

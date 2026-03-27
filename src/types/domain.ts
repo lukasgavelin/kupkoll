@@ -1,5 +1,6 @@
 export type HiveStatus = 'Stabilt' | 'Behöver åtgärd' | 'Under uppbyggnad';
 export type QueenStatus = 'Bekräftad' | 'Osäker' | 'Behöver följas upp';
+export type QueenMarkingColor = 'Vit' | 'Gul' | 'Röd' | 'Grön' | 'Blå' | 'Omärkt';
 export type HiveStrength = 'Starkt' | 'Medel' | 'Svagt';
 export type HiveTemperament = 'Lugnt' | 'Vaksamt' | 'Hetsigt';
 export type TaskPriority = 'Låg' | 'Medel' | 'Hög';
@@ -45,6 +46,14 @@ export type Apiary = {
   coordinates?: Coordinates;
 };
 
+export type QueenHistoryEntry = {
+  id: string;
+  year: string;
+  note: string;
+};
+
+export type QueenHistoryInput = Omit<QueenHistoryEntry, 'id'>;
+
 export type Hive = {
   id: string;
   apiaryId: string;
@@ -54,6 +63,11 @@ export type Hive = {
   strength: HiveStrength;
   temperament: HiveTemperament;
   boxSystem: HiveBoxSystem;
+  queenYear?: string;
+  queenMarkingColor?: QueenMarkingColor;
+  queenOrigin?: string;
+  queenIntroducedAt?: string;
+  queenHistory: QueenHistoryEntry[];
   lastInspectionAt?: string;
   notes: string;
 };
@@ -84,6 +98,11 @@ export type InspectionVarroaDetails = {
 export type HiveEventDetails = {
   mergedWithHiveName?: string;
   queenYear?: string;
+  queenMarkingColor?: QueenMarkingColor;
+  queenOrigin?: string;
+  queenIntroducedAt?: string;
+  queenStatus?: QueenStatus;
+  queenHistoryNote?: string;
   markingNote?: string;
   honeySuperCount?: number;
   harvestSummary?: string;
@@ -147,6 +166,12 @@ export type Recommendation = {
 export type NewInspectionInput = Omit<Inspection, 'id' | 'performedAt'>;
 export type NewHiveEventInput = Omit<HiveEvent, 'id' | 'performedAt'>;
 export type NewApiaryInput = Omit<Apiary, 'id'>;
-export type NewHiveInput = Pick<Hive, 'apiaryId' | 'name' | 'strength' | 'temperament' | 'boxSystem' | 'notes'>;
+export type NewHiveInput = Pick<Hive, 'apiaryId' | 'name' | 'queenStatus' | 'strength' | 'temperament' | 'boxSystem' | 'notes'> & {
+  queenYear?: string;
+  queenMarkingColor?: QueenMarkingColor;
+  queenOrigin?: string;
+  queenIntroducedAt?: string;
+  queenHistory?: QueenHistoryInput[];
+};
 export type UpdateApiaryInput = NewApiaryInput;
 export type UpdateHiveInput = NewHiveInput;

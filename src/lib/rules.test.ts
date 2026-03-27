@@ -27,6 +27,7 @@ function createHive(overrides: Partial<Hive> = {}): Hive {
     strength: 'Starkt',
     temperament: 'Lugnt',
     boxSystem: 'Lågnormal',
+    queenHistory: [],
     lastInspectionAt: '2026-06-15T10:00:00.000Z',
     notes: 'Testkupa',
     ...overrides,

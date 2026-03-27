@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, Task, VarroaControlMethod, VarroaLevel } from '@/types/domain';
+import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, QueenHistoryEntry, QueenMarkingColor, QueenStatus, Task, VarroaControlMethod, VarroaLevel } from '@/types/domain';
 
 const KUPKOLL_APP_STATE_STORAGE_KEY = 'kupkoll:app-state';
 const LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
-const KUPKOLL_APP_STATE_VERSION = 6;
+const KUPKOLL_APP_STATE_VERSION = 7;
 
 export type KupkollAppState = {
   apiaries: Apiary[];
@@ -50,6 +50,58 @@ function normalizeHiveBoxSystem(value: unknown): HiveBoxSystem {
   }
 
   return value === 'Lågnormal' || value === 'Svea' || value === 'Langstroth' || value === 'Dadant' ? value : 'Lågnormal';
+}
+
+function normalizeQueenStatus(value: unknown): QueenStatus {
+  return value === 'Bekräftad' || value === 'Osäker' || value === 'Behöver följas upp' ? value : 'Behöver följas upp';
+}
+
+function normalizeQueenMarkingColor(value: unknown): QueenMarkingColor | undefined {
+  return value === 'Vit' || value === 'Gul' || value === 'Röd' || value === 'Grön' || value === 'Blå' || value === 'Omärkt' ? value : undefined;
+}
+
+function normalizeIsoDate(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed || !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return undefined;
+  }
+
+  const parsed = new Date(`${trimmed}T00:00:00.000Z`);
+
+  return Number.isNaN(parsed.getTime()) ? undefined : trimmed;
+}
+
+function normalizeQueenHistory(value: unknown): QueenHistoryEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry, index) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        return null;
+      }
+
+      const candidate = entry as Record<string, unknown>;
+      const year = typeof candidate.year === 'string' && candidate.year.trim() ? candidate.year.trim() : undefined;
+      const note = typeof candidate.note === 'string' && candidate.note.trim() ? candidate.note.trim() : undefined;
+
+      if (!year || !note) {
+        return null;
+      }
+
+      return {
+        id: typeof candidate.id === 'string' && candidate.id.trim() ? candidate.id.trim() : `queen-history-${index}`,
+        year,
+        note,
+      };
+    })
+    .filter((entry): entry is QueenHistoryEntry => Boolean(entry));
 }
 
 function normalizeInspectionWeatherCondition(value: unknown): InspectionWeatherCondition | undefined {
@@ -157,6 +209,11 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
   const candidate = value as Record<string, unknown>;
   const mergedWithHiveName = typeof candidate.mergedWithHiveName === 'string' && candidate.mergedWithHiveName.trim() ? candidate.mergedWithHiveName.trim() : undefined;
   const queenYear = typeof candidate.queenYear === 'string' && candidate.queenYear.trim() ? candidate.queenYear.trim() : undefined;
+  const queenMarkingColor = normalizeQueenMarkingColor(candidate.queenMarkingColor);
+  const queenOrigin = typeof candidate.queenOrigin === 'string' && candidate.queenOrigin.trim() ? candidate.queenOrigin.trim() : undefined;
+  const queenIntroducedAt = normalizeIsoDate(candidate.queenIntroducedAt);
+  const queenStatus = candidate.queenStatus === undefined ? undefined : normalizeQueenStatus(candidate.queenStatus);
+  const queenHistoryNote = typeof candidate.queenHistoryNote === 'string' && candidate.queenHistoryNote.trim() ? candidate.queenHistoryNote.trim() : undefined;
   const markingNote = typeof candidate.markingNote === 'string' && candidate.markingNote.trim() ? candidate.markingNote.trim() : undefined;
   const honeySuperCount = typeof candidate.honeySuperCount === 'number' && Number.isFinite(candidate.honeySuperCount) ? candidate.honeySuperCount : undefined;
   const harvestSummary = typeof candidate.harvestSummary === 'string' && candidate.harvestSummary.trim() ? candidate.harvestSummary.trim() : undefined;
@@ -165,6 +222,11 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
   if (
     mergedWithHiveName === undefined &&
     queenYear === undefined &&
+    queenMarkingColor === undefined &&
+    queenOrigin === undefined &&
+    queenIntroducedAt === undefined &&
+    queenStatus === undefined &&
+    queenHistoryNote === undefined &&
     markingNote === undefined &&
     honeySuperCount === undefined &&
     harvestSummary === undefined &&
@@ -176,6 +238,11 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
   return {
     mergedWithHiveName,
     queenYear,
+    queenMarkingColor,
+    queenOrigin,
+    queenIntroducedAt,
+    queenStatus,
+    queenHistoryNote,
     markingNote,
     honeySuperCount,
     harvestSummary,
@@ -184,9 +251,18 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
 }
 
 function normalizeHive(item: Record<string, unknown>): Hive {
+  const queenYear = typeof item.queenYear === 'string' && item.queenYear.trim() ? item.queenYear.trim() : undefined;
+  const queenOrigin = typeof item.queenOrigin === 'string' && item.queenOrigin.trim() ? item.queenOrigin.trim() : undefined;
+
   return {
     ...(item as Hive),
+    queenStatus: normalizeQueenStatus(item.queenStatus),
     boxSystem: normalizeHiveBoxSystem(item.boxSystem),
+    queenYear,
+    queenMarkingColor: normalizeQueenMarkingColor(item.queenMarkingColor),
+    queenOrigin,
+    queenIntroducedAt: normalizeIsoDate(item.queenIntroducedAt),
+    queenHistory: normalizeQueenHistory(item.queenHistory),
   };
 }
 
@@ -278,7 +354,7 @@ export function parsePersistedKupkollState(input: unknown): KupkollAppState | nu
     return migrateLegacyState(candidate);
   }
 
-  if (version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== KUPKOLL_APP_STATE_VERSION) {
+  if (version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== KUPKOLL_APP_STATE_VERSION) {
     return null;
   }
 

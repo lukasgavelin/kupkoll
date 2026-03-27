@@ -33,6 +33,17 @@ const hives = [
     strength: 'Medel' as const,
     temperament: 'Lugnt' as const,
     boxSystem: 'Svea' as const,
+    queenYear: '2025',
+    queenMarkingColor: 'Vit' as const,
+    queenOrigin: 'Ursprunglig drottning',
+    queenIntroducedAt: '2025-06-10',
+    queenHistory: [
+      {
+        id: 'queen-history-1',
+        year: '2025',
+        note: 'Ursprunglig drottning',
+      },
+    ],
     lastInspectionAt: '2026-03-20T10:15:00.000Z',
     notes: 'Anteckning',
   },
@@ -88,6 +99,7 @@ const events = [
     notes: 'Drottningen märktes och årgången verifierades.',
     details: {
       queenYear: '2025',
+      queenMarkingColor: 'Vit' as const,
       markingNote: 'Vit märkfärg',
     },
   },
@@ -136,6 +148,23 @@ describe('parsePersistedKupkollState', () => {
     expect(
       parsePersistedKupkollState({
         version: 6,
+        apiaries,
+        hives,
+        inspections,
+        events,
+        manualTasks: tasks,
+      }),
+    ).toEqual({
+      apiaries,
+      hives,
+      inspections,
+      events,
+      manualTasks: tasks,
+    });
+
+    expect(
+      parsePersistedKupkollState({
+        version: 7,
         apiaries,
         hives,
         inspections,
@@ -248,6 +277,11 @@ describe('parsePersistedKupkollState', () => {
             ...events[0],
             details: {
               queenYear: ' 2025 ',
+              queenMarkingColor: 'Blå',
+              queenOrigin: '  Inköpt drottning  ',
+              queenIntroducedAt: ' 2025-06-12 ',
+              queenStatus: 'Bekräftad',
+              queenHistoryNote: '  Ersatt  ',
               markingNote: '  Vit märkfärg  ',
               honeySuperCount: '1',
             },
@@ -284,10 +318,69 @@ describe('parsePersistedKupkollState', () => {
           ...events[0],
           details: {
             queenYear: '2025',
+            queenMarkingColor: 'Blå',
+            queenOrigin: 'Inköpt drottning',
+            queenIntroducedAt: '2025-06-12',
+            queenStatus: 'Bekräftad',
+            queenHistoryNote: 'Ersatt',
             markingNote: 'Vit märkfärg',
           },
         },
       ],
+      manualTasks: tasks,
+    });
+  });
+
+  it('normalizes queen details and filters incomplete queen history rows', () => {
+    expect(
+      parsePersistedKupkollState({
+        version: 7,
+        apiaries,
+        hives: [
+          {
+            ...hives[0],
+            queenYear: ' 2024 ',
+            queenMarkingColor: 'Blå',
+            queenOrigin: '  Inköpt drottning  ',
+            queenIntroducedAt: ' 2024-07-01 ',
+            queenHistory: [
+              {
+                id: 'queen-history-1',
+                year: ' 2024 ',
+                note: '  Ursprunglig drottning  ',
+              },
+              {
+                id: 'queen-history-2',
+                year: '2025',
+                note: ' ',
+              },
+            ],
+          },
+        ],
+        inspections,
+        events,
+        manualTasks: tasks,
+      }),
+    ).toEqual({
+      apiaries,
+      hives: [
+        {
+          ...hives[0],
+          queenYear: '2024',
+          queenMarkingColor: 'Blå',
+          queenOrigin: 'Inköpt drottning',
+          queenIntroducedAt: '2024-07-01',
+          queenHistory: [
+            {
+              id: 'queen-history-1',
+              year: '2024',
+              note: 'Ursprunglig drottning',
+            },
+          ],
+        },
+      ],
+      inspections,
+      events,
       manualTasks: tasks,
     });
   });
