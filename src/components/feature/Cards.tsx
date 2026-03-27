@@ -7,7 +7,7 @@ import { getRecommendationKindLabel } from '@/lib/recommendations';
 import { formatDateLabel, formatDateTimeLabel } from '@/lib/selectors';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import { Apiary, Hive, Inspection, Recommendation, Task } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, Inspection, Recommendation, Task } from '@/types/domain';
 
 function getTaskSourceLabel(source: Task['source']) {
   return source === 'Beslutsstöd' ? 'Föreslaget från dina senaste noteringar' : 'Egen planering';
@@ -37,6 +37,75 @@ function formatInspectionWeather(inspection: Inspection) {
   ].filter(Boolean);
 
   return segments.length ? segments.join(' · ') : null;
+}
+
+function getAdvancedInspectionLabels(inspection: Inspection) {
+  if (!inspection.advancedDetails) {
+    return [];
+  }
+
+  const labels = [
+    inspection.advancedDetails.honeySuperOn !== undefined ? `Skattlåda ${inspection.advancedDetails.honeySuperOn ? 'på' : 'av'}` : undefined,
+    inspection.advancedDetails.splitMade !== undefined ? `Avläggare ${inspection.advancedDetails.splitMade ? 'gjord' : 'ej gjord'}` : undefined,
+    inspection.advancedDetails.queenChangeStatus ? `Drottningbyte ${inspection.advancedDetails.queenChangeStatus.toLowerCase()}` : undefined,
+  ].filter((label): label is string => Boolean(label));
+
+  if (inspection.advancedDetails.treatment) {
+    labels.push(`Åtgärd under besöket: ${inspection.advancedDetails.treatment}`);
+  }
+
+  if (inspection.advancedDetails.feeding) {
+    labels.push(`Utfodring: ${inspection.advancedDetails.feeding}`);
+  }
+
+  return labels;
+}
+
+function getVarroaDetailLabels(inspection: Inspection) {
+  if (!inspection.varroaDetails?.checked) {
+    return [];
+  }
+
+  const labels = [
+    inspection.varroaDetails.controlMethod ? `Varroametod: ${inspection.varroaDetails.controlMethod}` : undefined,
+    inspection.varroaDetails.measurementValue ? `Mätvärde: ${inspection.varroaDetails.measurementValue}` : undefined,
+    inspection.varroaDetails.treatmentPerformed !== undefined ? `Behandling ${inspection.varroaDetails.treatmentPerformed ? 'utförd' : 'ej utförd'}` : undefined,
+  ].filter((label): label is string => Boolean(label));
+
+  return labels;
+}
+
+function getHiveEventTone(event: HiveEvent) {
+  if (event.type === 'Vinterförlust' || event.type === 'Samhälle dött/avvecklat') {
+    return 'critical' as const;
+  }
+
+  if (event.type === 'Samhälle förenat' || event.type === 'Invintring startad' || event.type === 'Invintring slutförd') {
+    return 'warning' as const;
+  }
+
+  if (event.type === 'Rensningsflyg observerad' || event.type === 'Skattning/slungning') {
+    return 'calm' as const;
+  }
+
+  return 'info' as const;
+}
+
+function getHiveEventDetailLabels(event: HiveEvent) {
+  if (!event.details) {
+    return [];
+  }
+
+  const labels = [
+    event.details.mergedWithHiveName ? `Förenat med: ${event.details.mergedWithHiveName}` : undefined,
+    event.details.queenYear ? `Årgång: ${event.details.queenYear}` : undefined,
+    event.details.markingNote ? `Märkning: ${event.details.markingNote}` : undefined,
+    event.details.honeySuperCount !== undefined ? `Skattlådor: ${event.details.honeySuperCount}` : undefined,
+    event.details.harvestSummary ? `Skattning: ${event.details.harvestSummary}` : undefined,
+    event.details.feedingSummary ? `Stödfodring: ${event.details.feedingSummary}` : undefined,
+  ].filter((label): label is string => Boolean(label));
+
+  return labels;
 }
 
 export function StatCard({ value, label }: { value: string; label: string }) {
@@ -147,19 +216,61 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
   const styles = createStyles(theme);
   const varroaTone = inspection.varroaLevel === 'Hög' ? 'critical' : inspection.varroaLevel === 'Förhöjd' ? 'warning' : 'info';
   const weatherSummary = formatInspectionWeather(inspection);
+  const advancedLabels = getAdvancedInspectionLabels(inspection);
+  const varroaLabels = getVarroaDetailLabels(inspection);
 
   return (
     <AppCard>
       <Text style={theme.textStyles.heading}>{formatDateTimeLabel(inspection.performedAt)}</Text>
       <View style={styles.inlineWrap}>
+        <StatusBadge label={inspection.mode} tone={inspection.mode === 'Fördjupad genomgång' ? 'calm' : 'info'} />
         <StatusBadge label={inspection.queenSeen ? 'Drottning sedd' : 'Drottning ej sedd'} tone={inspection.queenSeen ? 'calm' : 'warning'} />
         <StatusBadge label={inspection.eggsSeen ? 'Ägg sedda' : 'Ägg ej sedda'} tone={inspection.eggsSeen ? 'calm' : 'warning'} />
         <StatusBadge label={inspection.actionNeeded ? 'Behöver följas upp' : 'Ingen uppföljning nu'} tone={inspection.actionNeeded ? 'critical' : 'info'} />
         <StatusBadge label={`Varroa: ${inspection.varroaLevel}`} tone={varroaTone} />
       </View>
+      {advancedLabels.length ? (
+        <View style={styles.inlineWrap}>
+          {advancedLabels.map((label) => (
+            <StatusBadge key={label} label={label} tone="info" />
+          ))}
+        </View>
+      ) : null}
+      {varroaLabels.length ? (
+        <View style={styles.inlineWrap}>
+          {varroaLabels.map((label) => (
+            <StatusBadge key={label} label={label} tone="warning" />
+          ))}
+        </View>
+      ) : null}
+      {inspection.varroaDetails?.treatmentNote ? <Text style={theme.textStyles.caption}>Varroanotis: {inspection.varroaDetails.treatmentNote}</Text> : null}
       {weatherSummary ? <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text> : null}
       {inspection.weather?.note ? <Text style={theme.textStyles.caption}>Vädernotis: {inspection.weather.note}</Text> : null}
       <Text style={theme.textStyles.body}>{inspection.notes}</Text>
+    </AppCard>
+  );
+}
+
+export function HiveEventSnapshot({ event }: { event: HiveEvent }) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
+  const tone = getHiveEventTone(event);
+  const labels = getHiveEventDetailLabels(event);
+
+  return (
+    <AppCard>
+      <Text style={theme.textStyles.heading}>{formatDateTimeLabel(event.performedAt)}</Text>
+      <View style={styles.inlineWrap}>
+        <StatusBadge label={event.type} tone={tone} />
+      </View>
+      {labels.length ? (
+        <View style={styles.inlineWrap}>
+          {labels.map((label) => (
+            <StatusBadge key={label} label={label} tone="info" />
+          ))}
+        </View>
+      ) : null}
+      <Text style={theme.textStyles.body}>{event.notes}</Text>
     </AppCard>
   );
 }

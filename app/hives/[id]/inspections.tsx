@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { InspectionSnapshot } from '@/components/feature/Cards';
+import { HiveEventSnapshot, InspectionSnapshot } from '@/components/feature/Cards';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -12,7 +12,7 @@ import { theme } from '@/theme';
 
 export default function HiveInspectionHistoryScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { getHiveById, getInspectionsForHive } = useKupkoll();
+  const { getEventsForHive, getHiveById, getInspectionsForHive } = useKupkoll();
   const hive = getHiveById(params.id);
 
   if (!hive) {
@@ -27,6 +27,11 @@ export default function HiveInspectionHistoryScreen() {
   }
 
   const inspections = getInspectionsForHive(hive.id);
+  const events = getEventsForHive(hive.id);
+  const timeline = [
+    ...inspections.map((inspection) => ({ id: `inspection-${inspection.id}`, performedAt: inspection.performedAt, kind: 'inspection' as const, inspection })),
+    ...events.map((event) => ({ id: `event-${event.id}`, performedAt: event.performedAt, kind: 'event' as const, event })),
+  ].sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime());
 
   return (
     <Screen>
@@ -34,16 +39,18 @@ export default function HiveInspectionHistoryScreen() {
         actionLabel="Tillbaka"
         actionIconName="chevron-back"
         onActionPress={() => router.back()}
-        eyebrow="Genomgångar"
+        eyebrow="Historik"
         title={`Historik för ${hive.name}`}
-        description="Här kan du gå tillbaka och se vad du har noterat tidigare, med senaste genomgången överst."
+        description="Här ser du både genomgångar och viktiga händelser för samhället, med senaste posten överst."
       />
 
       <View style={styles.list}>
-        {inspections.length ? (
-          inspections.map((inspection) => <InspectionSnapshot key={inspection.id} inspection={inspection} />)
+        {timeline.length ? (
+          timeline.map((item) =>
+            item.kind === 'inspection' ? <InspectionSnapshot key={item.id} inspection={item.inspection} /> : <HiveEventSnapshot key={item.id} event={item.event} />,
+          )
         ) : (
-          <EmptyStateCard title="Ingen historik ännu" description="När du har sparat genomgångar för kupan samlas de här i den ordning de gjordes." />
+          <EmptyStateCard title="Ingen historik ännu" description="När du har sparat genomgångar eller händelser för kupan samlas de här i den ordning de gjordes." />
         )}
       </View>
     </Screen>

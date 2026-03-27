@@ -13,7 +13,7 @@ import { Theme } from '@/theme';
 export default function SettingsScreen() {
   const theme = useTheme();
   const { isDarkMode, toggleThemeMode } = useThemeMode();
-  const { apiaries, hives, inspections, manualTasks } = useKupkoll();
+  const { apiaries, events, hives, inspections, manualTasks } = useKupkoll();
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const styles = createStyles(theme);
@@ -21,6 +21,7 @@ export default function SettingsScreen() {
     { label: 'Bigårdar', value: apiaries.length, fullWidth: false },
     { label: 'Kupor', value: hives.length, fullWidth: false },
     { label: 'Genomgångar', value: inspections.length, fullWidth: true },
+    { label: 'Händelser', value: events.length, fullWidth: false },
     { label: 'Manuella uppgifter', value: manualTasks.length, fullWidth: true },
   ];
 
@@ -37,6 +38,7 @@ export default function SettingsScreen() {
         apiaries,
         hives,
         inspections,
+        events,
         manualTasks,
       });
 
@@ -103,7 +105,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
         <AppCard>
           <View style={styles.backupIntro}>
             <Text style={theme.textStyles.heading}>Backup</Text>
-            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar och manuella uppgifter, så att informationen finns kvar även utanför telefonen eller webben.</Text>
+            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar, händelser och manuella uppgifter, så att informationen finns kvar även utanför telefonen eller webben.</Text>
           </View>
           <View style={styles.exportFacts}>
             {exportFacts.map((fact) => (

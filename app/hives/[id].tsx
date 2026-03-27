@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { InspectionSnapshot, TaskCard } from '@/components/feature/Cards';
+import { HiveEventSnapshot, InspectionSnapshot, TaskCard } from '@/components/feature/Cards';
 import { RecommendationSections } from '@/components/feature/RecommendationSections';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
@@ -15,7 +15,7 @@ import { theme } from '@/theme';
 
 export default function HiveDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { deleteHive, getHiveById, getApiaryById, getInspectionsForHive, getRecommendationsForHive, getTasksForHive, latestInspectionMap } = useKupkoll();
+  const { deleteHive, getHiveById, getApiaryById, getEventsForHive, getRecommendationsForHive, getTasksForHive, latestInspectionMap } = useKupkoll();
   const hive = getHiveById(params.id);
 
   if (!hive) {
@@ -32,12 +32,13 @@ export default function HiveDetailScreen() {
   const hiveId = hive.id;
   const apiary = getApiaryById(hive.apiaryId);
   const latestInspection = latestInspectionMap[hive.id];
-  const inspectionHistory = getInspectionsForHive(hive.id);
+  const events = getEventsForHive(hive.id);
+  const latestEvent = events[0];
   const recommendations = getRecommendationsForHive(hive.id);
   const tasks = getTasksForHive(hive.id);
 
   function confirmDelete() {
-    Alert.alert('Ta bort kupa?', 'Kupan tas bort tillsammans med sparade genomgångar och manuella uppgifter.', [
+    Alert.alert('Ta bort kupa?', 'Kupan tas bort tillsammans med sparade genomgångar, händelser och manuella uppgifter.', [
       { text: 'Avbryt', style: 'cancel' },
       {
         text: 'Ta bort',
@@ -71,17 +72,20 @@ export default function HiveDetailScreen() {
         </View>
         <Text style={theme.textStyles.body}>{hive.notes}</Text>
         <PrimaryButton label="Ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hiveId}`)} />
+        <PrimaryButton label="Ny händelse" onPress={() => router.push(`/events/new?hiveId=${hiveId}` as never)} variant="secondary" />
         <PrimaryButton label="Redigera kupa" onPress={() => router.push(`/hives/${hiveId}/edit`)} variant="secondary" />
         <PrimaryButton label="Ta bort kupa" onPress={confirmDelete} variant="ghost" />
       </AppCard>
 
-      {latestInspection ? (
+      <SectionHeader eyebrow="Historik" title="Senaste noteringar" />
+      {latestInspection || latestEvent ? (
         <View style={styles.sectionList}>
-          <InspectionSnapshot inspection={latestInspection} />
-          <PrimaryButton label="Tidigare genomgångar" onPress={() => router.push(`/hives/${hiveId}/inspections`)} variant="secondary" />
+          {latestEvent ? <HiveEventSnapshot event={latestEvent} /> : null}
+          {latestInspection ? <InspectionSnapshot inspection={latestInspection} /> : null}
+          <PrimaryButton label="Öppna historik" onPress={() => router.push(`/hives/${hiveId}/inspections`)} variant="secondary" />
         </View>
       ) : (
-        <EmptyStateCard title="Ingen genomgång ännu" description="När du sparar den första genomgången ser du här vad som noterades och vad som kan vara bra att följa upp." />
+        <EmptyStateCard title="Ingen historik ännu" description="När du sparar den första genomgången eller händelsen ser du här vad som har hänt i samhället över säsongen." />
       )}
 
       <SectionHeader eyebrow="Råd" title="Att hålla koll på" />
