@@ -449,6 +449,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>3. Hur känns läget?</Text>
+        <Text style={theme.textStyles.caption}>Välj ett förval som ligger nära verkligheten. Om du sedan justerar knapparna under nästa steg visas det som en egen bedömning.</Text>
         <View style={styles.stack}>
           {inspectionPresets.map((preset) => {
             const selected = activePreset?.id === preset.id;
@@ -472,6 +473,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             ? 'Om förvalet redan stämmer kan du gå vidare direkt. Här ändrar du bara det som inte passar.'
             : 'Utgå från förvalet och fyll sedan på med fler fält i nästa steg om du vill dokumentera mer.'}
         </Text>
+        <Text style={theme.textStyles.caption}>Nu matchar: {activePreset ? activePreset.label : 'Egen bedömning efter dina justeringar'}</Text>
         <View style={styles.optionGrid}>
           {quickToggleLabels.map((item) => {
             const selected = values[item.key];
@@ -672,6 +674,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             <Text style={theme.textStyles.overline}>Sammanfattning</Text>
             <Text style={styles.summaryTitle}>{selectedHive ? selectedHive.name : 'Välj kupa först'}</Text>
             <Text style={styles.summaryDescription}>{inspectionMode} • {summaryLabel} • {temperament} • {varroaSummary}</Text>
+            {selectedApiary ? <Text style={theme.textStyles.caption}>Bigård: {selectedApiary.name}</Text> : null}
             <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text>
           </View>
         </View>

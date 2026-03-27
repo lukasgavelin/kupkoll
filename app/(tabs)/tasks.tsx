@@ -17,6 +17,7 @@ export default function TasksScreen() {
   const styles = createStyles(theme);
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
+  const firstHive = hives[0];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -114,7 +115,12 @@ export default function TasksScreen() {
         ))
       ) : (
         <View style={styles.sectionList}>
-          <EmptyStateCard title="Inga uppgifter ännu" description="När du har lagt till kupor och sparat genomgångar samlas sådant att göra och följa upp här." />
+          <EmptyStateCard
+            title="Inga uppgifter ännu"
+            description={hasHives ? 'När du sparar genomgångar börjar appen lyfta ut sådant som behöver följas upp här. Nästa logiska steg är därför att logga en genomgång.' : 'När du har lagt till kupor och sparat genomgångar samlas sådant att göra och följa upp här.'}
+            actionLabel={hasHives ? 'Logga första genomgången' : undefined}
+            onActionPress={hasHives && firstHive ? () => router.push(`/inspections/new?hiveId=${firstHive.id}`) : undefined}
+          />
         </View>
       )}
     </Screen>

@@ -50,7 +50,12 @@ export default function HiveInspectionHistoryScreen() {
             item.kind === 'inspection' ? <InspectionSnapshot key={item.id} inspection={item.inspection} /> : <HiveEventSnapshot key={item.id} event={item.event} />,
           )
         ) : (
-          <EmptyStateCard title="Ingen historik ännu" description="När du har sparat genomgångar eller händelser för kupan samlas de här i den ordning de gjordes." />
+          <EmptyStateCard
+            title="Ingen historik ännu"
+            description="När du har sparat genomgångar eller händelser för kupan samlas de här i den ordning de gjordes. Börja med en genomgång om du vill få lägesbild, råd och uppgifter att bygga vidare på."
+            actionLabel="Logga genomgång"
+            onActionPress={() => router.push(`/inspections/new?hiveId=${hive.id}`)}
+          />
         )}
       </View>
     </Screen>

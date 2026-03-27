@@ -34,6 +34,7 @@ export default function HomeScreen() {
     [recommendations, tasks],
   );
   const hasApiaries = apiaries.length > 0;
+  const hasHives = hives.length > 0;
   const nextTask = tasks[0];
   const nextRecommendation = prioritizedRecommendations[0];
   const latestInspection = dashboard.latestInspections[0];
@@ -50,8 +51,8 @@ export default function HomeScreen() {
         ? 'Du har inget direkt att göra just nu, men här ser du vad som kan vara bra att ha med sig till nästa besök.'
         : 'Läget ser lugnt ut just nu. Här under kan du gå vidare till senaste genomgångar och säsongsläget.'
     : hasApiaries
-      ? 'Börja med att lägga till din första kupa. Sedan fylls Hem med nästa steg, senaste noteringar och säsongsläge.'
-      : 'Börja med att lägga till din första bigård. Därefter kan du lägga till kupor och få nästa steg här på Hem.';
+      ? 'Börja med att lägga till din första kupa och fyll i aktuell drottning. Sedan blir det tydligt att logga genomgångar och senare drottningbyte från kupans vy.'
+      : 'Börja med att lägga till din första bigård. Därefter lägger du till kupor och kan sedan logga händelser som drottningbyte i rätt ordning.';
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +118,12 @@ export default function HomeScreen() {
             <TaskCard key={task.id} hiveName={task.hiveId ? getHiveById(task.hiveId)?.name : apiaries.find((item) => item.id === task.apiaryId)?.name} task={task} />
           ))
         ) : (
-          <EmptyStateCard title="Inget att göra ännu" description="När du börjar lägga in kupor och genomgångar samlas dina nästa steg här." actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
+          <EmptyStateCard
+            title="Inget att göra ännu"
+            description={hasHives ? 'Du har ännu inget som kräver uppföljning. Om du vill få bättre guidning härnäst kan du logga en genomgång på en kupa.' : 'När du börjar lägga in kupor och genomgångar samlas dina nästa steg här.'}
+            actionLabel={hasHives ? 'Logga genomgång' : hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
+            onActionPress={() => router.push(hasHives && quickHive ? `/inspections/new?hiveId=${quickHive.id}` : hasApiaries ? '/hives/new' : '/apiaries/new')}
+          />
         )}
       </View>
 
@@ -135,7 +141,12 @@ export default function HomeScreen() {
         {dashboard.latestInspections.length ? (
           dashboard.latestInspections.map((inspection) => <InspectionSnapshot key={inspection.id} inspection={inspection} />)
         ) : (
-          <EmptyStateCard title="Inga genomgångar ännu" description="När du sparar din första genomgång visas den här, så att du lätt kan minnas vad du såg sist." actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
+          <EmptyStateCard
+            title="Inga genomgångar ännu"
+            description={hasHives ? 'Du har kupor på plats men ännu ingen sparad genomgång. Logga den första så blir både historik, råd och uppgifter mer träffsäkra.' : 'När du sparar din första genomgång visas den här, så att du lätt kan minnas vad du såg sist.'}
+            actionLabel={hasHives ? 'Logga första genomgången' : hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
+            onActionPress={() => router.push(hasHives && quickHive ? `/inspections/new?hiveId=${quickHive.id}` : hasApiaries ? '/hives/new' : '/apiaries/new')}
+          />
         )}
       </View>
 
