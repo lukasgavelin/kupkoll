@@ -2,10 +2,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { TaskCard } from '@/components/feature/Cards';
+import { RecommendationSections } from '@/components/feature/RecommendationSections';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { getRelatedTaskForRecommendation } from '@/lib/recommendations';
+import { formatDateLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -13,7 +16,7 @@ import type { Task } from '@/types/domain';
 
 export default function TasksScreen() {
   const theme = useTheme();
-  const { apiaries, hives, tasks, getHiveById, getApiaryById } = useKupkoll();
+  const { apiaries, hives, tasks, recommendations, getHiveById, getApiaryById } = useKupkoll();
   const styles = createStyles(theme);
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
@@ -77,6 +80,24 @@ export default function TasksScreen() {
         title="Det som behöver göras"
         description="Här ser du arbetslistan uppdelad efter hur snart något behöver göras."
       />
+      {recommendations.length ? (
+        <View style={styles.sectionList}>
+          <SectionHeader
+            eyebrow="Beslutsstöd"
+            title="Råd och signaler"
+            description="Allt beslutsstöd samlas här så att råd och uppgifter kan följas upp tillsammans."
+          />
+          <RecommendationSections
+            recommendations={recommendations}
+            getHiveName={(hiveId) => getHiveById(hiveId)?.name ?? 'Kupa'}
+            getRelatedTaskLabel={(recommendation) => {
+              const relatedTask = getRelatedTaskForRecommendation(recommendation, tasks);
+
+              return relatedTask ? `${relatedTask.title} senast ${formatDateLabel(relatedTask.dueDate)}` : undefined;
+            }}
+          />
+        </View>
+      ) : null}
       {hasHives ? (
         <AppCard style={styles.priorityCard}>
           <Text style={theme.textStyles.heading}>Snabb överblick</Text>
