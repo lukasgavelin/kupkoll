@@ -113,15 +113,26 @@ function getHiveEventDetailLabels(event: HiveEvent) {
   return labels;
 }
 
-export function StatCard({ value, label }: { value: string; label: string }) {
+export function StatCard({ value, label, onPress }: { value: string; label: string; onPress?: () => void }) {
   const theme = useTheme();
   const styles = createStyles(theme);
 
+  if (!onPress) {
+    return (
+      <AppCard style={styles.statCard}>
+        <Text style={theme.textStyles.overline}>{label}</Text>
+        <Text style={styles.statValue}>{value}</Text>
+      </AppCard>
+    );
+  }
+
   return (
-    <AppCard style={styles.statCard}>
-      <Text style={theme.textStyles.overline}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </AppCard>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.statPressable, pressed && styles.pressed]}>
+      <AppCard style={styles.statCard}>
+        <Text style={theme.textStyles.overline}>{label}</Text>
+        <Text style={styles.statValue}>{value}</Text>
+      </AppCard>
+    </Pressable>
   );
 }
 
@@ -295,10 +306,16 @@ function createStyles(theme: Theme) {
       opacity: 0.9,
     },
     statCard: {
-      flex: 1,
-      minWidth: '47%',
+      width: '100%',
       justifyContent: 'space-between',
-      minHeight: 144,
+      minHeight: 120,
+    },
+    statPressable: {
+      width: '48.5%',
+      flexGrow: 0,
+      flexShrink: 0,
+      borderRadius: theme.radii.xl,
+      marginBottom: theme.spacing.lg,
     },
     statValue: {
       ...theme.textStyles.display,
