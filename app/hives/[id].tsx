@@ -72,11 +72,8 @@ export default function HiveDetailScreen() {
           <MetaItem label="Kupsystem" value={hive.boxSystem} />
         </View>
         <Text style={theme.textStyles.body}>{hive.notes}</Text>
-        {apiary ? <PrimaryButton label={`Öppna ${apiary.name}`} onPress={() => router.push(`/apiaries/${apiary.id}`)} variant="secondary" /> : null}
         <PrimaryButton label="Ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hiveId}`)} />
         <PrimaryButton label="Ny händelse" onPress={() => router.push(`/events/new?hiveId=${hiveId}` as never)} variant="secondary" />
-        <PrimaryButton label="Redigera kupa" onPress={() => router.push(`/hives/${hiveId}/edit`)} variant="secondary" />
-        <PrimaryButton label="Ta bort kupa" onPress={confirmDelete} variant="ghost" />
       </AppCard>
 
       <SectionHeader eyebrow="Drottning" title="Nuvarande drottning och historik" />
@@ -114,6 +111,11 @@ export default function HiveDetailScreen() {
         <EmptyStateCard title="Ingen historik ännu" description="När du sparar den första genomgången eller händelsen ser du här vad som har hänt i samhället över säsongen." />
       )}
 
+      <SectionHeader eyebrow="Att göra" title="Saker kopplade till den här kupan" />
+      <View style={styles.sectionList}>
+        {tasks.length ? tasks.map((task) => <TaskCard key={task.id} hiveName={hive.name} task={task} />) : <EmptyStateCard title="Inga uppgifter ännu" description="När något behöver följas upp i den här kupan visas det här." />}
+      </View>
+
       <SectionHeader eyebrow="Råd" title="Att hålla koll på" />
       <View style={styles.sectionList}>
         {recommendations.length ? (
@@ -129,9 +131,10 @@ export default function HiveDetailScreen() {
         ) : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång börjar appen lyfta fram sådant som kan vara bra att titta närmare på." />}
       </View>
 
-      <SectionHeader eyebrow="Att göra" title="Saker kopplade till den här kupan" />
+      <SectionHeader eyebrow="Hantera" title="Administrera kupan" />
       <View style={styles.sectionList}>
-        {tasks.length ? tasks.map((task) => <TaskCard key={task.id} hiveName={hive.name} task={task} />) : <EmptyStateCard title="Inga uppgifter ännu" description="När något behöver följas upp i den här kupan visas det här." />}
+        <PrimaryButton fullWidth label="Redigera kupa" onPress={() => router.push(`/hives/${hiveId}/edit`)} variant="secondary" />
+        <PrimaryButton fullWidth label="Ta bort kupa" onPress={confirmDelete} variant="ghost" />
       </View>
     </Screen>
   );
