@@ -13,6 +13,7 @@ describe('dragCalendar', () => {
     const csv = [
       'common_name,scientific_name,obs_year,obs_doy,latitude,longitude,phase_main_name_SE,event_name_SE',
       'Sälg,Salix caprea,2022,92,56.1,13.1,Blomning,Start',
+      'Sälg,Salix caprea,2022,93,56.1,13.1,Lövsprickning,Blommor utslagna',
       'Sälg,Salix caprea,2022,95,56.2,13.2,Lövsprickning,Knopp',
       'Maskros,Taraxacum officinale,2022,120,59.1,18.1,Blomning,Blommor',
     ].join('\n');
@@ -45,6 +46,38 @@ describe('dragCalendar', () => {
 
     expect(windows.some((window) => window.scientificName === 'Brassica napus' && window.zone === 'south')).toBe(true);
     expect(windows.some((window) => window.scientificName === 'Phacelia tanacetifolia' && window.zone === 'north')).toBe(true);
+  });
+
+  it('excludes non-fallback species when sample size is below threshold', () => {
+    const observations = [
+      {
+        scientificName: 'Salix caprea',
+        commonName: 'Sälg',
+        obsYear: 2021,
+        obsDoy: 90,
+        latitude: 56.2,
+        longitude: 13.2,
+        zone: 'south' as const,
+      },
+      {
+        scientificName: 'Salix caprea',
+        commonName: 'Sälg',
+        obsYear: 2022,
+        obsDoy: 94,
+        latitude: 56.1,
+        longitude: 13.1,
+        zone: 'south' as const,
+      },
+    ];
+
+    const windows = buildBloomWindows(observations, {
+      ...DEFAULT_OPTIONS,
+      minSamplesPerPlantZone: 5,
+      enableAgriculturalFallbacks: true,
+    });
+
+    expect(windows.some((window) => window.scientificName === 'Salix caprea' && window.zone === 'south')).toBe(false);
+    expect(windows.some((window) => window.scientificName === 'Brassica napus' && window.zone === 'south')).toBe(true);
   });
 
   it('returns likely blooming plants sorted by relevance score', () => {

@@ -320,10 +320,7 @@ export function extractBloomObservations(
   const observations: BloomObservation[] = [];
 
   for (const row of csvRows) {
-    const phase = normalizeText(row.phase_main_name_SE).toLowerCase();
-    const event = normalizeText(row.event_name_SE).toLowerCase();
-
-    if (!phase.includes('blomning') && !event.includes('blom')) {
+    if (!isStrictBloomingPhase(row)) {
       continue;
     }
 
@@ -362,6 +359,10 @@ export function extractBloomObservations(
   }
 
   return observations;
+}
+
+export function isStrictBloomingPhase(row: CsvObservation): boolean {
+  return normalizeText(row.phase_main_name_SE).toLowerCase() === 'blomning';
 }
 
 export function getZoneFromLatitude(

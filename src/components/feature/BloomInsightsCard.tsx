@@ -15,14 +15,30 @@ type Props = {
 function formatStatusLabel(status: BloomPrediction['bloomStatus']) {
   switch (status) {
     case 'snart':
-      return 'Snart';
+      return 'Snart i gång';
     case 'nu':
-      return 'Nu';
+      return 'Sannolikt i blom nu';
     case 'på väg över':
       return 'På väg över';
     default:
-      return 'Nu';
+      return 'Sannolikt i blom nu';
   }
+}
+
+function formatRelevanceLevel(score: number) {
+  if (score >= 12) {
+    return 'mycket hög';
+  }
+
+  if (score >= 8) {
+    return 'hög';
+  }
+
+  if (score >= 4) {
+    return 'medel';
+  }
+
+  return 'låg';
 }
 
 export function BloomInsightsCard({ predictions, zoneLabel }: Props) {
@@ -34,9 +50,9 @@ export function BloomInsightsCard({ predictions, zoneLabel }: Props) {
     <AppCard style={styles.card}>
       <View style={styles.header}>
         <Text style={theme.textStyles.overline}>Blomning</Text>
-        <Text style={styles.title}>Växter bina troligen går på nu</Text>
-        <Text style={styles.subtitle}>Baserat på historiska observationer i {zoneLabel} Sverige.</Text>
-        <Text style={styles.disclaimer}>Detta är en sannolikhetsbedömning, inte en exakt botanisk sanning.</Text>
+        <Text style={styles.title}>Sannolika dragväxter just nu</Text>
+        <Text style={styles.subtitle}>Bedömningen bygger på historiska observationer i {zoneLabel} Sverige.</Text>
+        <Text style={styles.disclaimer}>Resultatet visar sannolikheter, inte säkra fakta för varje enskild plats.</Text>
       </View>
 
       {topPredictions.length ? (
@@ -46,7 +62,7 @@ export function BloomInsightsCard({ predictions, zoneLabel }: Props) {
               <View style={styles.mainInfo}>
                 <Text style={styles.name}>{plant.commonName}</Text>
                 <Text style={styles.meta}>
-                  Sannolikhet {Math.round(plant.bloomProbability * 100)}% · Relevans {Math.round(plant.relevanceScore * 100)}
+                  Sannolikhet {Math.round(plant.bloomProbability * 100)}% · Relevans {formatRelevanceLevel(plant.relevanceScore)}
                 </Text>
               </View>
               <StatusBadge tone={plant.bloomStatus === 'nu' ? 'calm' : plant.bloomStatus === 'snart' ? 'info' : 'warning'} label={formatStatusLabel(plant.bloomStatus)} />
