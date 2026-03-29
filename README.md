@@ -38,6 +38,26 @@ Appen fungerar utan konto och sparar data lokalt.
 - AsyncStorage
 - Vitest
 
+## Blomningsmodell (Drag Calendar)
+
+Bloom-funktionaliteten är nu renodlad till en modell och en service:
+
+- `src/lib/bloom/dragCalendar.ts`: innehåller domäntyper, växtlista, CSV-parsing, zonindelning, fönsterbyggnad och prediktioner
+- `src/lib/bloom/bloomService.ts`: laddar CSV-asset, bygger cachad dataset och exponerar `getLikelyBloomingPlantsNow` för UI
+- `src/lib/bloom/index.ts`: publikt API för bloom-delen
+
+Modellen utgår från:
+
+- DOY (day-of-year) för tidsfönster
+- Latitudbaserad zon (`south`, `middle`, `north`)
+- Percentilbaserade blomningsfönster per art och zon
+- Fallback-fönster för viktiga jordbruksväxter vid tunt underlag
+
+Notera:
+
+- Legacy-pipeline för bloom är borttagen för att undvika dubbla implementationer
+- UI-komponenter ska importera bloom-typer från `@/lib/bloom`, inte från separat typfil
+
 ## Projektstruktur
 
 - `app/` skärmar och navigation
