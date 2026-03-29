@@ -9,24 +9,23 @@ import { Theme } from '@/theme';
 export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const primaryItems = status.focusItems.slice(0, 3);
-  const secondaryItems = status.watchItems.slice(0, 2);
+  const primaryItems = status.focusItems.slice(0, 2);
+  const watchItem = status.watchItems[0];
+  const locationLabel = status.locationLabel ? `${status.regionLabel} · ${status.locationLabel}` : status.regionLabel;
 
   return (
     <AppCard style={styles.card}>
       <View style={styles.header}>
-        <Text style={theme.textStyles.overline}>Säsongsläge</Text>
-        <Text style={styles.regionLabel}>{status.locationLabel ? `${status.regionLabel} · ${status.locationLabel}` : status.regionLabel}</Text>
+        <Text style={theme.textStyles.overline}>{status.monthLabel}</Text>
         <Text style={styles.title}>{status.season}</Text>
-        <Text style={styles.metaText}>{status.monthLabel} · {status.phaseLabel}</Text>
+        <Text style={styles.metaText}>{status.phaseLabel} · {locationLabel}</Text>
         <View style={styles.badgeRow}>
           <StatusBadge label={status.timingLabel} tone="calm" />
         </View>
-        <Text style={styles.summary}>{status.summary}</Text>
       </View>
 
       <View style={styles.focusBlock}>
-        <Text style={styles.focusTitle}>Gör nu</Text>
+        <Text style={styles.focusTitle}>Fokus nu</Text>
         <View style={styles.focusList}>
           {primaryItems.map((item) => (
             <View key={item} style={styles.focusRow}>
@@ -35,14 +34,10 @@ export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
             </View>
           ))}
         </View>
-        {secondaryItems.length ? (
+        {watchItem ? (
           <View style={styles.watchBlock}>
-            <Text style={styles.watchLabel}>Tänk också på</Text>
-            <View style={styles.watchList}>
-              {secondaryItems.map((item) => (
-                <Text key={item} style={styles.watchText}>• {item}</Text>
-              ))}
-            </View>
+            <Text style={styles.watchLabel}>Håll koll</Text>
+            <Text style={styles.watchText}>{watchItem}</Text>
           </View>
         ) : null}
       </View>
@@ -59,15 +54,11 @@ function createStyles(theme: Theme) {
     header: {
       gap: theme.spacing.xs,
     },
-    regionLabel: {
-      ...theme.textStyles.label,
-      color: theme.colors.textMuted,
-    },
     title: {
       ...theme.textStyles.title,
       color: theme.colors.text,
-      fontSize: 30,
-      lineHeight: 34,
+      fontSize: 28,
+      lineHeight: 32,
     },
     metaText: {
       ...theme.textStyles.label,
@@ -77,11 +68,6 @@ function createStyles(theme: Theme) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
-    },
-    summary: {
-      ...theme.textStyles.body,
-      color: theme.colors.textMuted,
-      maxWidth: 680,
     },
     focusBlock: {
       gap: theme.spacing.sm,
@@ -106,9 +92,6 @@ function createStyles(theme: Theme) {
       ...theme.textStyles.caption,
       color: theme.colors.textMuted,
     },
-    watchList: {
-      gap: theme.spacing.xs,
-    },
     focusRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
@@ -127,7 +110,7 @@ function createStyles(theme: Theme) {
       flex: 1,
     },
     watchText: {
-      ...theme.textStyles.caption,
+      ...theme.textStyles.body,
       color: theme.colors.text,
     },
   });

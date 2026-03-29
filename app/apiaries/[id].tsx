@@ -1,6 +1,8 @@
+import { useEffect, useMemo, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 
+import { BloomInsightsCard } from '@/components/feature/BloomInsightsCard';
 import { HiveCard } from '@/components/feature/Cards';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
@@ -8,14 +10,71 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
 import { buildApiaryMapUrl, formatCoordinates } from '@/lib/mapLinks';
+import { getApiaryRegion } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
 
 export default function ApiaryDetailScreen() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const params = useLocalSearchParams<{ id: string }>();
   const { deleteApiary, getApiaryById, getHivesByApiary } = useKupkoll();
   const apiary = getApiaryById(params.id);
+  const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
+
+  const bloomZoneLabel = useMemo(() => {
+    if (!apiary) {
+      return 'mellan';
+    }
+
+    const region = getApiaryRegion(apiary);
+
+    if (region === 'Norra Sverige') {
+      return 'norra';
+    }
+
+    if (region === 'Södra Sverige') {
+      return 'södra';
+    }
+
+    return 'mellan';
+  }, [apiary]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPredictions() {
+      if (!apiary) {
+        setBloomPredictions([]);
+        return;
+      }
+
+      const fallbackLatitude = bloomZoneLabel === 'norra' ? 63 : bloomZoneLabel === 'södra' ? 56 : 59.5;
+      const userLatitude = apiary.coordinates?.latitude ?? fallbackLatitude;
+
+      try {
+        const result = await getLikelyBloomingPlantsNow({
+          userLatitude,
+        });
+
+        if (isMounted) {
+          setBloomPredictions(result.predictions);
+        }
+      } catch {
+        if (isMounted) {
+          setBloomPredictions([]);
+        }
+      }
+    }
+
+    void loadPredictions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [apiary, bloomZoneLabel]);
 
   if (!apiary) {
     return (
@@ -100,6 +159,13 @@ export default function ApiaryDetailScreen() {
         {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryName={apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor här ännu" description="Lägg till den första kupan i bigården så blir det lättare att följa upp platsen över tid." />}
       </View>
 
+      <SectionHeader
+        eyebrow="Blomning"
+        title="Sannolika dragväxter"
+        description="Historikbaserad prognos för vilka växter som troligen blommar kring din bigård."
+      />
+      <BloomInsightsCard predictions={bloomPredictions} zoneLabel={bloomZoneLabel} />
+
       <SectionHeader eyebrow="Hantera" title="Administrera bigården" />
       <View style={styles.sectionList}>
         <PrimaryButton fullWidth label="Redigera bigård" onPress={() => router.push(`/apiaries/${apiaryId}/edit`)} variant="secondary" />
@@ -109,8 +175,10 @@ export default function ApiaryDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  sectionList: {
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    sectionList: {
+      gap: theme.spacing.lg,
+    },
+  });
+}

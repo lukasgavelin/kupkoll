@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { BloomInsightsCard } from '@/components/feature/BloomInsightsCard';
 import { InspectionSnapshot, StatCard } from '@/components/feature/Cards';
 import { SeasonStatusCard } from '@/components/feature/SeasonStatusCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { getSeasonStatus } from '@/lib/selectors';
+import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
+import { getPrimaryApiary, getSeasonStatus } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -21,10 +23,43 @@ export default function HomeScreen() {
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
   const latestInspection = dashboard.latestInspections[0];
+  const inspectionTarget = latestInspection?.hiveId ?? quickHive?.id;
 
   // Compute season status for SeasonStatusCard
   const [seasonDate] = useState(() => new Date());
   const seasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
+  const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPredictions() {
+      const primaryApiary = getPrimaryApiary(apiaries);
+      const fallbackLatitude = seasonStatus.regionLabel === 'Norra Sverige' ? 63 : seasonStatus.regionLabel === 'Södra Sverige' ? 56 : 59.5;
+      const userLatitude = primaryApiary?.coordinates?.latitude ?? fallbackLatitude;
+
+      try {
+        const result = await getLikelyBloomingPlantsNow({
+          userLatitude,
+          date: seasonDate,
+        });
+
+        if (isMounted) {
+          setBloomPredictions(result.predictions);
+        }
+      } catch {
+        if (isMounted) {
+          setBloomPredictions([]);
+        }
+      }
+    }
+
+    void loadPredictions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [apiaries, seasonDate, seasonStatus.regionLabel]);
 
 
 
@@ -57,10 +92,14 @@ export default function HomeScreen() {
               onPress={() => router.push(`/hives/${latestInspection.hiveId}/inspections`)}
               variant="secondary"
             />
-            <PrimaryButton
-              label="Logga genomgång"
-              onPress={() => router.push(`/inspections/new?hiveId=${latestInspection.hiveId}`)}
-            />
+            {inspectionTarget ? <PrimaryButton label="Logga ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${inspectionTarget}`)} /> : null}
+            {inspectionTarget ? (
+              <PrimaryButton
+                label="Logga ny händelse"
+                onPress={() => router.push(`/events/new?hiveId=${inspectionTarget}` as never)}
+                variant="secondary"
+              />
+            ) : null}
           </>
         ) : (
           <EmptyStateCard
@@ -78,8 +117,13 @@ export default function HomeScreen() {
             }
           />
         )}
-        {!latestInspection && hasHives && quickHive ? (
-          <PrimaryButton label="Logga genomgång" onPress={() => router.push(`/inspections/new?hiveId=${quickHive.id}`)} />
+        {!latestInspection && inspectionTarget ? <PrimaryButton label="Logga ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${inspectionTarget}`)} /> : null}
+        {!latestInspection && inspectionTarget ? (
+          <PrimaryButton
+            label="Logga ny händelse"
+            onPress={() => router.push(`/events/new?hiveId=${inspectionTarget}` as never)}
+            variant="secondary"
+          />
         ) : null}
       </View>
 
@@ -89,6 +133,10 @@ export default function HomeScreen() {
         description="Fokus för perioden med aktuella råd för just din region."
       />
       <SeasonStatusCard status={seasonStatus} />
+      <BloomInsightsCard
+        predictions={bloomPredictions}
+        zoneLabel={seasonStatus.regionLabel === 'Norra Sverige' ? 'norra' : seasonStatus.regionLabel === 'Södra Sverige' ? 'södra' : 'mellan'}
+      />
     </Screen>
   );
 }
