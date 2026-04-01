@@ -9,6 +9,16 @@ Appen fungerar utan konto och sparar data lokalt.
 - [Integritetspolicy](./INTEGRITETSPOLICY.md)
 - [Google Play-release](./GOOGLE_PLAY_RELEASE.md)
 
+## Plattformsstöd
+
+Appen är byggd med React Native och Expo och stödjer **Android**, **iOS** och **webb** från samma kodbas.
+
+| Plattform | Status       | Bundle-ID / Package                   |
+|-----------|--------------|---------------------------------------|
+| Android   | ✅ Live       | `com.lukasgavelin.kupkoll`            |
+| iOS       | ✅ Klar för release | `com.lukasgavelin.kupkoll`     |
+| Webb      | ✅ Dev/test   | Metro bundler                         |
+
 ## Det här ingår
 
 - Hemvy som visar vad som behöver göras nu
@@ -97,4 +107,24 @@ Bygg release för distribution:
 
 ```bash
 npx eas build --platform android --profile production
+```
+
+## iOS-release
+
+Bygg för iOS Simulator (kräver macOS med Xcode):
+
+```bash
+npx eas build --platform ios --profile simulator
+```
+
+Bygg för TestFlight / App Store:
+
+```bash
+npx eas build --platform ios --profile production
+```
+
+Fyll i ditt Apple Developer-konto i `eas.json` → `submit.production.ios` (`appleId`, `ascAppId`, `appleTeamId`) innan du kör submit.
+
+```bash
+npx eas submit --platform ios --profile production
 ```

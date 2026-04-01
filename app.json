@@ -21,7 +21,14 @@
       ]
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lukasgavelin.kupkoll",
+      "buildNumber": "3",
+      "minimumOsVersion": "15.1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Kupkoll använder din plats för att spara bigårdens position på kartan.",
+        "NSPhotoLibraryUsageDescription": "Kupkoll behöver tillgång till bilder för export av data."
+      }
     },
     "android": {
       "package": "com.lukasgavelin.kupkoll",
