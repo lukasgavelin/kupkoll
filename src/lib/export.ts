@@ -31,6 +31,7 @@ function cloneState(state: KupkollAppState): KupkollAppState {
     apiaries: state.apiaries.map((apiary) => ({
       ...apiary,
       coordinates: apiary.coordinates ? { ...apiary.coordinates } : undefined,
+      locationDetails: apiary.locationDetails ? { ...apiary.locationDetails } : undefined,
     })),
     hives: state.hives.map((hive) => ({
       ...hive,

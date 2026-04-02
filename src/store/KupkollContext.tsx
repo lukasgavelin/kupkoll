@@ -26,6 +26,7 @@ type KupkollContextValue = {
   deleteHive: (hiveId: string) => void;
   addInspection: (input: NewInspectionInput) => void;
   addEvent: (input: NewHiveEventInput) => void;
+  replaceAllData: (nextState: KupkollAppState) => void;
   getApiaryById: (id: string) => Apiary | undefined;
   getHiveById: (id: string) => Hive | undefined;
   getHivesByApiary: (apiaryId: string) => Hive[];
@@ -211,6 +212,14 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     setHives((current) => current.map((hive) => applyHiveEventToHive(hive, event)));
   }
 
+  function replaceAllData(nextState: KupkollAppState) {
+    setApiaries(nextState.apiaries);
+    setHives(nextState.hives);
+    setInspections(nextState.inspections);
+    setEvents(nextState.events);
+    setManualTasks(nextState.manualTasks);
+  }
+
   const value = useMemo<KupkollContextValue>(
     () => ({
       apiaries,
@@ -230,6 +239,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       deleteHive,
       addInspection,
       addEvent,
+      replaceAllData,
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),
       getHiveById: (id) => hives.find((hive) => hive.id === id),
       getHivesByApiary: (apiaryId) => hives.filter((hive) => hive.apiaryId === apiaryId),
