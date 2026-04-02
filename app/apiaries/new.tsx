@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
 import { ApiaryLocationField } from '@/components/feature/ApiaryLocationField';
@@ -10,7 +10,7 @@ import { Screen } from '@/components/ui/Screen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import { Coordinates } from '@/types/domain';
+import { ApiaryLocationDetails, Coordinates } from '@/types/domain';
 
 export default function NewApiaryScreen() {
   const theme = useTheme();
@@ -20,21 +20,63 @@ export default function NewApiaryScreen() {
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [coordinates, setCoordinates] = useState<Coordinates | undefined>(undefined);
+  const [locationDetails, setLocationDetails] = useState<ApiaryLocationDetails | undefined>(undefined);
+
+  function handleClose() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/apiaries');
+  }
+
+  function showFormAlert(title: string, message: string) {
+    if (Platform.OS === 'web') {
+      globalThis.alert(`${title}\n\n${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  }
+
+  function resolveLocationLabel() {
+    const trimmedLocation = location.trim();
+
+    if (trimmedLocation) {
+      return trimmedLocation;
+    }
+
+    const municipality = locationDetails?.municipality?.trim();
+
+    if (municipality) {
+      return municipality;
+    }
+
+    const locality = locationDetails?.locality?.trim();
+
+    if (locality) {
+      return locality;
+    }
+
+    return '';
+  }
 
   function saveApiary() {
     const trimmedName = name.trim();
-    const trimmedLocation = location.trim();
+    const resolvedLocation = resolveLocationLabel();
 
-    if (!trimmedName || !trimmedLocation) {
-      Alert.alert('Fyll i det viktigaste', 'Ange namn och plats för bigården innan du sparar.');
+    if (!trimmedName || !resolvedLocation) {
+      showFormAlert('Fyll i det viktigaste', 'Ange namn och plats för bigården innan du sparar. Du kan skriva platsen manuellt eller använda Hämta min plats.');
       return;
     }
 
     const apiary = addApiary({
       name: trimmedName,
-      location: trimmedLocation,
+      location: resolvedLocation,
       notes: notes.trim() || 'Lägg gärna till en anteckning om platsen senare om du vill.',
       coordinates,
+      locationDetails,
     });
 
     router.replace(`/apiaries/${apiary.id}`);
@@ -45,7 +87,7 @@ export default function NewApiaryScreen() {
       <PageHeader
         actionLabel="Stäng"
         actionIconName="close"
-        onActionPress={() => router.back()}
+        onActionPress={handleClose}
         eyebrow="Ny bigård"
         title="Lägg till bigård"
         description="Steg 1 av 3. Börja med platsen där kuporna står. När bigården är sparad lägger du till kupor och kan sedan logga större händelser som drottningbyte."
@@ -57,7 +99,14 @@ export default function NewApiaryScreen() {
           <TextInput onChangeText={setName} placeholder="Till exempel Södra skogsbrynet" placeholderTextColor={theme.colors.textMuted} style={styles.input} value={name} />
         </View>
 
-        <ApiaryLocationField coordinates={coordinates} location={location} onCoordinatesChange={setCoordinates} onLocationChange={setLocation} />
+        <ApiaryLocationField
+          coordinates={coordinates}
+          location={location}
+          locationDetails={locationDetails}
+          onCoordinatesChange={setCoordinates}
+          onLocationChange={setLocation}
+          onLocationDetailsChange={setLocationDetails}
+        />
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Anteckning</Text>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { BloomInsightsCard } from '@/components/feature/BloomInsightsCard';
 import { HiveCard } from '@/components/feature/Cards';
@@ -11,8 +11,8 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
-import { buildApiaryMapUrl, formatCoordinates } from '@/lib/mapLinks';
-import { getApiaryRegion } from '@/lib/selectors';
+import { formatCoordinates } from '@/lib/mapLinks';
+import { getApiaryDisplayLocation, getApiaryRegion } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 
@@ -23,6 +23,16 @@ export default function ApiaryDetailScreen() {
   const { deleteApiary, getApiaryById, getHivesByApiary } = useKupkoll();
   const apiary = getApiaryById(params.id);
   const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
+  const apiaryDisplayLocation = getApiaryDisplayLocation(apiary);
+
+  function handleBackNavigation() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/apiaries');
+  }
 
   const bloomZoneLabel = useMemo(() => {
     if (!apiary) {
@@ -81,7 +91,7 @@ export default function ApiaryDetailScreen() {
       <Screen>
         <AppCard>
           <Text style={theme.textStyles.heading}>Bigården hittades inte</Text>
-          <PrimaryButton label="Tillbaka" onPress={() => router.back()} />
+          <PrimaryButton label="Tillbaka" onPress={handleBackNavigation} />
         </AppCard>
       </Screen>
     );
@@ -89,13 +99,27 @@ export default function ApiaryDetailScreen() {
 
   const apiaryId = apiary.id;
   const apiaryHives = getHivesByApiary(apiary.id);
-  const mapUrl = buildApiaryMapUrl(apiary.location, apiary.coordinates);
 
   function confirmDelete() {
     const hiveList = apiaryHives.map((hive) => `• ${hive.name}`).join('\n');
     const deleteMessage = apiaryHives.length
       ? `Bigården tas bort tillsammans med följande kupor:\n\n${hiveList}\n\nTillhörande genomgångar och manuella uppgifter rensas också.`
       : 'Bigården tas bort permanent.';
+
+    const performDelete = () => {
+      deleteApiary(apiaryId);
+      router.replace('/apiaries');
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = globalThis.confirm(`Ta bort bigård?\n\n${deleteMessage}`);
+
+      if (confirmed) {
+        performDelete();
+      }
+
+      return;
+    }
 
     Alert.alert(
       'Ta bort bigård?',
@@ -105,41 +129,20 @@ export default function ApiaryDetailScreen() {
         {
           text: 'Ta bort',
           style: 'destructive',
-          onPress: () => {
-            deleteApiary(apiaryId);
-            router.replace('/apiaries');
-          },
+          onPress: performDelete,
         },
       ],
     );
   }
 
-  async function openMap() {
-    if (!mapUrl) {
-      Alert.alert('Ingen plats att visa', 'Bigården saknar plats som kan öppnas i karta.');
-      return;
-    }
-
-    const canOpen = await Linking.canOpenURL(mapUrl);
-
-    if (!canOpen) {
-      Alert.alert('Kunde inte öppna karta', 'Det gick inte att öppna kartlänken på enheten.');
-      return;
-    }
-
-    await Linking.openURL(mapUrl);
-  }
-
   return (
     <Screen>
-      <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={() => router.back()} eyebrow="Bigård" title={apiary.name} description={apiary.location} />
+      <PageHeader actionLabel="Tillbaka" actionIconName="chevron-back" onActionPress={handleBackNavigation} eyebrow="Bigård" title={apiary.name} description={apiaryDisplayLocation ?? apiary.location} />
       <AppCard>
         <Text style={theme.textStyles.heading}>Om platsen</Text>
+        <Text style={theme.textStyles.caption}>{apiaryDisplayLocation ?? apiary.location}</Text>
         {apiary.coordinates ? <Text style={theme.textStyles.caption}>GPS-position: {formatCoordinates(apiary.coordinates)}</Text> : null}
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
-        {mapUrl ? <PrimaryButton fullWidth label="Öppna plats i karta" onPress={() => {
-          void openMap();
-        }} variant="secondary" iconName="map-outline" /> : null}
         <PrimaryButton fullWidth label="Lägg till kupa" onPress={() => router.push(`/hives/new?apiaryId=${apiaryId}`)} />
       </AppCard>
       {!apiaryHives.length ? (
@@ -156,7 +159,7 @@ export default function ApiaryDetailScreen() {
         description={apiaryHives.length ? `De här kuporna hör till ${apiary.name}.` : `Här kommer kuporna som kopplas till ${apiary.name} att visas.`}
       />
       <View style={styles.sectionList}>
-        {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryName={apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor här ännu" description="Lägg till den första kupan i bigården så blir det lättare att följa upp platsen över tid." />}
+        {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryLabel={apiaryDisplayLocation ? `${apiary.name} · ${apiaryDisplayLocation}` : apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor här ännu" description="Lägg till den första kupan i bigården så blir det lättare att följa upp platsen över tid." />}
       </View>
 
       <SectionHeader
@@ -164,7 +167,7 @@ export default function ApiaryDetailScreen() {
         title="Sannolika dragväxter"
         description="Historikbaserad prognos för vilka växter som troligen blommar kring din bigård."
       />
-      <BloomInsightsCard predictions={bloomPredictions} zoneLabel={bloomZoneLabel} />
+      <BloomInsightsCard predictions={bloomPredictions} zoneLabel={bloomZoneLabel} locationLabel={apiaryDisplayLocation} />
 
       <SectionHeader eyebrow="Hantera" title="Administrera bigården" />
       <View style={styles.sectionList}>

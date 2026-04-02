@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
 import { ApiaryLocationField } from '@/components/feature/ApiaryLocationField';
@@ -10,7 +10,7 @@ import { Screen } from '@/components/ui/Screen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import { Coordinates } from '@/types/domain';
+import { ApiaryLocationDetails, Coordinates } from '@/types/domain';
 
 export default function EditApiaryScreen() {
   const theme = useTheme();
@@ -22,13 +22,54 @@ export default function EditApiaryScreen() {
   const [location, setLocation] = useState(apiary?.location ?? '');
   const [notes, setNotes] = useState(apiary?.notes ?? '');
   const [coordinates, setCoordinates] = useState<Coordinates | undefined>(apiary?.coordinates);
+  const [locationDetails, setLocationDetails] = useState<ApiaryLocationDetails | undefined>(apiary?.locationDetails);
+
+  function handleClose() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/apiaries');
+  }
+
+  function showFormAlert(title: string, message: string) {
+    if (Platform.OS === 'web') {
+      globalThis.alert(`${title}\n\n${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  }
+
+  function resolveLocationLabel() {
+    const trimmedLocation = location.trim();
+
+    if (trimmedLocation) {
+      return trimmedLocation;
+    }
+
+    const municipality = locationDetails?.municipality?.trim();
+
+    if (municipality) {
+      return municipality;
+    }
+
+    const locality = locationDetails?.locality?.trim();
+
+    if (locality) {
+      return locality;
+    }
+
+    return '';
+  }
 
   if (!apiary) {
     return (
       <Screen>
         <AppCard>
           <Text style={theme.textStyles.heading}>Bigården hittades inte</Text>
-          <PrimaryButton label="Tillbaka" onPress={() => router.back()} />
+          <PrimaryButton label="Tillbaka" onPress={handleClose} />
         </AppCard>
       </Screen>
     );
@@ -38,18 +79,19 @@ export default function EditApiaryScreen() {
 
   function saveApiary() {
     const trimmedName = name.trim();
-    const trimmedLocation = location.trim();
+    const resolvedLocation = resolveLocationLabel();
 
-    if (!trimmedName || !trimmedLocation) {
-      Alert.alert('Fyll i det viktigaste', 'Ange namn och plats för bigården innan du sparar.');
+    if (!trimmedName || !resolvedLocation) {
+      showFormAlert('Fyll i det viktigaste', 'Ange namn och plats för bigården innan du sparar. Du kan skriva platsen manuellt eller använda Hämta min plats.');
       return;
     }
 
     updateApiary(apiaryId, {
       name: trimmedName,
-      location: trimmedLocation,
+      location: resolvedLocation,
       notes: notes.trim() || 'Lägg gärna till en anteckning om platsen senare om du vill.',
       coordinates,
+      locationDetails,
     });
 
     router.replace(`/apiaries/${apiaryId}`);
@@ -60,7 +102,7 @@ export default function EditApiaryScreen() {
       <PageHeader
         actionLabel="Stäng"
         actionIconName="close"
-        onActionPress={() => router.back()}
+        onActionPress={handleClose}
         eyebrow="Redigera bigård"
         title="Ändra bigård"
         description="Justera namn, plats och egna anteckningar. En sparad position gör att appen kan ge bättre väderstöd och mer träffsäkra råd för kuporna här."
@@ -72,7 +114,14 @@ export default function EditApiaryScreen() {
           <TextInput onChangeText={setName} placeholder="Till exempel Södra skogsbrynet" placeholderTextColor={theme.colors.textMuted} style={styles.input} value={name} />
         </View>
 
-        <ApiaryLocationField coordinates={coordinates} location={location} onCoordinatesChange={setCoordinates} onLocationChange={setLocation} />
+        <ApiaryLocationField
+          coordinates={coordinates}
+          location={location}
+          locationDetails={locationDetails}
+          onCoordinatesChange={setCoordinates}
+          onLocationChange={setLocation}
+          onLocationDetailsChange={setLocationDetails}
+        />
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Anteckning</Text>
