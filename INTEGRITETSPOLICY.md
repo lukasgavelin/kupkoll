@@ -1,6 +1,6 @@
 # Integritetspolicy för Kupkoll
 
-Senast uppdaterad: 2026-03-26
+Senast uppdaterad: 2026-04-02
 
 Den här integritetspolicyn beskriver hur Kupkoll behandlar information när du använder appen. Policyn utgår från hur appen fungerar i nuvarande version.
 
@@ -38,7 +38,7 @@ Kupkoll kan behandla information som du själv matar in, till exempel:
 
 - bigårdars namn, plats, anteckningar och koordinater
 - kupors namn, status, styrka, temperament, kupsystem och anteckningar
-- genomgångar, observationer, väderanteckningar och fria textanteckningar
+- genomgångar, händelser, observationer, väderanteckningar och fria textanteckningar
 - manuella uppgifter och planerade åtgärder
 
 ### Uppgifter som skapas i appen
@@ -71,7 +71,7 @@ Platsåtkomst används bara när du aktivt väljer funktionen och ger appen beh�
 Kupkoll behandlar information för att kunna:
 
 - spara och visa din biodlingslogg
-- ge överblick över bigårdar, kupor, genomgångar och uppgifter
+- ge överblick över bigårdar, kupor, genomgångar, händelser och uppgifter
 - räkna fram rekommendationer, varningar och uppföljning
 - hämta väder kopplat till en plats när du använder den funktionen
 - visa kartlänk för en sparad plats
@@ -82,7 +82,7 @@ Kupkoll behandlar information för att kunna:
 
 I nuvarande version lagras Kupkolls huvudinnehåll lokalt på din enhet eller i webbläsarens lokala lagring.
 
-Det innebär normalt att uppgifter om bigårdar, kupor, genomgångar, uppgifter och vissa inställningar ligger kvar lokalt tills du själv ändrar, raderar eller avinstallerar appen, beroende på plattformens hantering av lokal lagring.
+Det innebär normalt att uppgifter om bigårdar, kupor, genomgångar, händelser, uppgifter och vissa inställningar ligger kvar lokalt tills du själv ändrar, raderar eller avinstallerar appen, beroende på plattformens hantering av lokal lagring.
 
 Kupkoll skickar inte detta innehåll till någon egen Kupkoll-server i nuvarande MVP.
 
@@ -93,6 +93,7 @@ När du använder exportfunktionen skapar Kupkoll en JSON-fil som innehåller:
 - bigårdar
 - kupor
 - genomgångar
+- händelser
 - manuella uppgifter
 - metadata som exporttid, schema-version och antal poster
 
@@ -167,3 +168,5 @@ Kupkoll är inte särskilt riktad till barn. Om appen skulle börja användas i 
 ## 14. Ändringar i policyn
 
 Den här integritetspolicyn kan uppdateras om appens funktioner, datalagring eller externa integrationer ändras. Den senaste versionen bör alltid finnas i projektets dokumentation.
+
+Du kan även läsa samma policy direkt i appen under Inställningar.

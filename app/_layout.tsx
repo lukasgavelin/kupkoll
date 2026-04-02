@@ -29,6 +29,7 @@ function AppNavigator({ initialData }: { initialData: KupkollAppState }) {
         <Stack.Screen name="hives/[id]/inspections" />
         <Stack.Screen name="hives/[id]" />
         <Stack.Screen name="inspections/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="privacy-policy" />
       </Stack>
     </KupkollProvider>
   );

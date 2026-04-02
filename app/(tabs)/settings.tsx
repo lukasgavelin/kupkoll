@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Alert, Linking, Platform, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Switch, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
+import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -157,17 +158,8 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
     }
   }
 
-  async function openPrivacyPolicy() {
-    const policyUrl = 'https://github.com/lukasgavelin/kupkoll/blob/master/INTEGRITETSPOLICY.md';
-
-    const canOpen = await Linking.canOpenURL(policyUrl);
-
-    if (!canOpen) {
-      Alert.alert('Kunde inte öppna integritetspolicyn', 'Länken gick inte att öppna på enheten just nu.');
-      return;
-    }
-
-    await Linking.openURL(policyUrl);
+  function openPrivacyPolicy() {
+    router.push('/privacy-policy' as never);
   }
 
   return (
@@ -240,7 +232,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
             fullWidth
             label="Öppna integritetspolicy"
             onPress={() => {
-              void openPrivacyPolicy();
+              openPrivacyPolicy();
             }}
             variant="secondary"
           />
