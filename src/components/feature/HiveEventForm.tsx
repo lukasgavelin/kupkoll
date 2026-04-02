@@ -35,13 +35,13 @@ const defaultNotes: Record<HiveEventType, string> = {
 function getFieldLabels(type: HiveEventType) {
   switch (type) {
     case 'Samhälle förenat':
-      return [{ key: 'mergedWithHiveName', label: 'Förenat med', placeholder: 'Till exempel Kupa 7 eller avläggare från maj' }] as const;
+      return [{ key: 'mergedWithHiveName', label: 'Förenat med', placeholder: 'Exempel: Kupa 7 eller avläggare från maj' }] as const;
     case 'Skattlåda påsatt':
-      return [{ key: 'honeySuperCount', label: 'Antal skattlådor', placeholder: 'Till exempel 1' }] as const;
+      return [{ key: 'honeySuperCount', label: 'Antal skattlådor', placeholder: 'Exempel: 1' }] as const;
     case 'Skattning/slungning':
-      return [{ key: 'harvestSummary', label: 'Skattning/slungning', placeholder: 'Till exempel 18 kg vårhonung' }] as const;
+      return [{ key: 'harvestSummary', label: 'Skattning/slungning', placeholder: 'Exempel: 18 kg vårhonung' }] as const;
     case 'Stödfodring':
-      return [{ key: 'feedingSummary', label: 'Mängd eller typ', placeholder: 'Till exempel 5 liter sockerlösning' }] as const;
+      return [{ key: 'feedingSummary', label: 'Mängd eller typ', placeholder: 'Exempel: 5 liter sockerlösning' }] as const;
     default:
       return [] as const;
   }
@@ -51,20 +51,20 @@ function getHeaderCopy(type: HiveEventType) {
   if (type === 'Drottning bytt') {
     return {
       title: 'Logga drottningbyte',
-      description: 'Fyll i den nya drottningen här. När du sparar uppdateras både händelsen och kupans drottningkort.',
+      description: 'Fyll i den nya drottningen. När du sparar uppdateras både händelsen och kupans drottningkort.',
     };
   }
 
   if (type === 'Drottning märkt/årgång') {
     return {
       title: 'Logga märkning eller årgång',
-      description: 'Använd detta när du vill uppdatera kupans märkning eller årgång utan att registrera ett byte.',
+      description: 'Uppdatera kupans märkning eller årgång utan att registrera ett byte.',
     };
   }
 
   return {
-    title: 'Logga ett viktigt biodlingsmoment',
-    description: 'Spara större händelser här när något faktiskt har förändrats i samhället.',
+    title: 'Logga en händelse',
+    description: 'Logga större händelser när något har förändrats i samhället.',
   };
 }
 
@@ -195,7 +195,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
       {hives.length ? (
         <AppCard>
           <Text style={theme.textStyles.bodyStrong}>Kupa</Text>
-          <Text style={theme.textStyles.caption}>Sparas med dagens datum och tid, precis som genomgångarna.</Text>
+          <Text style={theme.textStyles.caption}>Händelsen sparas med dagens datum och tid.</Text>
           <View style={styles.chipWrap}>
             {hives.map((hive) => {
               const isSelected = hive.id === selectedHiveId;
@@ -211,7 +211,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
           </View>
         </AppCard>
       ) : (
-        <EmptyStateCard title="Ingen kupa att logga på ännu" description="Lägg till en kupa först, så kan du börja spara viktiga biodlingshändelser för säsongen." />
+        <EmptyStateCard title="Ingen kupa att logga på ännu" description="Lägg till en kupa först, så kan du börja logga händelser." />
       )}
 
       <AppCard>
@@ -235,8 +235,8 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
           <Text style={theme.textStyles.bodyStrong}>{isQueenChange ? 'Ny drottning' : 'Märkning och årgång'}</Text>
           <Text style={theme.textStyles.caption}>
             {isQueenChange
-              ? 'Det här är sista steget i flödet: skapa bigård, lägg till kupa och logga sedan drottningbytet härifrån.'
-              : 'Använd det här när du vill rätta eller komplettera uppgifter om drottningens årgång och märkning.'}
+              ? 'Det här är sista steget i flödet: skapa bigård, lägg till kupa och logga drottningbyte.'
+              : 'Använd detta när du vill rätta eller komplettera drottningens årgång och märkning.'}
           </Text>
 
           <View style={styles.inputList}>
@@ -245,7 +245,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
               <TextInput
                 keyboardType="number-pad"
                 maxLength={4}
-                placeholder="Till exempel 2025"
+                placeholder="Exempel: 2025"
                 placeholderTextColor={theme.colors.textMuted}
                 style={styles.input}
                 value={queenYear}
@@ -273,7 +273,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
                 <View style={styles.inputGroup}>
                   <Text style={theme.textStyles.caption}>Ursprung</Text>
                   <TextInput
-                    placeholder="Till exempel inköpt, avläggare eller egen odling"
+                    placeholder="Exempel: inköpt eller avläggare"
                     placeholderTextColor={theme.colors.textMuted}
                     style={styles.input}
                     value={queenOrigin}
@@ -311,7 +311,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
                 <View style={styles.inputGroup}>
                   <Text style={theme.textStyles.caption}>Historikrad</Text>
                   <TextInput
-                    placeholder="Till exempel ersatt eller ny inköpt drottning"
+                    placeholder="Exempel: ersatt med ny drottning"
                     placeholderTextColor={theme.colors.textMuted}
                     style={styles.input}
                     value={queenHistoryNote}
@@ -323,7 +323,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
               <View style={styles.inputGroup}>
                 <Text style={theme.textStyles.caption}>Notering om märkning</Text>
                 <TextInput
-                  placeholder="Till exempel omärkt tidigare eller märkt om under säsongen"
+                  placeholder="Exempel: märkt om under säsongen"
                   placeholderTextColor={theme.colors.textMuted}
                   style={styles.input}
                   value={markingNote}
@@ -385,7 +385,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
         <Text style={theme.textStyles.bodyStrong}>Anteckning</Text>
         <TextInput
           multiline
-          placeholder="Lägg till en kort notering om du vill göra händelsen lättare att förstå senare i säsongen."
+          placeholder="Valfritt: en kort notering om händelsen"
           placeholderTextColor={theme.colors.textMuted}
           style={[styles.input, styles.notesInput]}
           textAlignVertical="top"

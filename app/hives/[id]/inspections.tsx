@@ -41,7 +41,7 @@ export default function HiveInspectionHistoryScreen() {
         onActionPress={() => router.back()}
         eyebrow="Historik"
         title={`Historik för ${hive.name}`}
-        description="Här ser du både genomgångar och viktiga händelser för samhället, med senaste posten överst."
+        description="Här ser du genomgångar och händelser, med senaste posten överst."
       />
 
       <View style={styles.list}>
@@ -52,7 +52,7 @@ export default function HiveInspectionHistoryScreen() {
         ) : (
           <EmptyStateCard
             title="Ingen historik ännu"
-            description="När du har sparat genomgångar eller händelser för kupan samlas de här i den ordning de gjordes. Börja med en genomgång om du vill få lägesbild, råd och uppgifter att bygga vidare på."
+            description="När du loggar genomgångar eller händelser visas de här i tidsordning."
             actionLabel="Logga genomgång"
             onActionPress={() => router.push(`/inspections/new?hiveId=${hive.id}`)}
           />

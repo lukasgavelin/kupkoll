@@ -1,6 +1,6 @@
 # Google Play-release för Kupkoll
 
-Det här dokumentet beskriver vad som är klart i projektet, vad som återstår och hur första Android-publiceringen bör genomföras.
+Det här dokumentet beskriver vad som är klart i projektet, vad som återstår och hur första Android-publiceringen kan genomföras.
 
 ## Status i projektet
 
@@ -11,7 +11,7 @@ Följande releasegrund är nu satt i projektet:
 - Appversion i Expo synkad till `1.2.1`
 - EAS Build-konfiguration finns i `eas.json`
 
-Det här räcker för att påbörja en riktig Android-releasekedja, men inte för att publicera i Google Play utan ytterligare material och kontokonfiguration.
+Det här räcker för att påbörja Android-releaseflödet, men inte för publicering i Google Play utan ytterligare material och kontokonfiguration.
 
 ## Viktiga beslut att bekräfta
 
@@ -28,7 +28,7 @@ Package name och Play-appens identitet bör ses som permanenta beslut.
 
 ### 1. Skapa grafiska release-assets
 
-Projektet saknar just nu appbilder för release. Följande behöver produceras:
+Projektet saknar just nu appbilder för release. Följande behöver tas fram:
 
 - Appikon för Expo/Android: 1024 x 1024 px PNG
 - Adaptive icon foreground: minst 1024 x 1024 px PNG med transparent bakgrund
@@ -42,7 +42,7 @@ När de finns bör `app.json` kompletteras med `icon`, `android.adaptiveIcon` oc
 
 ### 2. Publicera integritetspolicyn på stabil publik URL
 
-Nuvarande policy finns i projektet och länkas från appen, men för Play Console bör ni använda en stabil publik HTTPS-sida som är tänkt som policy-URL.
+Nuvarande policy finns i projektet och länkas från appen, men för Play Console bör ni använda en stabil publik HTTPS-sida som policy-URL.
 
 Bra alternativ:
 
@@ -50,7 +50,7 @@ Bra alternativ:
 - egen domän
 - enkel statisk sida hos valfri host
 
-Undvik att förlita er enbart på GitHub blob-vy som slutlig policy-URL i Play Console.
+Undvik att använda enbart GitHub blob-vy som slutlig policy-URL i Play Console.
 
 ### 3. Skapa första signerade Android-builden
 

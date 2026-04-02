@@ -2,9 +2,9 @@
 
 Senast uppdaterad: 2026-03-26
 
-Den här integritetspolicyn beskriver hur appen Kupkoll behandlar information när du använder appen. Policyn är skriven utifrån hur appen fungerar i nuvarande version av projektet.
+Den här integritetspolicyn beskriver hur Kupkoll behandlar information när du använder appen. Policyn utgår från hur appen fungerar i nuvarande version.
 
-Kupkoll är i grunden en lokal biodlingsapp. I nuvarande MVP finns ingen användarinloggning och ingen egen backend där ditt innehåll lagras centralt av utvecklaren.
+Kupkoll är i grunden en lokal biodlingsapp. I nuvarande MVP finns ingen användarinloggning och ingen egen backend där ditt innehåll lagras centralt.
 
 ## 1. Vem policyn gäller för
 
@@ -64,7 +64,7 @@ Om du väljer att använda funktionen för att hämta din plats kan Kupkoll beha
 - förbättra platsanpassning av säsongslogik och råd
 - hämta väder för genomgångar och säsongssignal
 
-Platsåtkomst används bara när du aktivt väljer att använda funktionen och om du ger appen behörighet på enheten.
+Platsåtkomst används bara när du aktivt väljer funktionen och ger appen behörighet på enheten.
 
 ## 5. Varför uppgifterna behandlas
 
@@ -82,7 +82,7 @@ Kupkoll behandlar information för att kunna:
 
 I nuvarande version lagras Kupkolls huvudinnehåll lokalt på din enhet eller i webbläsarens lokala lagring.
 
-Det innebär normalt att uppgifter om bigårdar, kupor, genomgångar, uppgifter och vissa inställningar ligger kvar lokalt tills du själv ändrar, raderar eller avinstallerar appen, med reservation för hur respektive plattform hanterar lokal lagring.
+Det innebär normalt att uppgifter om bigårdar, kupor, genomgångar, uppgifter och vissa inställningar ligger kvar lokalt tills du själv ändrar, raderar eller avinstallerar appen, beroende på plattformens hantering av lokal lagring.
 
 Kupkoll skickar inte detta innehåll till någon egen Kupkoll-server i nuvarande MVP.
 

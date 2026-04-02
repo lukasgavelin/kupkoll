@@ -78,14 +78,14 @@ export default function TasksScreen() {
       <SectionHeader
         eyebrow="Uppgifter"
         title="Det som behöver göras"
-        description="Här ser du arbetslistan uppdelad efter hur snart något behöver göras."
+        description="Här ser du uppgifter sorterade efter hur bråttom de är."
       />
       {recommendations.length ? (
         <View style={styles.sectionList}>
           <SectionHeader
             eyebrow="Beslutsstöd"
             title="Råd och signaler"
-            description="Allt beslutsstöd samlas här så att råd och uppgifter kan följas upp tillsammans."
+            description="Här samlas råd som kan följas upp med uppgifter."
           />
           <RecommendationSections
             recommendations={recommendations}
@@ -114,7 +114,7 @@ export default function TasksScreen() {
           description={
             hasApiaries
               ? 'Uppgifter blir relevanta när det finns kupor att följa upp. Lägg till första kupan för att komma vidare.'
-              : 'Den här fliken fylls med sådant att göra när du först har lagt till en bigård och sedan dina kupor.'
+              : 'Den här fliken fylls när du har lagt till en bigård och minst en kupa.'
           }
           actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
           onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')}
@@ -138,7 +138,7 @@ export default function TasksScreen() {
         <View style={styles.sectionList}>
           <EmptyStateCard
             title="Inga uppgifter ännu"
-            description={hasHives ? 'När du sparar genomgångar börjar appen lyfta ut sådant som behöver följas upp här. Nästa logiska steg är därför att logga en genomgång.' : 'När du har lagt till kupor och sparat genomgångar samlas sådant att göra och följa upp här.'}
+            description={hasHives ? 'När du loggar genomgångar visas sådant som behöver följas upp här.' : 'När du har lagt till kupor och loggat genomgångar visas uppgifter här.'}
             actionLabel={hasHives ? 'Logga första genomgången' : undefined}
             onActionPress={hasHives && firstHive ? () => router.push(`/inspections/new?hiveId=${firstHive.id}`) : undefined}
           />

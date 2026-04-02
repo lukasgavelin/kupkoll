@@ -47,7 +47,7 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
           keyboardType="number-pad"
           maxLength={4}
           onChangeText={(next) => onChange({ ...value, queenYear: next.replace(/[^0-9]/g, '') })}
-          placeholder="Till exempel 2025"
+          placeholder="Exempel: 2025"
           placeholderTextColor={theme.colors.textMuted}
           style={styles.input}
           value={value.queenYear}
@@ -73,7 +73,7 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
         <Text style={styles.label}>Ursprung</Text>
         <TextInput
           onChangeText={(next) => onChange({ ...value, queenOrigin: next })}
-          placeholder="Till exempel ursprunglig drottning, avläggare eller inköpt"
+          placeholder="Exempel: avläggare eller inköpt"
           placeholderTextColor={theme.colors.textMuted}
           style={styles.input}
           value={value.queenOrigin}
@@ -96,7 +96,7 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
         <View style={styles.historyHeader}>
           <View style={styles.historyText}>
             <Text style={styles.label}>Historik</Text>
-            <Text style={theme.textStyles.caption}>Lägg till byten eller korta milstolpar, till exempel 2024 ursprunglig drottning och 2025 ersatt.</Text>
+            <Text style={theme.textStyles.caption}>Lägg till byten eller korta milstolpar.</Text>
           </View>
           <PrimaryButton label="Lägg till rad" onPress={onAddHistoryEntry} size="compact" variant="secondary" />
         </View>
@@ -116,7 +116,7 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
                 />
                 <TextInput
                   onChangeText={(next) => updateEntry(entry.id, { note: next })}
-                  placeholder="Till exempel ersatt med ny drottning"
+                  placeholder="Exempel: ersatt med ny drottning"
                   placeholderTextColor={theme.colors.textMuted}
                   style={[styles.input, styles.historyNoteInput]}
                   value={entry.note}

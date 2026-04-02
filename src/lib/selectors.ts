@@ -72,7 +72,7 @@ export function getSeasonTimingLabel(season: SeasonLabel, region: SwedishRegion)
     return `Brukar infalla mellan ${range}, beroende på var i landet du är.`;
   }
 
-  return `Brukar oftast infalla mellan ${range} i ${region.toLowerCase()}.`;
+  return `Brukar oftast infalla mellan ${range} i ${region}.`;
 }
 
 export function getApiaryRegion(apiary?: Apiary): SwedishRegion {

@@ -51,7 +51,7 @@ const inspectionPresets: InspectionPreset[] = [
   {
     id: 'watch',
     label: 'Följ upp snart',
-    description: 'Något avviker, men läget går att bevaka till nästa kontroll.',
+    description: 'Något avviker, men läget kan följas upp vid nästa kontroll.',
     defaultNote: 'Genomgång: läget är okej men bör följas upp snart.',
     temperament: 'Vaksamt',
     varroaLevel: 'Förhöjd',
@@ -70,7 +70,7 @@ const inspectionPresets: InspectionPreset[] = [
   {
     id: 'action',
     label: 'Åtgärd krävs',
-    description: 'Tecken på problem eller ingrepp som inte bör vänta.',
+    description: 'Tecken på problem eller behov av snabb åtgärd.',
     defaultNote: 'Genomgång: avvikelse upptäckt och åtgärd behövs.',
     temperament: 'Hetsigt',
     varroaLevel: 'Hög',
@@ -107,12 +107,12 @@ const inspectionModes: Array<{ value: InspectionMode; label: string; description
   {
     value: 'Snabb genomgång',
     label: 'Snabb genomgång',
-    description: 'Dagens preset-flöde med några viktiga toggles och direkt sparning.',
+    description: 'Snabbt läge med förval och de viktigaste valen.',
   },
   {
     value: 'Fördjupad genomgång',
     label: 'Fördjupad genomgång',
-    description: 'Samma grund men med fler biodlingsfält, anteckning och åtgärdsdetaljer.',
+    description: 'Samma grund, med fler fält och mer detaljerad notering.',
   },
 ];
 
@@ -146,7 +146,7 @@ function matchesPreset(values: Record<BooleanKey, boolean>, temperament: HiveTem
 }
 
 function buildQuickInspectionNote(activePreset?: InspectionPreset) {
-  return activePreset?.defaultNote ?? 'Genomgång: egen bedömning sparad efter att förvalet justerats.';
+  return activePreset?.defaultNote ?? 'Genomgång: egen bedömning sparad.';
 }
 
 function buildDetailedInspectionNote(input: { noteText: string; activePreset?: InspectionPreset }) {
@@ -160,7 +160,7 @@ function buildDetailedInspectionNote(input: { noteText: string; activePreset?: I
     return `${input.activePreset.defaultNote} Fördjupad genomgång sparad.`;
   }
 
-  return 'Fördjupad genomgång sparad utan fri anteckning.';
+  return 'Fördjupad genomgång sparad.';
 }
 
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
@@ -292,7 +292,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   function openEventShortcut(type?: HiveEventType) {
     if (!selectedHiveId) {
-      Alert.alert('Välj kupa först', 'Välj först vilken kupa du går igenom, så kan du logga en händelse för rätt samhälle.');
+      Alert.alert('Välj kupa först', 'Välj vilken kupa du går igenom innan du loggar en händelse.');
       return;
     }
 
@@ -302,7 +302,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   function saveInspection() {
     if (!selectedHiveId) {
-      Alert.alert('Välj kupa', 'Du behöver välja vilken kupa som ska få genomgången.');
+      Alert.alert('Välj kupa', 'Välj vilken kupa som ska få genomgången.');
       return;
     }
 
@@ -362,7 +362,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       ...values,
     });
 
-    Alert.alert('Genomgång sparad', 'Din notering är sparad och kupans sida har uppdaterats.');
+    Alert.alert('Genomgång sparad', 'Genomgången är sparad och kupans sida är uppdaterad.');
     router.replace(`/hives/${selectedHiveId}`);
   }
 
@@ -376,15 +376,15 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const varroaSummary = varroaChecked ? `Varroa ${varroaLevel}` : 'Varroa ej kontrollerad';
   const summaryNote = inspectionMode === 'Snabb genomgång' ? buildQuickInspectionNote(activePreset) : buildDetailedInspectionNote({ noteText, activePreset });
   const autoWeatherHint = !selectedApiary
-    ? 'Välj först vilken kupa du tittar på, så fyller vi i förhållandena för rätt plats.'
+    ? 'Välj först kupa så fylls vädret för rätt plats i.'
     : !selectedApiary.coordinates
-      ? 'Den här bigården saknar sparad position. Fyll i uppgifterna själv eller lägg till plats på bigården.'
+      ? 'Den här bigården saknar sparad position. Fyll i vädret manuellt eller lägg till plats på bigården.'
       : autoWeatherStatus === 'loading'
         ? `Hämtar aktuella förhållanden för ${selectedApiary.name}...`
         : autoWeatherStatus === 'ready'
-          ? `Uppgifterna för ${selectedApiary.name} är ifyllda utifrån platsen. Justera om något skiljer sig där du står.`
+          ? `Vädret för ${selectedApiary.name} är ifyllt utifrån platsen. Justera vid behov.`
           : autoWeatherStatus === 'error'
-            ? `Det gick inte att hämta uppgifterna för ${selectedApiary.name}. Fyll i dem själv eller försök igen.`
+            ? `Kunde inte hämta vädret för ${selectedApiary.name}. Fyll i manuellt eller försök igen.`
             : `Uppgifterna kan hämtas för ${selectedApiary.name}.`;
 
   if (!hives.length) {
@@ -395,8 +395,8 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           title={hasApiaries ? 'Lägg till första kupan först' : 'Lägg till första bigården'}
           description={
             hasApiaries
-                ? 'Det finns ännu inga kupor att spara en genomgång för. Lägg till din första kupa och kom sedan tillbaka hit.'
-                : 'För att kunna spara en genomgång behöver du först lägga till en bigård och sedan en kupa.'
+                ? 'Det finns inga kupor att logga genomgång för ännu. Lägg till en kupa och kom tillbaka hit.'
+                : 'För att logga en genomgång behöver du först lägga till en bigård och sedan en kupa.'
           }
           actionLabel={hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
           onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')}
@@ -410,8 +410,8 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       <SectionHeader
         title="Genomgång"
         description={inspectionMode === 'Snabb genomgång'
-          ? 'Snabbläget låter dig välja kupa, bekräfta läget och spara direkt.'
-          : 'Fördjupat läge lägger till fler observationsfält, fri anteckning och detaljer från själva genomgången.'}
+          ? 'Snabbläge: välj kupa, bekräfta läget och spara direkt.'
+          : 'Fördjupat läge: fler fält, anteckningar och detaljer.'}
       />
 
       <AppCard>
@@ -449,7 +449,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>3. Hur känns läget?</Text>
-        <Text style={theme.textStyles.caption}>Välj ett förval som ligger nära verkligheten. Om du sedan justerar knapparna under nästa steg visas det som en egen bedömning.</Text>
+        <Text style={theme.textStyles.caption}>Välj det förval som ligger närmast läget. Justeringar nedan blir en egen bedömning.</Text>
         <View style={styles.stack}>
           {inspectionPresets.map((preset) => {
             const selected = activePreset?.id === preset.id;
@@ -470,8 +470,8 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
         <Text style={theme.textStyles.heading}>4. Justera det som sticker ut</Text>
         <Text style={theme.textStyles.caption}>
           {inspectionMode === 'Snabb genomgång'
-            ? 'Om förvalet redan stämmer kan du gå vidare direkt. Här ändrar du bara det som inte passar.'
-            : 'Utgå från förvalet och fyll sedan på med fler fält i nästa steg om du vill dokumentera mer.'}
+            ? 'Om förvalet stämmer kan du gå vidare direkt. Ändra bara det som avviker.'
+            : 'Utgå från förvalet och fyll på med fler fält i nästa steg.'}
         </Text>
         <Text style={theme.textStyles.caption}>Nu matchar: {activePreset ? activePreset.label : 'Egen bedömning efter dina justeringar'}</Text>
         <View style={styles.optionGrid}>
@@ -519,14 +519,14 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             </View>
           </>
         ) : (
-          <Text style={theme.textStyles.caption}>Varroa lämnas som ej kontrollerad tills du faktiskt gör en kontroll.</Text>
+          <Text style={theme.textStyles.caption}>Varroa lämnas som ej kontrollerad tills du gör en kontroll.</Text>
         )}
       </AppCard>
 
       {inspectionMode === 'Fördjupad genomgång' ? (
         <AppCard>
           <Text style={theme.textStyles.heading}>5. Fördjupa genomgången</Text>
-          <Text style={theme.textStyles.caption}>Lägg till mer av det som är relevant för just den här kupan. Här hör sådant hemma som beskriver läget i samhället under besöket.</Text>
+          <Text style={theme.textStyles.caption}>Lägg till det som är relevant för just den här kupan.</Text>
 
           <Text style={styles.inlineLabel}>Yngel och resurser</Text>
           <View style={styles.optionGrid}>
@@ -541,7 +541,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           </View>
 
           <Text style={styles.inlineLabel}>Fördjupad varroakontroll</Text>
-          <Text style={theme.textStyles.caption}>Fyll bara i detta när varroa faktiskt är kontrollerad och du vill kunna följa upp metod och behandling.</Text>
+          <Text style={theme.textStyles.caption}>Fyll i detta när varroa är kontrollerad och du vill följa upp metod och behandling.</Text>
           {varroaChecked ? (
             <>
               <View style={styles.optionGrid}>
@@ -558,7 +558,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
               <Text style={styles.inlineLabel}>Mätvärde</Text>
               <TextInput
                 onChangeText={setVarroaMeasurementValue}
-                placeholder="Till exempel 6 kvalster/24 h eller 3%"
+                placeholder="Exempel: 6 kvalster/24 h eller 3%"
                 placeholderTextColor={theme.colors.textMuted}
                 style={styles.input}
                 value={varroaMeasurementValue}
@@ -578,7 +578,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
               <TextInput
                 multiline
                 onChangeText={setVarroaTreatmentNote}
-                placeholder="Till exempel vad som gjorts, varför det avvaktas eller när du vill följa upp"
+                placeholder="Exempel: vad som gjorts och när du vill följa upp"
                 placeholderTextColor={theme.colors.textMuted}
                 style={[styles.input, styles.textArea]}
                 textAlignVertical="top"
@@ -592,7 +592,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <Text style={styles.inlineLabel}>Åtgärd eller behandling under besöket</Text>
           <TextInput
             onChangeText={setTreatmentText}
-            placeholder="Till exempel myrsyra, oxalsyra, rambyte eller att ingen åtgärd gjordes"
+            placeholder="Exempel: myrsyra, oxalsyra, rambyte eller ingen åtgärd"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.input}
             value={treatmentText}
@@ -600,7 +600,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
           <View style={styles.eventGuidanceCard}>
             <Text style={theme.textStyles.bodyStrong}>Sådant som passar bättre som händelse</Text>
-            <Text style={theme.textStyles.caption}>Det som ändrar samhällets säsongshistorik sparas tydligare som en egen händelse än som en del av en genomgång.</Text>
+            <Text style={theme.textStyles.caption}>Det som ändrar samhällets historik är oftast tydligare som en egen händelse.</Text>
             <View style={styles.optionGrid}>
               {eventShortcutTypes.map((type) => (
                 <Pressable key={type} onPress={() => openEventShortcut(type)} style={styles.option}>
@@ -626,7 +626,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       <AppCard>
         <Text style={theme.textStyles.heading}>{inspectionMode === 'Snabb genomgång' ? '5. Väder vid genomgången' : '6. Väder vid genomgången'}</Text>
-        <Text style={theme.textStyles.caption}>När bigården har en sparad plats fyller vi i temperatur, vind och väderläge automatiskt. Justera om det inte stämmer där du står.</Text>
+        <Text style={theme.textStyles.caption}>När bigården har en sparad plats fylls temperatur, vind och väderläge i automatiskt. Justera vid behov.</Text>
         <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
         {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : autoWeatherStatus === 'error' ? 'Försök igen' : 'Hämta igen'} onPress={() => {
           if (!selectedApiary.coordinates || autoWeatherStatus === 'loading') {
@@ -661,7 +661,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
         <TextInput
           keyboardType="decimal-pad"
           onChangeText={setTemperatureText}
-          placeholder="Till exempel 17,5"
+          placeholder="Exempel: 17,5"
           placeholderTextColor={theme.colors.textMuted}
           style={styles.input}
           value={temperatureText}

@@ -11,8 +11,8 @@ export default function NewInspectionScreen() {
   const hive = params.hiveId ? getHiveById(params.hiveId) : undefined;
   const apiary = hive ? getApiaryById(hive.apiaryId) : undefined;
   const description = hive
-    ? `${hive.name}${apiary ? ` · ${apiary.name}` : ''}. Börja med att välja typ av genomgång och bekräfta sedan läget steg för steg.`
-    : 'Välj kupa och spara det du såg vid besöket. Genomgången uppdaterar kupans aktuella läge direkt.';
+    ? `${hive.name}${apiary ? ` · ${apiary.name}` : ''}. Välj typ av genomgång och bekräfta läget.`
+    : 'Välj kupa och logga det du såg vid besöket.';
 
   return (
     <Screen>

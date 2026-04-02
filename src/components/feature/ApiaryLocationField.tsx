@@ -135,8 +135,8 @@ export function ApiaryLocationField({
   const detectedPlace = hasTrustedMunicipality ? [locationDetails?.municipality, locationDetails?.county].filter(Boolean).join(', ') : '';
   const locationModeLabel = locationDetails?.source === 'manual' ? 'Manuellt justerad plats' : 'Automatisk platsupplösning';
   const utilityMessage = coordinates
-    ? 'Positionen hjälper appen att visa väder för genomgångar och göra råden mer träffsäkra för platsen.'
-    : 'Lägg gärna till GPS-positionen också. Då kan appen hämta väder vid genomgångar och anpassa råden bättre för platsen.';
+    ? 'Positionen hjälper appen att visa väder vid genomgångar och ge mer träffsäkra råd.'
+    : 'Lägg gärna till GPS-position. Då kan appen hämta väder vid genomgångar och anpassa råden bättre.';
 
   async function captureCurrentLocation() {
     try {
@@ -145,7 +145,7 @@ export function ApiaryLocationField({
       const permission = await Location.requestForegroundPermissionsAsync();
 
       if (!permission.granted) {
-        Alert.alert('Platsåtkomst nekad', 'Tillåt platsåtkomst om du vill fylla i bigårdens position från enheten.');
+          Alert.alert('Platsåtkomst nekad', 'Tillåt platsåtkomst för att hämta bigårdens position från enheten.');
         return;
       }
 
@@ -243,9 +243,9 @@ export function ApiaryLocationField({
         style={styles.input}
         value={location}
       />
-      <Text style={styles.helperText}>Hämta min plats är standard. Om du inte är vid bigården kan du skriva platsen manuellt.</Text>
+      <Text style={styles.helperText}>Använd min plats när du är vid bigården. Annars kan du skriva platsen manuellt.</Text>
       <View style={[styles.utilityCard, coordinates && styles.utilityCardReady]}>
-        <Text style={styles.utilityTitle}>{coordinates ? 'Position sparad' : 'Rekommenderat för bästa nytta'}</Text>
+        <Text style={styles.utilityTitle}>{coordinates ? 'Position sparad' : 'Rekommenderat'}</Text>
         {locationDetails ? <Text style={styles.utilityMeta}>{locationModeLabel}</Text> : null}
         {detectedPlace ? <Text style={styles.utilityMeta}>Kommun: {detectedPlace}</Text> : null}
         <Text style={styles.utilityText}>{utilityMessage}</Text>

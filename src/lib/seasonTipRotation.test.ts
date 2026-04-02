@@ -21,7 +21,7 @@ const status: SeasonStatus = {
   summary: 'Mars kan skifta snabbt.',
   focusItems: ['tips 1', 'tips 2', 'tips 3'],
   watchItems: ['tänk 1', 'tänk 2', 'tänk 3'],
-  timingLabel: 'Brukar oftast infalla mellan mars och maj i mellansverige.',
+  timingLabel: 'Brukar oftast infalla mellan mars och maj i Mellansverige.',
   regionLabel: 'Mellansverige',
   zoneLabel: 'mellan',
   inspectionCadenceDays: 12,

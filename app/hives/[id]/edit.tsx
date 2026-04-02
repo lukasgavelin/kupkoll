@@ -71,7 +71,7 @@ export default function EditHiveScreen() {
       strength,
       temperament,
       boxSystem,
-      notes: notes.trim() || 'Lägg gärna till en anteckning om kupan senare om du vill.',
+      notes: notes.trim() || 'Ingen anteckning ännu.',
     });
 
     router.replace(`/hives/${hiveId}`);
@@ -167,7 +167,7 @@ export default function EditHiveScreen() {
             multiline
             numberOfLines={4}
             onChangeText={setNotes}
-            placeholder="Valfritt: hur kupan brukar vara, något att hålla koll på eller annat du vill minnas"
+            placeholder="Valfritt: sådant du vill minnas om kupan"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.inputMultiline}
             textAlignVertical="top"

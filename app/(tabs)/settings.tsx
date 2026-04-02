@@ -45,12 +45,12 @@ export default function SettingsScreen() {
       setExportStatus(`${result.fileName} skapad.`);
 
       if (result.method === 'download') {
-        Alert.alert('Export klar', 'JSON-filen har laddats ned till din enhet. Öppna den i en texteditor om du vill läsa innehållet, eller spara den som backup.');
+        Alert.alert('Export klar', 'JSON-filen har laddats ned till din enhet. Spara den som backup.');
         return;
       }
 
       if (result.method === 'share') {
-        Alert.alert('Export klar', 'Delningsdialogen öppnades. Spara filen i Filer, Drive eller mejla den till dig själv för att behålla en backup.');
+        Alert.alert('Export klar', 'Delningsdialogen är öppen. Spara filen där du vill ha din backup.');
         return;
       }
 
@@ -83,14 +83,14 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
       <SectionHeader
         eyebrow="Inställningar"
         title="Backup och appval"
-        description="Här hittar du det som hjälper dig att hantera appen: tema, backup och information om hur Kupkoll hanterar dina uppgifter."
+        description="Hantera tema, backup och integritetsinformation."
       />
       <View style={{ gap: theme.spacing.lg }}>
         <AppCard>
           <View style={styles.themeHeader}>
             <View style={styles.themeCopy}>
               <Text style={theme.textStyles.heading}>Mörkt läge</Text>
-              <Text style={styles.infoItem}>Slå på mörkt läge om du vill ha en mörkare vy som är behagligare i svagt ljus.</Text>
+              <Text style={styles.infoItem}>Använd mörkt läge för en mörkare vy.</Text>
             </View>
             <Switch
               onValueChange={() => {
@@ -105,7 +105,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
         <AppCard>
           <View style={styles.backupIntro}>
             <Text style={theme.textStyles.heading}>Backup</Text>
-            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar, händelser och manuella uppgifter, så att informationen finns kvar även utanför telefonen eller webben.</Text>
+            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar, händelser och manuella uppgifter.</Text>
           </View>
           <View style={styles.exportFacts}>
             {exportFacts.map((fact) => (
@@ -125,14 +125,14 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               }}
             />
             <View style={styles.exportMeta}>
-              <Text style={theme.textStyles.caption}>Exporten skapas som en JSON-fil och fungerar bäst som säkerhetskopia av det du själv har sparat i appen.</Text>
+              <Text style={theme.textStyles.caption}>Exporten skapas som JSON och fungerar som säkerhetskopia.</Text>
               {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
             </View>
           </View>
         </AppCard>
         <AppCard>
           <Text style={theme.textStyles.heading}>Integritet</Text>
-          <Text style={theme.textStyles.body}>Läs hur Kupkoll hanterar lokal lagring, platsuppgifter, väderhämtning, export och länkar till externa tjänster.</Text>
+          <Text style={theme.textStyles.body}>Läs hur Kupkoll hanterar lagring, platsdata, väderhämtning och export.</Text>
           <PrimaryButton
             fullWidth
             label="Öppna integritetspolicy"

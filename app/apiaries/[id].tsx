@@ -149,7 +149,7 @@ export default function ApiaryDetailScreen() {
       {!apiaryHives.length ? (
         <AppCard>
           <Text style={theme.textStyles.heading}>Nästa steg</Text>
-          <Text style={theme.textStyles.body}>Lägg till första kupan i bigården. Där fyller du också i aktuell drottning, så att nästa steg blir enkelt när ett byte behöver loggas.</Text>
+          <Text style={theme.textStyles.body}>Lägg till första kupan i bigården och fyll i aktuell drottning.</Text>
           <PrimaryButton fullWidth label="Lägg till första kupan" onPress={() => router.push(`/hives/new?apiaryId=${apiaryId}`)} />
         </AppCard>
       ) : null}
@@ -157,10 +157,10 @@ export default function ApiaryDetailScreen() {
       <SectionHeader
         eyebrow="Kupor"
         title="Kopplade kupor"
-        description={apiaryHives.length ? `De här kuporna hör till ${apiary.name}.` : `Här kommer kuporna som kopplas till ${apiary.name} att visas.`}
+        description={apiaryHives.length ? `Kupor i ${apiary.name}.` : `Här visas kupor i ${apiary.name}.`}
       />
       <View style={styles.sectionList}>
-        {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryLabel={apiaryDisplayLocation ? `${apiary.name} · ${apiaryDisplayLocation}` : apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor här ännu" description="Lägg till den första kupan i bigården så blir det lättare att följa upp platsen över tid." />}
+        {apiaryHives.length ? apiaryHives.map((hive) => <HiveCard key={hive.id} apiaryLabel={apiaryDisplayLocation ? `${apiary.name} · ${apiaryDisplayLocation}` : apiary.name} hive={hive} />) : <EmptyStateCard title="Inga kupor här ännu" description="Lägg till första kupan i bigården." />}
       </View>
 
       <SectionHeader

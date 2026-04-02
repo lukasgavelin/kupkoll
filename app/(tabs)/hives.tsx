@@ -19,7 +19,7 @@ export default function HivesScreen() {
       <SectionHeader
         eyebrow="Kupor"
         title="Dina kupor"
-        description="Steg två i flödet är att lägga in kupan och nuvarande drottning. Därefter blir det logiskt att spara genomgångar, händelser och drottningbyten från varje kupa."
+        description="Lägg till kupa och nuvarande drottning. Därefter kan du logga genomgångar och händelser per kupa."
       />
       <PrimaryButton fullWidth label="Lägg till kupa" onPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
       <View style={{ gap: theme.spacing.lg }}>
@@ -32,7 +32,7 @@ export default function HivesScreen() {
             return <HiveCard key={hive.id} apiaryLabel={apiaryLabel} hive={hive} />;
           })
         ) : (
-          <EmptyStateCard title={hasApiaries ? 'Inga kupor ännu' : 'Lägg till första bigården'} description={hasApiaries ? 'Lägg till din första kupa och fyll i aktuell drottning. Sedan kan du logga genomgångar och drottningbyten på ett sätt som håller ihop historiken.' : 'Varje kupa behöver höra till en bigård. Börja därför med att lägga till platsen där kuporna står.'} actionLabel={hasApiaries ? 'Lägg till första kupan' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
+          <EmptyStateCard title={hasApiaries ? 'Inga kupor ännu' : 'Lägg till första bigården'} description={hasApiaries ? 'Lägg till din första kupa och fyll i aktuell drottning. Sedan kan du logga genomgångar och händelser.' : 'Varje kupa behöver höra till en bigård. Börja med att lägga till platsen där kuporna står.'} actionLabel={hasApiaries ? 'Lägg till första kupan' : 'Lägg till bigård'} onActionPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
         )}
       </View>
     </Screen>

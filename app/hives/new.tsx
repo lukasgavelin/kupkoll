@@ -64,7 +64,7 @@ export default function NewHiveScreen() {
       strength,
       temperament,
       boxSystem,
-      notes: notes.trim() || 'Lägg gärna till en anteckning om kupan senare om du vill.',
+      notes: notes.trim() || 'Ingen anteckning ännu.',
     });
 
     router.replace(`/hives/${hive.id}`);
@@ -87,7 +87,7 @@ export default function NewHiveScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny kupa"
         title="Lägg till kupa"
-        description={selectedApiaryId ? `Steg 2 av 3. Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Fyll också i aktuell drottning så blir nästa steg tydligt om du senare behöver logga ett byte.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
+        description={selectedApiaryId ? `Steg 2 av 3. Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Fyll i aktuell drottning.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
       />
 
       <AppCard>
@@ -169,7 +169,7 @@ export default function NewHiveScreen() {
             multiline
             numberOfLines={4}
             onChangeText={setNotes}
-            placeholder="Valfritt: hur kupan brukar vara, något att hålla koll på eller annat du vill minnas"
+            placeholder="Valfritt: sådant du vill minnas om kupan"
             placeholderTextColor={theme.colors.textMuted}
             style={styles.inputMultiline}
             textAlignVertical="top"

@@ -10,7 +10,7 @@ export default function NotFoundScreen() {
     <Screen>
       <View style={styles.wrapper}>
         <Text style={theme.textStyles.display}>Sidan finns inte</Text>
-        <Text style={theme.textStyles.body}>Den här vyn verkar ha tappat sin rutt. Gå tillbaka till hemöversikten.</Text>
+        <Text style={theme.textStyles.body}>Sidan kunde inte hittas. Gå tillbaka till startsidan.</Text>
         <PrimaryButton label="Till hem" onPress={() => router.replace('/')} />
       </View>
     </Screen>

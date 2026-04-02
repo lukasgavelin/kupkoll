@@ -11,8 +11,8 @@ export default function NewHiveEventScreen() {
   const hive = params.hiveId ? getHiveById(params.hiveId) : undefined;
   const apiary = hive ? getApiaryById(hive.apiaryId) : undefined;
   const description = hive
-    ? `${hive.name}${apiary ? ` · ${apiary.name}` : ''}. Använd händelser när något faktiskt har förändrats i samhället, till exempel drottningbyte eller stödfodring.`
-    : 'Välj kupa och spara större händelser som förändrar samhällets säsongshistorik.';
+    ? `${hive.name}${apiary ? ` · ${apiary.name}` : ''}. Logga händelser när något har förändrats i samhället.`
+    : 'Välj kupa och logga händelser som påverkar samhällets historik.';
 
   return (
     <Screen>

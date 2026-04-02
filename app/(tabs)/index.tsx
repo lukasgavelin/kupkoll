@@ -82,7 +82,7 @@ export default function HomeScreen() {
       <SectionHeader
         eyebrow="Senast"
         title="Senaste genomgången"
-        description="Här ser du senaste sparade genomgång. Tidigare genomgångar hittar du i historiken."
+        description="Här ser du senaste genomgången. Tidigare genomgångar finns i historiken."
       />
       <View style={styles.sectionList}>
         {latestInspection ? (
@@ -105,7 +105,7 @@ export default function HomeScreen() {
         ) : (
           <EmptyStateCard
             title="Inga genomgångar ännu"
-            description={hasHives ? 'Du har kupor på plats men ännu ingen sparad genomgång. Logga den första så blir historiken tydlig.' : 'När du sparar din första genomgång visas den här, så att du lätt kan minnas vad du såg sist.'}
+            description={hasHives ? 'Du har kupor på plats men ingen genomgång ännu. Logga den första för att starta historiken.' : 'När du loggar din första genomgång visas den här.'}
             actionLabel={hasHives ? 'Logga första genomgången' : hasApiaries ? 'Lägg till kupa' : 'Lägg till bigård'}
             onActionPress={() =>
               router.push(

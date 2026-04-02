@@ -1,6 +1,6 @@
 # Kupkoll
 
-Kupkoll är en svensk Expo-app för biodlare som vill hålla ordning på bigårdar, kupor, genomgångar, händelser och uppgifter i ett enkelt arbetsflöde för mobil och webb.
+Kupkoll är en svensk Expo-app för biodlare som vill hålla ordning på bigårdar, kupor, genomgångar, händelser och uppgifter i ett tydligt arbetsflöde för mobil och webb.
 
 Appen fungerar utan konto och sparar data lokalt.
 
@@ -34,9 +34,9 @@ Appen är byggd med React Native och Expo och stödjer **Android**, **iOS** och 
 ## Arbetsflöden
 
 - Grundflöde: lägg till bigård, lägg sedan till kupa och fyll i aktuell drottning, logga därefter genomgångar och större händelser från kupans vy
-- Snabb genomgång för ett snabbt lägesbesked direkt i bigården
-- Fördjupad genomgång när du vill spara mer detaljer om varroa, åtgärder och anteckningar
-- Separata händelser för sådant som ändrar samhällets säsongshistorik, särskilt drottningbyten och märkning
+- Snabb genomgång för ett snabbt lägesbesked i bigården
+- Fördjupad genomgång när du vill logga mer detaljer om varroa, åtgärder och anteckningar
+- Separata händelser för sådant som ändrar samhällets historik, särskilt drottningbyten och märkning
 - Export till JSON för att kunna spara en lokal backup utanför appen
 
 ## Teknik

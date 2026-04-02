@@ -109,7 +109,7 @@ export default function HiveDetailScreen() {
           <PrimaryButton label="Öppna historik" onPress={() => router.push(`/hives/${hiveId}/inspections`)} variant="secondary" />
         </View>
       ) : (
-        <EmptyStateCard title="Ingen historik ännu" description="När du sparar den första genomgången eller händelsen ser du här vad som har hänt i samhället över säsongen." />
+        <EmptyStateCard title="Ingen historik ännu" description="När du loggar första genomgången eller händelsen visas den här." />
       )}
 
       <SectionHeader eyebrow="Att göra" title="Saker kopplade till den här kupan" />
@@ -129,7 +129,7 @@ export default function HiveDetailScreen() {
               return relatedTask ? `${relatedTask.title} senast ${formatDateLabel(relatedTask.dueDate)}` : undefined;
             }}
           />
-        ) : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång börjar appen lyfta fram sådant som kan vara bra att titta närmare på." />}
+        ) : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång visas råd här." />}
       </View>
 
       <SectionHeader eyebrow="Hantera" title="Administrera kupan" />
