@@ -2,21 +2,19 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { HiveEventSnapshot, InspectionSnapshot, TaskCard } from '@/components/feature/Cards';
-import { RecommendationSections } from '@/components/feature/RecommendationSections';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { getRelatedTaskForRecommendation } from '@/lib/recommendations';
 import { formatDateLabel, getApiaryDisplayLocation } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
 export default function HiveDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { deleteHive, getHiveById, getApiaryById, getEventsForHive, getRecommendationsForHive, getTasksForHive, latestInspectionMap } = useKupkoll();
+  const { deleteHive, getHiveById, getApiaryById, getEventsForHive, getTasksForHive, latestInspectionMap } = useKupkoll();
   const hive = getHiveById(params.id);
 
   if (!hive) {
@@ -36,7 +34,6 @@ export default function HiveDetailScreen() {
   const latestInspection = latestInspectionMap[hive.id];
   const events = getEventsForHive(hive.id);
   const latestEvent = events[0];
-  const recommendations = getRecommendationsForHive(hive.id);
   const tasks = getTasksForHive(hive.id);
   const queenHistory = [...hive.queenHistory].sort((left, right) => right.year.localeCompare(left.year));
 
@@ -115,21 +112,6 @@ export default function HiveDetailScreen() {
       <SectionHeader eyebrow="Att göra" title="Saker kopplade till den här kupan" />
       <View style={styles.sectionList}>
         {tasks.length ? tasks.map((task) => <TaskCard key={task.id} hiveName={hive.name} task={task} />) : <EmptyStateCard title="Inga uppgifter ännu" description="När något behöver följas upp i den här kupan visas det här." />}
-      </View>
-
-      <SectionHeader eyebrow="Råd" title="Att hålla koll på" />
-      <View style={styles.sectionList}>
-        {recommendations.length ? (
-          <RecommendationSections
-            recommendations={recommendations}
-            getHiveName={() => hive.name}
-            getRelatedTaskLabel={(recommendation) => {
-              const relatedTask = getRelatedTaskForRecommendation(recommendation, tasks);
-
-              return relatedTask ? `${relatedTask.title} senast ${formatDateLabel(relatedTask.dueDate)}` : undefined;
-            }}
-          />
-        ) : <EmptyStateCard title="Inga råd ännu" description="När kupan har fått sin första genomgång visas råd här." />}
       </View>
 
       <SectionHeader eyebrow="Hantera" title="Administrera kupan" />

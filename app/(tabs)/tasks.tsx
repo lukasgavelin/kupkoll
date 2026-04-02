@@ -78,14 +78,14 @@ export default function TasksScreen() {
       <SectionHeader
         eyebrow="Uppgifter"
         title="Det som behöver göras"
-        description="Här ser du uppgifter sorterade efter hur bråttom de är."
+        description="Här samlas alla uppgifter, råd och rekommendationer på ett ställe."
       />
       {recommendations.length ? (
         <View style={styles.sectionList}>
           <SectionHeader
             eyebrow="Beslutsstöd"
             title="Råd och signaler"
-            description="Här samlas råd som kan följas upp med uppgifter."
+            description="Alla råd och rekommendationer visas här och kan följas upp med uppgifter."
           />
           <RecommendationSections
             recommendations={recommendations}
