@@ -135,7 +135,8 @@ export default function HomeScreen() {
       <SeasonStatusCard status={seasonStatus} />
       <BloomInsightsCard
         predictions={bloomPredictions}
-        zoneLabel={seasonStatus.regionLabel === 'Norra Sverige' ? 'norra' : seasonStatus.regionLabel === 'Södra Sverige' ? 'södra' : 'mellan'}
+        locationLabel={seasonStatus.locationLabel}
+        zoneLabel={seasonStatus.zoneLabel === 'nord' ? 'norra' : seasonStatus.zoneLabel === 'syd' ? 'södra' : 'mellan'}
       />
     </Screen>
   );

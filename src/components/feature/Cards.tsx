@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getRecommendationKindLabel } from '@/lib/recommendations';
-import { formatDateLabel, formatDateTimeLabel } from '@/lib/selectors';
+import { formatDateLabel, formatDateTimeLabel, getApiaryDisplayLocation } from '@/lib/selectors';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
 import { Apiary, Hive, HiveEvent, Inspection, Recommendation, Task } from '@/types/domain';
@@ -113,6 +113,24 @@ function getHiveEventDetailLabels(event: HiveEvent) {
   return labels;
 }
 
+function getZoneBadgeLabel(apiary: Apiary) {
+  const zone = apiary.locationDetails?.zone;
+
+  if (zone === 'nord') {
+    return 'Zon nord';
+  }
+
+  if (zone === 'syd') {
+    return 'Zon syd';
+  }
+
+  if (zone === 'mellan') {
+    return 'Zon mellan';
+  }
+
+  return undefined;
+}
+
 export function StatCard({ value, label, onPress }: { value: string; label: string; onPress?: () => void }) {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -139,6 +157,9 @@ export function StatCard({ value, label, onPress }: { value: string; label: stri
 export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: number }) {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const displayLocation = getApiaryDisplayLocation(apiary);
+  const locationSourceLabel = apiary.locationDetails?.source === 'manual' ? 'Manuell plats' : apiary.locationDetails?.source === 'auto' ? 'Auto-plats' : undefined;
+  const zoneLabel = getZoneBadgeLabel(apiary);
 
   return (
     <Pressable onPress={() => router.push(`/apiaries/${apiary.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
@@ -146,9 +167,13 @@ export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: n
         <View style={styles.rowBetween}>
           <View style={styles.textColumn}>
             <Text style={theme.textStyles.heading}>{apiary.name}</Text>
-            <Text style={theme.textStyles.caption}>{apiary.location}</Text>
+            <Text style={theme.textStyles.caption}>{displayLocation}</Text>
           </View>
           <StatusBadge label={`${hiveCount} kupor`} tone="calm" />
+        </View>
+        <View style={styles.inlineWrap}>
+          {locationSourceLabel ? <StatusBadge label={locationSourceLabel} tone={apiary.locationDetails?.source === 'manual' ? 'info' : 'calm'} /> : null}
+          {zoneLabel ? <StatusBadge label={zoneLabel} tone="warning" /> : null}
         </View>
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
       </AppCard>
@@ -156,7 +181,7 @@ export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: n
   );
 }
 
-export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string }) {
+export function HiveCard({ hive, apiaryLabel }: { hive: Hive; apiaryLabel: string }) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : 'calm';
@@ -172,7 +197,7 @@ export function HiveCard({ hive, apiaryName }: { hive: Hive; apiaryName: string 
         <View style={styles.rowBetween}>
           <View style={styles.textColumn}>
             <Text style={theme.textStyles.heading}>{hive.name}</Text>
-            <Text style={theme.textStyles.caption}>{apiaryName}</Text>
+            <Text style={theme.textStyles.caption}>{apiaryLabel}</Text>
           </View>
           <StatusBadge label={hive.status} tone={statusTone} />
         </View>

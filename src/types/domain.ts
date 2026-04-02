@@ -38,12 +38,24 @@ export type Coordinates = {
   longitude: number;
 };
 
+export type ApiaryZone = 'syd' | 'mellan' | 'nord';
+
+export type ApiaryLocationDetails = {
+  locality?: string;
+  municipality?: string;
+  county?: string;
+  countryCode?: string;
+  source: 'auto' | 'manual';
+  zone?: ApiaryZone;
+};
+
 export type Apiary = {
   id: string;
   name: string;
   location: string;
   notes: string;
   coordinates?: Coordinates;
+  locationDetails?: ApiaryLocationDetails;
 };
 
 export type QueenHistoryEntry = {

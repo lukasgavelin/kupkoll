@@ -10,6 +10,7 @@ import { Theme } from '@/theme';
 type Props = {
   predictions: BloomPrediction[];
   zoneLabel: string;
+  locationLabel?: string;
 };
 
 function formatStatusLabel(status: BloomPrediction['bloomStatus']) {
@@ -41,7 +42,7 @@ function formatRelevanceLevel(score: number) {
   return 'låg';
 }
 
-export function BloomInsightsCard({ predictions, zoneLabel }: Props) {
+export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Props) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const topPredictions = predictions.slice(0, 8);
@@ -51,7 +52,11 @@ export function BloomInsightsCard({ predictions, zoneLabel }: Props) {
       <View style={styles.header}>
         <Text style={theme.textStyles.overline}>Blomning</Text>
         <Text style={styles.title}>Sannolika dragväxter just nu</Text>
-        <Text style={styles.subtitle}>Bedömningen bygger på historiska observationer i {zoneLabel} Sverige.</Text>
+        <Text style={styles.subtitle}>
+          {locationLabel
+            ? `Bedömningen bygger på historiska observationer nära ${locationLabel}, med zondata för ${zoneLabel} Sverige.`
+            : `Bedömningen bygger på historiska observationer i ${zoneLabel} Sverige.`}
+        </Text>
         <Text style={styles.disclaimer}>Resultatet visar sannolikheter, inte säkra fakta för varje enskild plats.</Text>
       </View>
 

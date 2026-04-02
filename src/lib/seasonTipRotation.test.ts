@@ -23,6 +23,7 @@ const status: SeasonStatus = {
   watchItems: ['tänk 1', 'tänk 2', 'tänk 3'],
   timingLabel: 'Brukar oftast infalla mellan mars och maj i mellansverige.',
   regionLabel: 'Mellansverige',
+  zoneLabel: 'mellan',
   inspectionCadenceDays: 12,
   sourceLabel: 'Bygger på Biodlaråret.',
 };

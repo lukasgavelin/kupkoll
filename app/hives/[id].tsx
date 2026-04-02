@@ -10,7 +10,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getRelatedTaskForRecommendation } from '@/lib/recommendations';
-import { formatDateLabel } from '@/lib/selectors';
+import { formatDateLabel, getApiaryDisplayLocation } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
 
@@ -32,6 +32,7 @@ export default function HiveDetailScreen() {
 
   const hiveId = hive.id;
   const apiary = getApiaryById(hive.apiaryId);
+  const apiaryLocation = getApiaryDisplayLocation(apiary);
   const latestInspection = latestInspectionMap[hive.id];
   const events = getEventsForHive(hive.id);
   const latestEvent = events[0];
@@ -61,7 +62,7 @@ export default function HiveDetailScreen() {
         onActionPress={() => router.back()}
         eyebrow="Kupa"
         title={hive.name}
-        description={apiary ? `${apiary.name} · ${hive.lastInspectionAt ? `Senast genomgången ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång ännu'}` : undefined}
+        description={apiary ? `${apiary.name}${apiaryLocation ? ` · ${apiaryLocation}` : ''} · ${hive.lastInspectionAt ? `Senast genomgången ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång ännu'}` : undefined}
       />
 
       <AppCard>

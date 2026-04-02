@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getApiarySeasonLabel, getRecommendedInspectionCadenceDays, getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
+import { getApiaryDisplayLocation, getApiaryMunicipalityLabel, getApiarySeasonLabel, getRecommendedInspectionCadenceDays, getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
 
 describe('getSeasonLabel', () => {
   it('maps months to biodling seasons', () => {
@@ -98,5 +98,90 @@ describe('getRecommendedInspectionCadenceDays', () => {
     expect(getRecommendedInspectionCadenceDays('Svärmperiod', 'Mellansverige')).toBe(7);
     expect(getRecommendedInspectionCadenceDays('Svärmperiod', 'Norra Sverige')).toBe(10);
     expect(getRecommendedInspectionCadenceDays('Vårutveckling', 'Norra Sverige')).toBe(14);
+  });
+});
+
+describe('getApiaryDisplayLocation', () => {
+  it('prefers geocoded municipality and county', () => {
+    expect(
+      getApiaryDisplayLocation({
+        id: 'apiary-1',
+        name: 'Dag H',
+        location: 'Dag H',
+        notes: '',
+        locationDetails: {
+          source: 'auto',
+          municipality: 'Uppsala',
+          county: 'Uppsala',
+        },
+      }),
+    ).toBe('Uppsala kommun, Uppsala län');
+  });
+
+  it('does not invent municipality from manual place name', () => {
+    expect(
+      getApiaryDisplayLocation({
+        id: 'apiary-2',
+        name: 'Dag H',
+        location: 'Dag H',
+        notes: '',
+        locationDetails: {
+          source: 'manual',
+          municipality: 'Dag H',
+        },
+      }),
+    ).toBe('Dag H');
+  });
+
+  it('uses municipality from geodata when coordinates exist even if source is manual', () => {
+    expect(
+      getApiaryDisplayLocation({
+        id: 'apiary-3',
+        name: 'Dag H',
+        location: 'Dag H',
+        notes: '',
+        coordinates: { latitude: 59.8586, longitude: 17.6389 },
+        locationDetails: {
+          source: 'manual',
+          municipality: 'Uppsala',
+        },
+      }),
+    ).toBe('Uppsala kommun');
+  });
+});
+
+describe('getApiaryMunicipalityLabel', () => {
+  it('returns municipality label for trusted data', () => {
+    expect(
+      getApiaryMunicipalityLabel({
+        id: 'apiary-4',
+        name: 'Dag H',
+        location: 'Dag H',
+        notes: '',
+        coordinates: { latitude: 59.8586, longitude: 17.6389 },
+        locationDetails: {
+          source: 'manual',
+          municipality: 'Uppsala',
+        },
+      }),
+    ).toBe('Uppsala kommun');
+  });
+
+  it('is used by season status when present', () => {
+    const seasonStatus = getSeasonStatus(new Date('2026-04-05T12:00:00.000Z'), [
+      {
+        id: 'apiary-5',
+        name: 'Dag H',
+        location: 'Dag H',
+        notes: '',
+        coordinates: { latitude: 59.8586, longitude: 17.6389 },
+        locationDetails: {
+          source: 'manual',
+          municipality: 'Uppsala',
+        },
+      },
+    ]);
+
+    expect(seasonStatus.locationLabel).toBe('Uppsala kommun');
   });
 });

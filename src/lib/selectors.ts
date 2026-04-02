@@ -1,5 +1,5 @@
 import { monthLabels, inspectionCadenceDaysBySeason, regionalOrder, regionalProfileMonthIndices, seasonProfiles, SwedishRegion } from '@/data/seasonModel';
-import { Apiary, Hive, Inspection, SeasonLabel, Task } from '@/types/domain';
+import { Apiary, ApiaryZone, Hive, Inspection, SeasonLabel, Task } from '@/types/domain';
 
 export type SeasonStatus = {
   season: SeasonLabel;
@@ -13,6 +13,7 @@ export type SeasonStatus = {
   locationLabel?: string;
   inspectionCadenceDays: number;
   sourceLabel: string;
+  zoneLabel: ApiaryZone;
 };
 
 const northKeywords = ['norrbotten', 'västerbotten', 'jämtland', 'västernorrland', 'gävleborg', 'kiruna', 'umeå', 'luleå', 'skellefteå', 'sundsvall', 'östersund'];
@@ -104,12 +105,89 @@ export function getApiaryRegion(apiary?: Apiary): SwedishRegion {
   return location.trim() ? 'Mellansverige' : 'Sverige';
 }
 
-function getLocationLabel(apiary?: Apiary) {
+export function getZoneFromRegion(region: SwedishRegion): ApiaryZone {
+  if (region === 'Norra Sverige') {
+    return 'nord';
+  }
+
+  if (region === 'Södra Sverige') {
+    return 'syd';
+  }
+
+  return 'mellan';
+}
+
+function formatMunicipalityLabel(value?: string) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (trimmed.toLowerCase().endsWith(' kommun')) {
+    return trimmed;
+  }
+
+  return `${trimmed} kommun`;
+}
+
+function formatCountyLabel(value?: string) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (trimmed.toLowerCase().endsWith(' län')) {
+    return trimmed;
+  }
+
+  return `${trimmed} län`;
+}
+
+export function getApiaryDisplayLocation(apiary?: Apiary) {
   if (!apiary) {
     return undefined;
   }
 
-  return apiary.location.trim() || apiary.name;
+  const hasTrustedMunicipality = apiary.locationDetails?.source === 'auto' || Boolean(apiary.locationDetails?.county?.trim()) || Boolean(apiary.coordinates);
+  const municipality = hasTrustedMunicipality ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
+  const county = formatCountyLabel(apiary.locationDetails?.county);
+  const locality = apiary.locationDetails?.locality?.trim();
+  const fallbackLocation = apiary.location.trim();
+
+  if (municipality && county) {
+    return `${municipality}, ${county}`;
+  }
+
+  if (municipality) {
+    return municipality;
+  }
+
+  if (locality && county) {
+    return `${locality}, ${county}`;
+  }
+
+  if (locality) {
+    return locality;
+  }
+
+  return fallbackLocation || apiary.name;
+}
+
+export function getApiaryMunicipalityLabel(apiary?: Apiary) {
+  if (!apiary) {
+    return undefined;
+  }
+
+  const hasTrustedMunicipality = apiary.locationDetails?.source === 'auto' || Boolean(apiary.locationDetails?.county?.trim()) || Boolean(apiary.coordinates);
+  const municipality = hasTrustedMunicipality ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
+
+  return municipality;
+}
+
+function getLocationLabel(apiary?: Apiary) {
+  return getApiaryMunicipalityLabel(apiary) ?? getApiaryDisplayLocation(apiary);
 }
 
 export function getPrimaryApiary(apiaries: Apiary[]) {
@@ -169,6 +247,7 @@ export function getSeasonStatus(
     locationLabel: getLocationLabel(primaryApiary),
     inspectionCadenceDays: getRecommendedInspectionCadenceDays(season, region),
     sourceLabel: 'Bygger på Biodlaråret, tid på året och bigårdens läge i Sverige.',
+    zoneLabel: getZoneFromRegion(region),
   };
 }
 

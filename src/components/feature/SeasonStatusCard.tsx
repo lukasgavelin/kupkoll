@@ -11,7 +11,7 @@ export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
   const styles = createStyles(theme);
   const primaryItems = status.focusItems.slice(0, 2);
   const watchItem = status.watchItems[0];
-  const locationLabel = status.locationLabel ? `${status.regionLabel} · ${status.locationLabel}` : status.regionLabel;
+  const locationLabel = status.locationLabel ?? status.regionLabel;
 
   return (
     <AppCard style={styles.card}>
