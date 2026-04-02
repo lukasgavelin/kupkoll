@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useMemo, useState } from 'react';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -26,7 +27,7 @@ function formatStatusLabel(status: BloomPrediction['bloomStatus']) {
   }
 }
 
-function formatRelevanceLevel(score: number) {
+function formatPriorityLevel(score: number) {
   if (score >= 12) {
     return 'mycket hög';
   }
@@ -42,15 +43,48 @@ function formatRelevanceLevel(score: number) {
   return 'låg';
 }
 
+function formatConfidenceLevel(score: number) {
+  if (score >= 0.75) {
+    return 'hög';
+  }
+
+  if (score >= 0.5) {
+    return 'medel';
+  }
+
+  return 'låg';
+}
+
+function getWikipediaUrl(scientificName: string) {
+  const pageName = scientificName.trim().replace(/\s+/g, '_');
+  return `https://sv.wikipedia.org/wiki/${encodeURIComponent(pageName)}`;
+}
+
 export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Props) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const topPredictions = predictions.slice(0, 8);
+  const [showInfo, setShowInfo] = useState(false);
+
+  async function openPlantWiki(scientificName: string) {
+    const url = getWikipediaUrl(scientificName);
+    await Linking.openURL(url);
+  }
 
   return (
     <AppCard style={styles.card}>
       <View style={styles.header}>
-        <Text style={theme.textStyles.overline}>Blomning</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={theme.textStyles.overline}>Blomning</Text>
+          <Pressable
+            accessibilityLabel={showInfo ? 'Dolj förklaring av prioritet och datastöd' : 'Visa förklaring av prioritet och datastöd'}
+            accessibilityRole="button"
+            onPress={() => setShowInfo((current) => !current)}
+            style={styles.infoButton}
+          >
+            <Ionicons color={theme.colors.textMuted} name={showInfo ? 'information-circle' : 'information-circle-outline'} size={18} />
+          </Pressable>
+        </View>
         <Text style={styles.title}>Sannolika dragväxter just nu</Text>
         <Text style={styles.subtitle}>
           {locationLabel
@@ -58,6 +92,13 @@ export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Pro
             : `Bedömningen bygger på historiska observationer i ${zoneLabel} Sverige.`}
         </Text>
         <Text style={styles.disclaimer}>Resultatet visar sannolikheter, inte säkra fakta för varje enskild plats.</Text>
+        {showInfo ? (
+          <View style={styles.infoPanel}>
+            <Text style={styles.infoText}>Prioritet visar hur intressant växten är just nu: sannolik blomning och värde för bina.</Text>
+            <Text style={styles.infoText}>Datastöd visar hur mycket observationsdata som finns bakom uppskattningen.</Text>
+            <Text style={styles.infoText}>Växtnamnen är klickbara och öppnar Wikipedia för mer information.</Text>
+          </View>
+        ) : null}
       </View>
 
       {topPredictions.length ? (
@@ -65,9 +106,19 @@ export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Pro
           {topPredictions.map((plant) => (
             <View key={`${plant.scientificName}-${plant.zone}`} style={styles.row}>
               <View style={styles.mainInfo}>
-                <Text style={styles.name}>{plant.commonName}</Text>
+                <Pressable
+                  accessibilityHint="Öppnar växtens Wikipediasida"
+                  accessibilityLabel={`Öppna ${plant.commonName} på Wikipedia`}
+                  accessibilityRole="link"
+                  onPress={() => {
+                    void openPlantWiki(plant.scientificName);
+                  }}
+                >
+                  <Text style={styles.nameLink}>{plant.commonName}</Text>
+                </Pressable>
                 <Text style={styles.meta}>
-                  Sannolikhet {Math.round(plant.bloomProbability * 100)}% · Relevans {formatRelevanceLevel(plant.relevanceScore)}
+                  Sannolikhet {Math.round(plant.bloomProbability * 100)}% · Prioritet {formatPriorityLevel(plant.priorityScore)} · Datastöd{' '}
+                  {formatConfidenceLevel(plant.confidenceScore)}
                 </Text>
               </View>
               <StatusBadge tone={plant.bloomStatus === 'nu' ? 'calm' : plant.bloomStatus === 'snart' ? 'info' : 'warning'} label={formatStatusLabel(plant.bloomStatus)} />
@@ -93,6 +144,16 @@ function createStyles(theme: Theme) {
     header: {
       gap: theme.spacing.xs,
     },
+    headerTopRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    infoButton: {
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: 2,
+      marginRight: -theme.spacing.xs,
+    },
     title: {
       ...theme.textStyles.heading,
       color: theme.colors.text,
@@ -102,6 +163,18 @@ function createStyles(theme: Theme) {
       color: theme.colors.textMuted,
     },
     disclaimer: {
+      ...theme.textStyles.caption,
+      color: theme.colors.textMuted,
+    },
+    infoPanel: {
+      gap: 2,
+      padding: theme.spacing.sm,
+      borderRadius: theme.spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+    },
+    infoText: {
       ...theme.textStyles.caption,
       color: theme.colors.textMuted,
     },
@@ -124,6 +197,11 @@ function createStyles(theme: Theme) {
     name: {
       ...theme.textStyles.label,
       color: theme.colors.text,
+    },
+    nameLink: {
+      ...theme.textStyles.label,
+      color: theme.colors.text,
+      textDecorationLine: 'underline',
     },
     meta: {
       ...theme.textStyles.caption,

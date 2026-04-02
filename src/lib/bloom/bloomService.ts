@@ -11,6 +11,8 @@ import {
   SwedenZone,
   parseCsv,
 } from '@/lib/bloom/dragCalendar';
+import { applyTemperatureShiftToWindows, calculateTemperatureShiftDays } from '@/lib/bloom/temperaturePhenology';
+import { Coordinates } from '@/types/domain';
 import { loadBloomCsvContent } from '@/lib/bloom/loadBloomCsv';
 import precomputedBloomWindows from '../../../assets/bloomWindows.json';
 
@@ -21,6 +23,7 @@ type BloomDataset = {
 };
 
 let bloomDatasetPromise: Promise<BloomDataset> | null = null;
+const bloomWeatherShiftPromiseCache = new Map<string, Promise<number>>();
 
 type PrecomputedBloomWindowsShape =
   | BloomWindow[]
@@ -123,14 +126,39 @@ export async function getBloomDataset() {
 
 export async function getLikelyBloomingPlantsNow(params: {
   userLatitude: number;
+  coordinates?: Coordinates;
   date?: Date;
   minimumBloomProbability?: number;
+  enableWeatherAdjustment?: boolean;
+  fetchImplementation?: typeof fetch;
 }): Promise<{ predictions: BloomPrediction[]; zone: SwedenZone; sampleSize: number; rejectedRows: number }> {
   const dataset = await getBloomDataset();
-  const currentDayOfYear = getDayOfYear(params.date ?? new Date());
+  const date = params.date ?? new Date();
+  const currentDayOfYear = getDayOfYear(date);
   const zone = getZoneFromLatitude(params.userLatitude, DEFAULT_OPTIONS);
 
-  const rawPredictions = getLikelyBloomingPlants(currentDayOfYear, params.userLatitude, dataset.windows, DEFAULT_OPTIONS);
+  let windows = dataset.windows;
+  const shouldApplyWeatherAdjustment = (params.enableWeatherAdjustment ?? true) && params.coordinates;
+
+  if (shouldApplyWeatherAdjustment && params.coordinates) {
+    const cacheKey = `${params.coordinates.latitude.toFixed(4)}:${params.coordinates.longitude.toFixed(4)}:${date.toISOString().slice(0, 10)}`;
+    const cachedShiftPromise = bloomWeatherShiftPromiseCache.get(cacheKey);
+    const shiftPromise =
+      cachedShiftPromise ??
+      calculateTemperatureShiftDays(params.coordinates, date, params.fetchImplementation)
+        .then((shiftDays) => shiftDays)
+        .catch(() => 0);
+
+    bloomWeatherShiftPromiseCache.set(cacheKey, shiftPromise);
+
+    const shiftDays = await shiftPromise;
+
+    if (shiftDays !== 0) {
+      windows = applyTemperatureShiftToWindows(dataset.windows, shiftDays);
+    }
+  }
+
+  const rawPredictions = getLikelyBloomingPlants(currentDayOfYear, params.userLatitude, windows, DEFAULT_OPTIONS);
   const minimumBloomProbability = params.minimumBloomProbability ?? 0.15;
   const predictions = rawPredictions.filter((prediction) => prediction.bloomProbability >= minimumBloomProbability);
 
@@ -144,4 +172,5 @@ export async function getLikelyBloomingPlantsNow(params: {
 
 export function clearBloomDatasetCache() {
   bloomDatasetPromise = null;
+  bloomWeatherShiftPromiseCache.clear();
 }

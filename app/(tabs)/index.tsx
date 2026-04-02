@@ -41,6 +41,7 @@ export default function HomeScreen() {
       try {
         const result = await getLikelyBloomingPlantsNow({
           userLatitude,
+          coordinates: primaryApiary?.coordinates,
           date: seasonDate,
         });
 

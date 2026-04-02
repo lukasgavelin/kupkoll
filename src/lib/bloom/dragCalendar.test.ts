@@ -80,7 +80,7 @@ describe('dragCalendar', () => {
     expect(windows.some((window) => window.scientificName === 'Brassica napus' && window.zone === 'south')).toBe(true);
   });
 
-  it('returns likely blooming plants sorted by relevance score', () => {
+  it('returns likely blooming plants sorted by priority score', () => {
     const csv = [
       'common_name,scientific_name,obs_year,obs_doy,latitude,longitude,phase_main_name_SE,event_name_SE',
       'Sälg,Salix caprea,2019,84,56.1,13.1,Blomning,Start',
@@ -104,6 +104,18 @@ describe('dragCalendar', () => {
     const predictions = getLikelyBloomingPlants(92, 56.2, windows);
 
     expect(predictions.length).toBeGreaterThan(0);
-    expect(predictions[0].relevanceScore).toBeGreaterThanOrEqual(predictions[predictions.length - 1].relevanceScore);
+    expect(predictions[0].priorityScore).toBeGreaterThanOrEqual(predictions[predictions.length - 1].priorityScore);
+  });
+
+  it('assigns lower confidence to agricultural fallback windows with no samples', () => {
+    const windows = buildBloomWindows([], {
+      ...DEFAULT_OPTIONS,
+      enableAgriculturalFallbacks: true,
+    });
+
+    const fallbackPrediction = getLikelyBloomingPlants(132, 56.2, windows).find((prediction) => prediction.scientificName === 'Brassica napus');
+
+    expect(fallbackPrediction).toBeDefined();
+    expect(fallbackPrediction?.confidenceScore).toBe(0.35);
   });
 });

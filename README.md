@@ -54,6 +54,7 @@ Bloom-funktionaliteten är nu renodlad till en modell och en service:
 
 - `src/lib/bloom/dragCalendar.ts`: innehåller domäntyper, växtlista, CSV-parsing, zonindelning, fönsterbyggnad och prediktioner
 - `src/lib/bloom/bloomService.ts`: laddar CSV-asset, bygger cachad dataset och exponerar `getLikelyBloomingPlantsNow` för UI
+- `src/lib/bloom/temperaturePhenology.ts`: temperaturbaserad fenologi (GDD) som kan skifta blomningsfönster när platskoordinater finns
 - `src/lib/bloom/index.ts`: publikt API för bloom-delen
 
 Modellen utgår från:
@@ -62,6 +63,14 @@ Modellen utgår från:
 - Latitudbaserad zon (`south`, `middle`, `north`)
 - Percentilbaserade blomningsfönster per art och zon
 - Fallback-fönster för viktiga jordbruksväxter vid tunt underlag
+- Temperaturjustering av fönstren baserat på historisk väderdata för användarens plats (med säker fallback till DOY-modellen vid API-fel)
+
+I UI visas varje kandidat med:
+
+- Sannolikhet (beräknad blomningssannolikhet just nu)
+- Prioritet (sammanvägd signal av sannolikhet och dragvärde)
+- Datastöd (hur starkt observationsunderlag som finns)
+- Klickbart växtnamn som öppnar artens sida på Wikipedia
 
 Notera:
 

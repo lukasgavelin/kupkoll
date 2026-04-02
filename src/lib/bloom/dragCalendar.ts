@@ -60,7 +60,8 @@ export type BloomPrediction = {
   zone: SwedenZone;
   bloomStatus: BloomStatus;
   bloomProbability: number;
-  relevanceScore: number;
+  priorityScore: number;
+  confidenceScore: number;
   window: BloomWindow;
   notes?: string;
   isAgricultural?: boolean;
@@ -493,7 +494,7 @@ export function getLikelyBloomingPlants(
     .filter((window) => window.zone === zone)
     .map((window) => buildPrediction(currentDayOfYear, window, options))
     .filter((prediction): prediction is BloomPrediction => prediction !== null)
-    .sort((left, right) => right.relevanceScore - left.relevanceScore);
+    .sort((left, right) => right.priorityScore - left.priorityScore);
 }
 
 function buildPrediction(
@@ -508,7 +509,8 @@ function buildPrediction(
   }
 
   const bloomStatus = getBloomStatus(currentDayOfYear, window, options);
-  const relevanceScore = calculateRelevanceScore(probability, window);
+  const priorityScore = calculatePriorityScore(probability, window);
+  const confidenceScore = calculateConfidenceScore(window);
 
   return {
     scientificName: window.scientificName,
@@ -516,7 +518,8 @@ function buildPrediction(
     zone: window.zone,
     bloomStatus,
     bloomProbability: round(probability, 3),
-    relevanceScore: round(relevanceScore, 3),
+    priorityScore: round(priorityScore, 3),
+    confidenceScore: round(confidenceScore, 3),
     window,
     notes: window.notes,
     isAgricultural: window.isAgricultural,
@@ -571,11 +574,20 @@ function getBloomStatus(
   return 'på väg över';
 }
 
-function calculateRelevanceScore(bloomProbability: number, window: BloomWindow): number {
+function calculatePriorityScore(bloomProbability: number, window: BloomWindow): number {
   const plantWeight = window.dragScore * 2.0 + window.nectarScore * 1.2 + window.pollenScore * 0.9;
   const sampleWeight = Math.min(1.15, 1 + Math.log10(Math.max(1, window.sampleSize + 1)) * 0.08);
 
   return bloomProbability * plantWeight * sampleWeight;
+}
+
+function calculateConfidenceScore(window: BloomWindow): number {
+  if (window.isAgricultural && window.sampleSize === 0) {
+    return 0.35;
+  }
+
+  const sampleFactor = Math.min(1, Math.log10(Math.max(1, window.sampleSize + 1)) / Math.log10(31));
+  return 0.4 + sampleFactor * 0.6;
 }
 
 export function buildDragCalendarFromCsv(

@@ -67,6 +67,7 @@ export default function ApiaryDetailScreen() {
       try {
         const result = await getLikelyBloomingPlantsNow({
           userLatitude,
+          coordinates: apiary.coordinates,
         });
 
         if (isMounted) {
