@@ -106,13 +106,13 @@ const detailedToggleLabels: Array<{ key: Extract<BooleanKey, 'openBrood' | 'capp
 const inspectionModes: Array<{ value: InspectionMode; label: string; description: string }> = [
   {
     value: 'Snabb genomgång',
-    label: 'Snabb genomgång',
-    description: 'Snabbt läge med förval och de viktigaste valen.',
+    label: 'Snabb',
+    description: 'Förval och de viktigaste valen.',
   },
   {
     value: 'Fördjupad genomgång',
-    label: 'Fördjupad genomgång',
-    description: 'Samma grund, med fler fält och mer detaljerad notering.',
+    label: 'Fördjupad',
+    description: 'Samma grund, med fler fält och mer detaljer.',
   },
 ];
 
@@ -390,7 +390,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   if (!hives.length) {
     return (
       <View style={styles.wrapper}>
-        <SectionHeader title="Genomgång" description="Den här vyn blir tillgänglig så fort du har minst en kupa att välja mellan." />
+        <SectionHeader title="Ny notering" description="Den här vyn blir tillgänglig så fort du har minst en kupa att välja mellan." />
         <EmptyStateCard
           title={hasApiaries ? 'Lägg till första kupan först' : 'Lägg till första bigården'}
           description={
@@ -407,15 +407,8 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   return (
     <View style={styles.wrapper}>
-      <SectionHeader
-        title="Genomgång"
-        description={inspectionMode === 'Snabb genomgång'
-          ? 'Snabbläge: välj kupa, bekräfta läget och spara direkt.'
-          : 'Fördjupat läge: fler fält, anteckningar och detaljer.'}
-      />
-
       <AppCard>
-        <Text style={theme.textStyles.heading}>1. Välj genomgång</Text>
+        <Text style={theme.textStyles.heading}>1. Välj läge</Text>
         <View style={styles.stack}>
           {inspectionModes.map((mode) => {
             const selected = inspectionMode === mode.value;

@@ -16,7 +16,7 @@ export default function NewInspectionScreen() {
 
   return (
     <Screen>
-      <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => router.back()} eyebrow="Ny genomgång" title="Logga genomgång" description={description} />
+      <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => router.back()} eyebrow="Inspektion" title="Ny genomgång" description={description} />
       <QuickInspectionForm initialHiveId={params.hiveId} />
     </Screen>
   );
