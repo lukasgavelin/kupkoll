@@ -149,8 +149,8 @@ const decisionRules: DecisionRule[] = [
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'queen-recovered',
-        title: 'Drottning verifierad igen',
-        detail: 'De senaste genomgångarna visade osäkerhet, men drottningen är nu sedd igen. Läget ser stabilt ut och ingen extra åtgärd behövs just nu.',
+        title: 'Drottning sedd igen',
+        detail: 'De senaste genomgångarna visade osäkerhet, men drottningen är nu sedd igen. Läget kan vara mer stabilt och extra åtgärd verkar inte nödvändig just nu.',
         severity: 'info',
         kind: 'status',
       }),
@@ -166,15 +166,15 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'queen-trend',
         title: 'Möjligt drottningproblem',
-        detail: 'Drottning ej observerad vid tre genomgångar i rad. Kontrollera yngelbild, svärmceller och om samhället visar tecken på drottninglöshet.',
+        detail: 'Drottning har inte observerats vid tre genomgångar i rad. Det kan vara bra att kontrollera yngelbild, svärmceller och om samhället visar tecken på drottninglöshet.',
         severity: 'warning',
         kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'queen-trend',
-        title: 'Fördjupa drottningkontroll',
-        description: `Gå igenom ${context.hive.name} med fokus på yngelbild, svärmceller och möjliga tecken på drottninglöshet efter tre genomgångar utan sedd drottning.`,
+        title: 'Överväg fördjupad drottningkontroll',
+        description: `Det kan vara bra att gå igenom ${context.hive.name} med fokus på yngelbild, svärmceller och möjliga tecken på drottninglöshet efter tre genomgångar utan sedd drottning.`,
         dueInDays: 2,
         priority: 'Hög',
       }),
@@ -185,22 +185,22 @@ const decisionRules: DecisionRule[] = [
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'varroa',
-        title: context.inspection.varroaLevel === 'Hög' ? 'Hög varroabelastning' : 'Förhöjt varroatryck',
+        title: context.inspection.varroaLevel === 'Hög' ? 'Möjligen hög varroabelastning' : 'Möjligen förhöjt varroatryck',
         detail:
           context.inspection.varroaLevel === 'Hög'
-            ? 'Varroaläget är högt och bör hanteras skyndsamt. Bekräfta med vald metod och planera snabb åtgärd innan samhället tappar kraft.'
-            : 'Varroaläget börjar stiga. Följ upp med ny mätning eller planerad säsongsåtgärd innan trycket blir svårt att vända.',
+            ? 'Varroaläget kan vara högt och kan behöva hanteras skyndsamt. Bekräfta gärna nivån med mätning, använd godkänd metod enligt etikett och följ upp effekten med ny kontroll.'
+            : 'Varroaläget kan vara på väg upp. Det kan vara klokt att följa upp med ny mätning och planera säsongsanpassad åtgärd i tid.',
         severity: getVarroaSeverity(context.inspection),
         kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'varroa',
-        title: 'Planera varroaåtgärd',
+        title: 'Överväg varroaåtgärd',
         description:
           context.inspection.varroaLevel === 'Hög'
-            ? `Prioritera varroaåtgärd i ${context.hive.name} och bekräfta belastningen med vald kontrollmetod så snart som möjligt.`
-            : `Följ upp varroaläget i ${context.hive.name} med ny kontroll eller planerad åtgärd innan nästa genomgång.`,
+            ? `Det kan vara klokt att prioritera varroaåtgärd i ${context.hive.name}, bekräfta belastningen med vald kontrollmetod och planera uppföljande mätning efter genomförd insats.`
+            : `Det kan vara bra att följa upp varroaläget i ${context.hive.name} med ny kontroll och planerad åtgärd innan nästa genomgång.`,
         dueInDays: getVarroaDueInDays(context.inspection),
         priority: getVarroaPriority(context.inspection),
       }),
@@ -223,16 +223,16 @@ const decisionRules: DecisionRule[] = [
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'varroa-trend',
-        title: 'Varroa-trend uppåt',
-        detail: 'Varroaläget har stigit över de senaste genomgångarna. Planera behandling inom 1-2 veckor innan trycket blir svårt att vända.',
+        title: 'Möjlig varroa-trend uppåt',
+        detail: 'Varroaläget ser ut att ha stigit över de senaste genomgångarna. Överväg behandling inom 1-2 veckor med medelval som minskar resistensrisk och följ upp med ny mätning.',
         severity: 'warning',
         kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'varroa-trend',
-        title: 'Planera behandling mot varroa',
-        description: `Varroan i ${context.hive.name} visar en stigande trend. Lägg in behandling eller tätt återbesök inom de närmaste 1-2 veckorna.`,
+        title: 'Överväg behandling mot varroa',
+        description: `Varroan i ${context.hive.name} ser ut att visa en stigande trend. Det kan vara klokt att lägga in behandling eller tätt återbesök inom de närmaste 1-2 veckorna.`,
         dueInDays: 10,
         priority: 'Hög',
       }),
@@ -243,16 +243,16 @@ const decisionRules: DecisionRule[] = [
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'swarm',
-        title: 'Hög svärmrisk',
-        detail: 'Drottningceller eller tydliga svärmtecken noterades. Följ upp snabbt och bedöm avläggare, skattlåda eller annan svärmförebyggande åtgärd.',
+        title: 'Förhöjd svärmrisk just nu',
+        detail: 'Drottningceller eller tydliga svärmtecken noterades. Det kan vara bra att följa upp snabbt och bedöma avläggare, skattlåda eller annan svärmförebyggande åtgärd.',
         severity: 'critical',
         kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'swarm',
-        title: 'Gör svärmkontroll',
-        description: `Gå igenom ${context.hive.name} igen inom några dagar och avgör om samhället behöver avläggare, skattlåda eller brytning av svärmceller.`,
+        title: 'Överväg snabb svärmkontroll',
+        description: `Det kan vara bra att gå igenom ${context.hive.name} igen inom några dagar och bedöma om samhället kan behöva avläggare, skattlåda eller brytning av svärmceller.`,
         dueInDays: 2,
         priority: 'Hög',
       }),
@@ -270,15 +270,15 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'seasonal-swarm',
         title: 'Möjlig svärmperiod',
-        detail: 'Det är svärmperiod och samhället är starkt med äggläggning igång. Kontrollera svärmceller, utrymme och om avläggare kan bli aktuell.',
+        detail: 'Det verkar vara svärmperiod och samhället ser starkt ut med äggläggning igång. Det kan vara bra att kontrollera svärmceller, utrymme och om avläggare kan bli aktuell.',
         severity: 'warning',
         kind: 'seasonal',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'seasonal-swarm',
-        title: 'Gör förebyggande svärmkontroll',
-        description: `Kontrollera ${context.hive.name} för svärmceller, utrymmesbehov och eventuell avläggare medan svärmtrycket byggs upp.`,
+        title: 'Överväg förebyggande svärmkontroll',
+        description: `Det kan vara bra att kontrollera ${context.hive.name} för svärmceller, utrymmesbehov och eventuell avläggare medan svärmtrycket byggs upp.`,
         dueInDays: 3,
         priority: 'Medel',
       }),
@@ -293,15 +293,15 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'weather-follow-up',
         title: 'Följ upp i bättre flygväder',
-        detail: 'Senaste genomgången gjordes i kyligt, regnigt eller blåsigt väder. Planera en kort uppföljning när bina flyger bättre för att få säkrare bild av aktivitet och drag.',
+        detail: 'Senaste genomgången gjordes i kyligt, regnigt eller blåsigt väder. En kort uppföljning när bina flyger bättre kan ge en säkrare bild av aktivitet och drag.',
         severity: 'info',
         kind: 'reminder',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'weather-follow-up',
-        title: 'Planera väderanpassad uppföljning',
-        description: `Lägg in en kort uppföljning av ${context.hive.name} när vädret är torrare, varmare och lugnare så att flygaktiviteten går att bedöma bättre.`,
+        title: 'Överväg väderanpassad uppföljning',
+        description: `Det kan vara bra att lägga in en kort uppföljning av ${context.hive.name} när vädret är torrare, varmare och lugnare så att flygaktiviteten går att bedöma bättre.`,
         dueInDays: 2,
         priority: 'Medel',
       }),
@@ -313,15 +313,15 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'weak',
         title: 'Samhället verkar svagt',
-        detail: 'Lite yngel, svag styrka eller tunt foderläge tyder på att samhället behöver tätare uppföljning, stödfodring eller förstärkning.',
+        detail: 'Lite yngel, svag styrka eller tunt foderläge kan tyda på att samhället kan behöva tätare uppföljning, stödfodring eller förstärkning.',
         severity: 'warning',
         kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'weak',
-        title: 'Bedöm stödåtgärd',
-        description: `Avgör om ${context.hive.name} behöver stödfodring, utjämning med yngelram eller annan stödåtgärd för att komma i balans.`,
+        title: 'Överväg stödåtgärd',
+        description: `Det kan vara klokt att bedöma om ${context.hive.name} kan behöva stödfodring, utjämning med yngelram eller annan stödåtgärd för att komma i balans.`,
         dueInDays: 4,
         priority: taskPriorityFromStrength(context.hive.strength),
       }),
@@ -332,16 +332,16 @@ const decisionRules: DecisionRule[] = [
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'inactive-hive',
-        title: 'Dags för ny genomgång',
-        detail: `Ingen genomgång har registrerats på ${context.daysSinceLastInspection} dagar. För ${context.regionLabel.toLowerCase()} i det här säsongsläget är det rimligt att följa kupan ungefär var ${context.inspectionCadenceDays}:e dag.`,
+        title: 'Kan vara dags för ny genomgång',
+        detail: `Ingen genomgång har registrerats på ${context.daysSinceLastInspection} dagar. För ${context.regionLabel.toLowerCase()} i det här säsongsläget kan det ofta vara rimligt att följa kupan ungefär var ${context.inspectionCadenceDays}:e dag.`,
         severity: 'info',
         kind: 'reminder',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'inactive-hive',
-        title: 'Planera ny genomgång',
-        description: `${context.hive.name} följs just nu för glest i förhållande till säsong och region. Lägg in en ny genomgång för att få uppdaterat läge.`,
+        title: 'Överväg ny genomgång',
+        description: `${context.hive.name} följs just nu relativt glest i förhållande till säsong och region. Det kan vara bra att lägga in en ny genomgång för att få uppdaterat läge.`,
         dueInDays: 1,
         priority: 'Medel',
       }),
@@ -359,15 +359,15 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'super',
         title: 'Överväg skattlåda',
-        detail: 'Samhället är starkt, har gott drag och producerar. Förbered skattlåda innan trängsel i yngelrummet ökar svärmtrycket.',
+        detail: 'Samhället ser starkt ut, med gott drag och produktion. Det kan vara läge att förbereda skattlåda innan trängsel i yngelrummet ökar svärmtrycket.',
         severity: 'info',
         kind: 'seasonal',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'super',
-        title: 'Planera skattlåda',
-        description: `Säkerställ att ${context.hive.name} snabbt kan få skattlåda eller mer utrymme om draget fortsätter öka.`,
+        title: 'Överväg skattlåda',
+        description: `Det kan vara klokt att säkerställa att ${context.hive.name} snabbt kan få skattlåda eller mer utrymme om draget fortsätter öka.`,
         dueInDays: 5,
         priority: 'Medel',
       }),
@@ -378,16 +378,16 @@ const decisionRules: DecisionRule[] = [
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'queen',
-        title: 'Kontrollera drottningstatus',
-        detail: 'Drottning eller färska ägg kunde inte bekräftas, eller så finns redan osäker drottningstatus. Samhället bör följas upp med fokus på äggläggning, yngelbild och eventuellt visecellbygge.',
+        title: 'Följ upp drottningstatus',
+        detail: 'Drottning eller färska ägg kunde inte bekräftas, eller så finns redan osäker drottningstatus. Det kan vara klokt att följa upp med fokus på äggläggning, yngelbild och eventuellt visecellbygge.',
         severity: 'warning',
         kind: 'alert',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'queen',
-        title: 'Bekräfta drottningstatus',
-        description: `Följ upp ${context.hive.name} med fokus på drottning, färska ägg, jämn yngelsättning och eventuella tecken på viselöshet.`,
+        title: 'Överväg uppföljning av drottningstatus',
+        description: `Det kan vara bra att följa upp ${context.hive.name} med fokus på drottning, färska ägg, jämn yngelsättning och eventuella tecken på viselöshet.`,
         dueInDays: 3,
         priority: 'Hög',
       }),
@@ -400,15 +400,15 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'winter',
         title: 'Förbered invintring',
-        detail: 'Det är dags att planera invintring. Samhället behöver rätt fodermängd, varroaplan och tillräcklig vinterstyrka.',
+        detail: 'Det kan vara dags att planera invintring. Samhället kan behöva rätt fodermängd, en varroaplan och tillräcklig vinterstyrka.',
         severity: 'warning',
         kind: 'seasonal',
       }),
     buildTask: (context) =>
       createTask(context, {
         id: 'winter',
-        title: 'Planera invintring',
-        description: `Se över invintringsfoder, varroabehandling och vinterstyrka i ${context.hive.name} innan höstens beslut blir akuta.`,
+        title: 'Överväg invintringsplan',
+        description: `Det kan vara klokt att se över invintringsfoder, varroabehandling och vinterstyrka i ${context.hive.name} innan höstens beslut blir akuta.`,
         dueInDays: 7,
         priority: 'Medel',
       }),

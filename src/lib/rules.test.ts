@@ -72,8 +72,8 @@ describe('buildDerivedSignals', () => {
     const inspection = createInspection({ swarmSigns: true });
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
-    expect(result.recommendations.map((item) => item.title)).toEqual(expect.arrayContaining(['Hög svärmrisk', 'Överväg skattlåda']));
-    expect(result.tasks.map((item) => item.title)).toEqual(expect.arrayContaining(['Gör svärmkontroll', 'Planera skattlåda']));
+    expect(result.recommendations.map((item) => item.title)).toEqual(expect.arrayContaining(['Förhöjd svärmrisk just nu', 'Överväg skattlåda']));
+    expect(result.tasks.map((item) => item.title)).toEqual(expect.arrayContaining(['Överväg snabb svärmkontroll', 'Överväg skattlåda']));
   });
 
   it('recommends queen follow-up, support and winter prep for a weak colony in invintring', () => {
@@ -92,7 +92,7 @@ describe('buildDerivedSignals', () => {
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
     expect(result.recommendations.map((item) => item.title)).toEqual(
-      expect.arrayContaining(['Samhället verkar svagt', 'Kontrollera drottningstatus', 'Förbered invintring']),
+      expect.arrayContaining(['Samhället verkar svagt', 'Följ upp drottningstatus', 'Förbered invintring']),
     );
     expect(result.tasks.every((item) => item.source === 'Beslutsstöd')).toBe(true);
   });
@@ -104,8 +104,8 @@ describe('buildDerivedSignals', () => {
     const inspection = createInspection({ varroaLevel: 'Hög' });
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
-    expect(result.recommendations.map((item) => item.title)).toContain('Hög varroabelastning');
-    expect(result.tasks.map((item) => item.title)).toContain('Planera varroaåtgärd');
+    expect(result.recommendations.map((item) => item.title)).toContain('Möjligen hög varroabelastning');
+    expect(result.tasks.map((item) => item.title)).toContain('Överväg varroaåtgärd');
   });
 
   it('flags possible queen problems after three inspections without seen queen', () => {
@@ -120,7 +120,7 @@ describe('buildDerivedSignals', () => {
     const result = buildDerivedSignals([createApiary()], [hive], inspections);
 
     expect(result.recommendations.map((item) => item.title)).toContain('Möjligt drottningproblem');
-    expect(result.tasks.map((item) => item.title)).toContain('Fördjupa drottningkontroll');
+    expect(result.tasks.map((item) => item.title)).toContain('Överväg fördjupad drottningkontroll');
   });
 
   it('shows that the queen is verified again after two missed inspections', () => {
@@ -134,7 +134,7 @@ describe('buildDerivedSignals', () => {
     ];
     const result = buildDerivedSignals([createApiary()], [hive], inspections);
 
-    expect(result.recommendations.map((item) => item.title)).toContain('Drottning verifierad igen');
+    expect(result.recommendations.map((item) => item.title)).toContain('Drottning sedd igen');
   });
 
   it('detects an upward varroa trend over recent inspections', () => {
@@ -148,8 +148,8 @@ describe('buildDerivedSignals', () => {
     ];
     const result = buildDerivedSignals([createApiary()], [hive], inspections);
 
-    expect(result.recommendations.map((item) => item.title)).toContain('Varroa-trend uppåt');
-    expect(result.tasks.map((item) => item.title)).toContain('Planera behandling mot varroa');
+    expect(result.recommendations.map((item) => item.title)).toContain('Möjlig varroa-trend uppåt');
+    expect(result.tasks.map((item) => item.title)).toContain('Överväg behandling mot varroa');
   });
 
   it('warns about swarm pressure in May for a strong colony with eggs', () => {
@@ -160,7 +160,7 @@ describe('buildDerivedSignals', () => {
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
     expect(result.recommendations.map((item) => item.title)).toContain('Möjlig svärmperiod');
-    expect(result.tasks.map((item) => item.title)).toContain('Gör förebyggande svärmkontroll');
+    expect(result.tasks.map((item) => item.title)).toContain('Överväg förebyggande svärmkontroll');
   });
 
   it('adds a weather-sensitive follow-up when spring inspection happened in poor fly weather', () => {
@@ -178,7 +178,7 @@ describe('buildDerivedSignals', () => {
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
     expect(result.recommendations.map((item) => item.title)).toContain('Följ upp i bättre flygväder');
-    expect(result.tasks.map((item) => item.title)).toContain('Planera väderanpassad uppföljning');
+    expect(result.tasks.map((item) => item.title)).toContain('Överväg väderanpassad uppföljning');
   });
 
   it('reminds about passive hives when inspection cadence is exceeded for the season', () => {
@@ -188,7 +188,7 @@ describe('buildDerivedSignals', () => {
     const inspection = createInspection({ performedAt: '2026-05-01T10:00:00.000Z' });
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
-    expect(result.recommendations.map((item) => item.title)).toContain('Dags för ny genomgång');
-    expect(result.tasks.map((item) => item.title)).toContain('Planera ny genomgång');
+    expect(result.recommendations.map((item) => item.title)).toContain('Kan vara dags för ny genomgång');
+    expect(result.tasks.map((item) => item.title)).toContain('Överväg ny genomgång');
   });
 });

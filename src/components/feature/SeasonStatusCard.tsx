@@ -30,14 +30,14 @@ export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
           {primaryItems.map((item) => (
             <View key={item} style={styles.focusRow}>
               <View style={styles.focusDot} />
-              <Text style={styles.focusText}>{item}</Text>
+              <Text style={styles.focusText}>Möjligt fokus: {item}</Text>
             </View>
           ))}
         </View>
         {watchItem ? (
           <View style={styles.watchBlock}>
             <Text style={styles.watchLabel}>Håll koll</Text>
-            <Text style={styles.watchText}>{watchItem}</Text>
+            <Text style={styles.watchText}>Något att hålla koll på: {watchItem}</Text>
           </View>
         ) : null}
       </View>

@@ -252,7 +252,7 @@ export function RecommendationCard({ recommendation, hiveName, relatedTaskLabel 
           <StatusBadge label={getRecommendationKindLabel(recommendation.kind)} tone={kindTone} />
         </View>
       </View>
-      <Text style={theme.textStyles.body}>{recommendation.detail}</Text>
+      <Text style={theme.textStyles.body}>Vägledande råd: {recommendation.detail}</Text>
       {relatedTaskLabel ? <Text style={theme.textStyles.caption}>Finns redan som uppgift: {relatedTaskLabel}</Text> : null}
     </AppCard>
   );

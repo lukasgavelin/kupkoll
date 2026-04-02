@@ -68,20 +68,20 @@ export const seasonProfiles: SeasonProfile[] = [
     phaseLabel: 'sensommardrag',
     summary: 'Augusti växlar mellan sensommarskörd, beslut om invintring och tydligare fokus på drottningläge och bihälsa.',
     focusItems: ['skatta och slunga sensommarhonung när den är mogen', 'börja ge vinterfoder om draget avtagit i området', 'kontrollera att samhället har en äggläggande drottning och rimlig styrka'],
-    watchItems: ['bygg inte på med fler lådor sent på säsongen utan låt bina sitta trängre när nätterna blir kyliga', 'förena svaga samhällen eller avläggare som inte hinner bli starka nog', 'påbörja varroabekämpning först när slutskattning och invintring är klara'],
+    watchItems: ['bygg inte på med fler lådor sent på säsongen utan låt bina sitta trängre när nätterna blir kyliga', 'förena svaga samhällen eller avläggare som inte hinner bli starka nog', 'planera varroakontroll och behandling direkt efter slutskattning enligt etikett och lokal rekommendation'],
   },
   {
     season: 'Invintring',
     phaseLabel: 'slutskörd och invintring',
     summary: 'September är den mest krävande höstmånaden med slutskattning, invintring, fodring och beslut om vilka samhällen som ska övervintra.',
-    focusItems: ['slutskatta och invintra med minst 16 kilo vinterfoder per samhälle', 'säkra att varje samhälle har en äggläggande drottning eller förena det', 'förnya vaxbygget och ta bort gamla mörka yngelramar'],
-    watchItems: ['arbeta snabbt och tätt för att minska röveri vid slutskattning och fodring', 'slutskatta ljung- och bladhonung för säkrare övervintring', 'varroabekämpa med tymol nu om den metoden används och behov finns'],
+    focusItems: ['slutskatta och invintra med tillräckligt vinterfoder utifrån samhällsstyrka, kupmodell och lokal rekommendation', 'säkra att varje samhälle har en äggläggande drottning eller förena det', 'förnya vaxbygget och ta bort gamla mörka yngelramar'],
+    watchItems: ['arbeta snabbt och tätt för att minska röveri vid slutskattning och fodring', 'slutskatta ljung- och bladhonung för säkrare övervintring', 'genomför varroabehandling med godkänd metod och följ upp effekten med ny mätning'],
   },
   {
     season: 'Invintring',
     phaseLabel: 'höstbehandling',
     summary: 'Oktober är tiden för att avsluta honungshanteringen och göra de sista höstinsatserna innan vinterläget tar över.',
-    focusItems: ['varroabekämpa med oxalsyra när bina gått ur yngel eller enligt vald metod', 'montera musskydd och säkra bottenlösning för vinterläge', 'sortera ramar och skicka utsorterat vax till ursmältning eller rensning'],
+    focusItems: ['varroabekämpa i rätt tid med godkänd metod enligt etikett och lokala förutsättningar', 'montera musskydd och säkra bottenlösning för vinterläge', 'sortera ramar och skicka utsorterat vax till ursmältning eller rensning'],
     watchItems: ['spara någon honungsram per samhälle som reserv för vårens stödfodring', 'kontrollera kvalsternedfall efter behandling', 'rapportera säsongen till förening och avsluta burkning, märkning och lagring av honung'],
   },
   {
@@ -96,7 +96,7 @@ export const seasonProfiles: SeasonProfile[] = [
     phaseLabel: 'vinterro',
     summary: 'December är vintertillsyn, skydd mot väder och skadedjur samt en bra månad för rengöring, ordning och vinterarbete inomhus.',
     focusItems: ['gör en runda efter snöfall eller oväder och håll flustren öppna', 'skydda kupor mot fallande grenar, fåglar och stöldrisk där det behövs', 'rengör biredskap, städa biboden och säkra vinterlagrade ramar'],
-    watchItems: ['oxalsyraförångning kan fortfarande vara aktuell vid plusgrader om behandling missats', 'märk utrustning och använd kamera eller spårning i obevakade bigårdar vid behov', 'använd lugnet till bivaxljus, hudprodukter, honungsrecept och planering inför våren'],
+    watchItems: ['oxalsyraförångning kan vara aktuell vid missad höstbehandling om metoden är godkänd och används enligt etikett', 'märk utrustning och använd kamera eller spårning i obevakade bigårdar vid behov', 'använd lugnet till bivaxljus, hudprodukter, honungsrecept och planering inför våren'],
   },
 ];
 

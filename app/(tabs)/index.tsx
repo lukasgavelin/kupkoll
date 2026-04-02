@@ -10,6 +10,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
+import { applySeasonTipSelection, getSeasonTipSelection } from '@/lib/seasonTipRotation';
 import { getPrimaryApiary, getSeasonStatus } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
@@ -27,8 +28,31 @@ export default function HomeScreen() {
 
   // Compute season status for SeasonStatusCard
   const [seasonDate] = useState(() => new Date());
-  const seasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
+  const baseSeasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
+  const [seasonStatus, setSeasonStatus] = useState(baseSeasonStatus);
   const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    setSeasonStatus(baseSeasonStatus);
+
+    async function loadSeasonTipSelection() {
+      const selection = await getSeasonTipSelection(baseSeasonStatus, seasonDate);
+
+      if (!isMounted) {
+        return;
+      }
+
+      setSeasonStatus(applySeasonTipSelection(baseSeasonStatus, selection));
+    }
+
+    void loadSeasonTipSelection();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [baseSeasonStatus, seasonDate]);
 
   useEffect(() => {
     let isMounted = true;
