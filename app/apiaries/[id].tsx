@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { BloomInsightsCard } from '@/components/feature/BloomInsightsCard';
 import { HiveCard } from '@/components/feature/Cards';
@@ -11,6 +11,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { formatCoordinates } from '@/lib/mapLinks';
 import { getApiaryDisplayLocation, getApiaryRegion } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
@@ -101,39 +102,24 @@ export default function ApiaryDetailScreen() {
   const apiaryId = apiary.id;
   const apiaryHives = getHivesByApiary(apiary.id);
 
-  function confirmDelete() {
+  async function confirmDelete() {
     const hiveList = apiaryHives.map((hive) => `• ${hive.name}`).join('\n');
     const deleteMessage = apiaryHives.length
       ? `Bigården tas bort tillsammans med följande kupor:\n\n${hiveList}\n\nTillhörande genomgångar och manuella uppgifter rensas också.`
       : 'Bigården tas bort permanent.';
 
-    const performDelete = () => {
-      deleteApiary(apiaryId);
-      router.replace('/apiaries');
-    };
+    const shouldDelete = await confirmDestructiveAction({
+      title: 'Ta bort bigård?',
+      message: deleteMessage,
+      confirmLabel: 'Ta bort',
+    });
 
-    if (Platform.OS === 'web') {
-      const confirmed = globalThis.confirm(`Ta bort bigård?\n\n${deleteMessage}`);
-
-      if (confirmed) {
-        performDelete();
-      }
-
+    if (!shouldDelete) {
       return;
     }
 
-    Alert.alert(
-      'Ta bort bigård?',
-      deleteMessage,
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        {
-          text: 'Ta bort',
-          style: 'destructive',
-          onPress: performDelete,
-        },
-      ],
-    );
+    deleteApiary(apiaryId);
+    router.replace('/apiaries');
   }
 
   return (

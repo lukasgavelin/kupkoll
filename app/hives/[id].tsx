@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveEventSnapshot, InspectionSnapshot, TaskCard } from '@/components/feature/Cards';
 import { AppCard } from '@/components/ui/AppCard';
@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { formatDateLabel, getApiaryDisplayLocation } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
@@ -37,18 +38,19 @@ export default function HiveDetailScreen() {
   const tasks = getTasksForHive(hive.id);
   const queenHistory = [...hive.queenHistory].sort((left, right) => right.year.localeCompare(left.year));
 
-  function confirmDelete() {
-    Alert.alert('Ta bort kupa?', 'Kupan tas bort tillsammans med sparade genomgångar, händelser och manuella uppgifter.', [
-      { text: 'Avbryt', style: 'cancel' },
-      {
-        text: 'Ta bort',
-        style: 'destructive',
-        onPress: () => {
-          deleteHive(hiveId);
-          router.replace('/hives');
-        },
-      },
-    ]);
+  async function confirmDelete() {
+    const shouldDelete = await confirmDestructiveAction({
+      title: 'Ta bort kupa?',
+      message: 'Kupan tas bort tillsammans med sparade genomgångar, händelser och manuella uppgifter.',
+      confirmLabel: 'Ta bort',
+    });
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    deleteHive(hiveId);
+    router.replace('/hives');
   }
 
   return (

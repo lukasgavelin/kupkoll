@@ -7,6 +7,7 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { exportKupkollData } from '@/lib/export';
 import { parseKupkollImportJson } from '@/lib/import';
 import { useKupkoll } from '@/store/KupkollContext';
@@ -71,19 +72,10 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
   }
 
   function confirmImport(): Promise<boolean> {
-    return new Promise((resolve) => {
-      Alert.alert('Ersätt data?', 'Import ersätter nuvarande data i appen med innehållet i filen.', [
-        {
-          text: 'Avbryt',
-          style: 'cancel',
-          onPress: () => resolve(false),
-        },
-        {
-          text: 'Importera',
-          style: 'destructive',
-          onPress: () => resolve(true),
-        },
-      ]);
+    return confirmDestructiveAction({
+      title: 'Ersätt data?',
+      message: 'Import ersätter nuvarande data i appen med innehållet i filen.',
+      confirmLabel: 'Importera',
     });
   }
 
