@@ -4,8 +4,13 @@ import { Apiary, Hive, HiveEvent, Inspection, Task, UserSettings } from '@/types
 
 const DB_NAME = 'kupkoll.db';
 
+let dbInstance: SQLite.SQLiteDatabase | null = null;
+
 export function getDbSync() {
-  return SQLite.openDatabaseSync(DB_NAME);
+  if (!dbInstance) {
+    dbInstance = SQLite.openDatabaseSync(DB_NAME);
+  }
+  return dbInstance;
 }
 
 export function initDbSync() {
