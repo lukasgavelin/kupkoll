@@ -18,6 +18,13 @@
         {
           "locationWhenInUsePermission": "Kupkoll använder din plats för att spara bigårdens position på kartan."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kupkoll behöver åtkomst till dina foton så att du kan lägga till bilder i dina genomgångar.",
+          "cameraPermission": "Kupkoll behöver åtkomst till kameran så att du kan fota ramar och kupor i fält."
+        }
       ]
     ],
     "ios": {
@@ -27,7 +34,8 @@
       "minimumOsVersion": "15.1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Kupkoll använder din plats för att spara bigårdens position på kartan.",
-        "NSPhotoLibraryUsageDescription": "Kupkoll behöver tillgång till bilder för export av data."
+        "NSPhotoLibraryUsageDescription": "Kupkoll behöver åtkomst till dina foton så att du kan lägga till bilder i dina genomgångar.",
+        "NSCameraUsageDescription": "Kupkoll behöver åtkomst till kameran så att du kan fota ramar och kupor i fält."
       }
     },
     "android": {

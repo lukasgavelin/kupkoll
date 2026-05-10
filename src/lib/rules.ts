@@ -1,4 +1,4 @@
-import { Apiary, Hive, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task } from '@/types/domain';
+import { Apiary, Hive, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task, UserSettings } from '@/types/domain';
 import { getApiaryRegion, getApiarySeasonLabel, getLatestInspectionMap, getRecommendedInspectionCadenceDays } from '@/lib/selectors';
 
 type DerivedResult = {
@@ -16,6 +16,7 @@ type RuleContext = {
   daysSinceLastInspection: number;
   regionLabel: string;
   inspectionCadenceDays: number;
+  userSettings?: UserSettings;
 };
 
 type DecisionRule = {
@@ -285,7 +286,8 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'follow-up-in-better-weather',
-    shouldApply: ({ season, inspection }) =>
+    shouldApply: ({ season, inspection, userSettings }) =>
+      userSettings?.experienceLevel !== 'experienced' &&
       (season === 'Vårutveckling' || season === 'Svärmperiod' || season === 'Drag och skattning') &&
       !inspection.actionNeeded &&
       hasPoorInspectionWeather(inspection),
@@ -328,7 +330,9 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'inactive-hive',
-    shouldApply: ({ daysSinceLastInspection, inspectionCadenceDays }) => daysSinceLastInspection >= inspectionCadenceDays,
+    shouldApply: ({ daysSinceLastInspection, inspectionCadenceDays, userSettings }) => 
+      userSettings?.experienceLevel !== 'experienced' && 
+      daysSinceLastInspection >= inspectionCadenceDays,
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'inactive-hive',
@@ -415,7 +419,7 @@ const decisionRules: DecisionRule[] = [
   },
 ];
 
-export function buildDerivedSignals(apiaries: Apiary[], hives: Hive[], inspections: Inspection[]): DerivedResult {
+export function buildDerivedSignals(apiaries: Apiary[], hives: Hive[], inspections: Inspection[], userSettings?: UserSettings): DerivedResult {
   const latestInspections = getLatestInspectionMap(inspections);
   const inspectionHistoryMap = getInspectionHistoryMap(inspections);
   const apiaryMap = apiaries.reduce<Record<string, Apiary>>((map, apiary) => {
@@ -450,6 +454,7 @@ export function buildDerivedSignals(apiaries: Apiary[], hives: Hive[], inspectio
       daysSinceLastInspection,
       regionLabel,
       inspectionCadenceDays,
+      userSettings,
     };
 
     for (const rule of decisionRules) {

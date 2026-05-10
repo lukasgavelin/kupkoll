@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
@@ -183,6 +185,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const [autoWeatherStatus, setAutoWeatherStatus] = useState<AutoWeatherStatus>('idle');
   const [noteText, setNoteText] = useState('');
   const [treatmentText, setTreatmentText] = useState('');
+  const [imageUris, setImageUris] = useState<string[]>([]);
 
   const selectedHive = useMemo(() => hives.find((item) => item.id === selectedHiveId), [hives, selectedHiveId]);
   const selectedApiary = useMemo(() => apiaries.find((item) => item.id === selectedHive?.apiaryId), [apiaries, selectedHive?.apiaryId]);
@@ -264,6 +267,52 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     setVarroaLevel(preset.varroaLevel);
     setVarroaChecked(preset.varroaLevel !== 'Ej kontrollerad');
     setValues({ ...preset.values });
+  }
+
+  async function handlePickImage(useCamera: boolean) {
+    try {
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
+      };
+
+      let result;
+      if (useCamera) {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Kamera nekas', 'Du behöver ge åtkomst till kameran för att ta bilder.');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync(options);
+      } else {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Bilder nekas', 'Du behöver ge åtkomst till bildbiblioteket.');
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync(options);
+      }
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop() || `img_${Date.now()}.jpg`;
+        const newPath = `${FileSystem.documentDirectory}${filename}`;
+        
+        await FileSystem.copyAsync({
+          from: uri,
+          to: newPath,
+        });
+        
+        setImageUris((current) => [...current, newPath]);
+      }
+    } catch (err) {
+      Alert.alert('Kunde inte lägga till bild', 'Ett fel inträffade när bilden skulle hämtas.');
+    }
+  }
+
+  function removeImage(indexToRemove: number) {
+    setImageUris((current) => current.filter((_, idx) => idx !== indexToRemove));
   }
 
   function updateVarroaChecked(nextValue: boolean) {
@@ -359,6 +408,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       weather,
       advancedDetails,
       notes,
+      imageUris,
       ...values,
     });
 
@@ -614,6 +664,23 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             textAlignVertical="top"
             value={noteText}
           />
+
+          <Text style={styles.inlineLabel}>Bilder</Text>
+          <Text style={theme.textStyles.caption}>Lägg till foton från genomgången (t.ex. yngelbild eller misstänkt sjukdom).</Text>
+          <View style={styles.imageGrid}>
+            {imageUris.map((uri, index) => (
+              <View key={uri} style={styles.imageWrapper}>
+                <Image source={{ uri }} style={styles.imagePreview} />
+                <Pressable style={styles.removeImageButton} onPress={() => removeImage(index)}>
+                  <Text style={styles.removeImageText}>✕</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+          <View style={styles.optionGrid}>
+            <PrimaryButton label="Ta bild" iconName="camera-outline" onPress={() => handlePickImage(true)} variant="secondary" />
+            <PrimaryButton label="Välj från galleri" iconName="image-outline" onPress={() => handlePickImage(false)} variant="secondary" />
+          </View>
         </AppCard>
       ) : null}
 
@@ -796,6 +863,40 @@ function createStyles(theme: Theme) {
     optionSelected: {
       backgroundColor: theme.colors.sage,
       borderColor: theme.colors.sage,
+    },
+    imageGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+    },
+    imageWrapper: {
+      position: 'relative',
+    },
+    imagePreview: {
+      width: 100,
+      height: 100,
+      borderRadius: theme.radii.md,
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    removeImageButton: {
+      position: 'absolute',
+      top: -8,
+      right: -8,
+      backgroundColor: theme.colors.danger,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: theme.colors.surface,
+    },
+    removeImageText: {
+      color: theme.colors.surface,
+      fontSize: 12,
+      fontWeight: 'bold',
+      lineHeight: 16,
     },
     optionLabel: {
       ...theme.textStyles.bodyStrong,

@@ -62,6 +62,7 @@ export type QueenHistoryEntry = {
   id: string;
   year: string;
   note: string;
+  imageUris?: string[];
 };
 
 export type QueenHistoryInput = Omit<QueenHistoryEntry, 'id'>;
@@ -138,6 +139,7 @@ export type Inspection = {
   varroaDetails?: InspectionVarroaDetails;
   temperament: HiveTemperament;
   actionNeeded: boolean;
+  imageUris?: string[];
   weather?: InspectionWeather;
   advancedDetails?: InspectionAdvancedDetails;
   notes: string;
@@ -149,6 +151,7 @@ export type HiveEvent = {
   type: HiveEventType;
   performedAt: string;
   notes: string;
+  imageUris?: string[];
   details?: HiveEventDetails;
 };
 
@@ -187,3 +190,9 @@ export type NewHiveInput = Pick<Hive, 'apiaryId' | 'name' | 'queenStatus' | 'str
 };
 export type UpdateApiaryInput = NewApiaryInput;
 export type UpdateHiveInput = NewHiveInput;
+
+export type ExperienceLevel = 'beginner' | 'experienced';
+
+export type UserSettings = {
+  experienceLevel: ExperienceLevel;
+};

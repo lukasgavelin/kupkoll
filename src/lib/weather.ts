@@ -29,6 +29,21 @@ export type InspectionWeatherSnapshot = {
   provider: 'SMHI' | 'Open-Meteo';
 };
 
+export async function fetchWithTimeout(url: RequestInfo | URL, options: RequestInit = {}, timeoutMs = 3000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 function buildRoundedCoordinate(value: number) {
   return value.toFixed(4);
 }
@@ -136,7 +151,7 @@ export function parseSmhiWeatherSnapshot(payload: SmhiPointForecastResponse, now
   };
 }
 
-export async function fetchSmhiWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetch): Promise<InspectionWeatherSnapshot> {
+export async function fetchSmhiWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetchWithTimeout): Promise<InspectionWeatherSnapshot> {
   const response = await fetchImplementation(buildSmhiPointForecastUrl(coordinates));
 
   if (!response.ok) {
@@ -146,7 +161,7 @@ export async function fetchSmhiWeather(coordinates: Coordinates, fetchImplementa
   return parseSmhiWeatherSnapshot((await response.json()) as SmhiPointForecastResponse);
 }
 
-export async function fetchOpenMeteoWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetch): Promise<InspectionWeatherSnapshot> {
+export async function fetchOpenMeteoWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetchWithTimeout): Promise<InspectionWeatherSnapshot> {
   const response = await fetchImplementation(buildOpenMeteoWeatherUrl(coordinates));
 
   if (!response.ok) {
@@ -172,7 +187,7 @@ export async function fetchOpenMeteoWeather(coordinates: Coordinates, fetchImple
   };
 }
 
-export async function fetchInspectionWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetch): Promise<InspectionWeatherSnapshot> {
+export async function fetchInspectionWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetchWithTimeout): Promise<InspectionWeatherSnapshot> {
   try {
     return await fetchSmhiWeather(coordinates, fetchImplementation);
   } catch {
@@ -180,6 +195,6 @@ export async function fetchInspectionWeather(coordinates: Coordinates, fetchImpl
   }
 }
 
-export async function fetchSeasonWeatherSignal(coordinates: Coordinates, fetchImplementation: typeof fetch = fetch) {
+export async function fetchSeasonWeatherSignal(coordinates: Coordinates, fetchImplementation: typeof fetch = fetchWithTimeout) {
   return fetchInspectionWeather(coordinates, fetchImplementation);
 }

@@ -1,7 +1,10 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, router, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveEventSnapshot, InspectionSnapshot } from '@/components/feature/Cards';
+import { loadEventsForHiveSync, loadInspectionsForHiveSync } from '@/lib/db';
+import { HiveEvent, Inspection } from '@/types/domain';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -12,8 +15,19 @@ import { theme } from '@/theme';
 
 export default function HiveInspectionHistoryScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const { getEventsForHive, getHiveById, getInspectionsForHive } = useKupkoll();
+  const { getHiveById } = useKupkoll();
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [events, setEvents] = useState<HiveEvent[]>([]);
   const hive = getHiveById(params.id);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (hive) {
+        setInspections(loadInspectionsForHiveSync(hive.id));
+        setEvents(loadEventsForHiveSync(hive.id));
+      }
+    }, [hive?.id])
+  );
 
   if (!hive) {
     return (
@@ -26,8 +40,7 @@ export default function HiveInspectionHistoryScreen() {
     );
   }
 
-  const inspections = getInspectionsForHive(hive.id);
-  const events = getEventsForHive(hive.id);
+
   const timeline = [
     ...inspections.map((inspection) => ({ id: `inspection-${inspection.id}`, performedAt: inspection.performedAt, kind: 'inspection' as const, inspection })),
     ...events.map((event) => ({ id: `event-${event.id}`, performedAt: event.performedAt, kind: 'event' as const, event })),

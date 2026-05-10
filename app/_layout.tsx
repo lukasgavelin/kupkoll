@@ -6,13 +6,13 @@ import { SplashScreen } from 'expo-router';
 import { useFonts, Manrope_400Regular, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import { Newsreader_600SemiBold } from '@expo-google-fonts/newsreader';
 
-import { KupkollAppState, loadKupkollState } from '@/lib/storage';
+import { initDbSync, loadAllDataSync } from '@/lib/db';
 import { KupkollProvider } from '@/store/KupkollContext';
 import { ThemeProvider, useTheme, useThemeMode } from '@/store/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
-function AppNavigator({ initialData }: { initialData: KupkollAppState }) {
+function AppNavigator({ initialData }: { initialData: ReturnType<typeof loadAllDataSync> }) {
   const theme = useTheme();
   const { isDarkMode } = useThemeMode();
 
@@ -42,13 +42,15 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
   });
-  const [initialData, setInitialData] = useState<KupkollAppState | null>(null);
+  const [initialData, setInitialData] = useState<ReturnType<typeof loadAllDataSync> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function prepareKupkollData() {
-      const data = await loadKupkollState();
+      // Initialize DB before anything else
+      initDbSync();
+      const data = loadAllDataSync();
 
       if (!cancelled) {
         setInitialData(data);

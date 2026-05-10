@@ -106,6 +106,7 @@ export default function HiveDetailScreen() {
           {latestEvent ? <HiveEventSnapshot event={latestEvent} /> : null}
           {latestInspection ? <InspectionSnapshot inspection={latestInspection} /> : null}
           <PrimaryButton label="Öppna historik" onPress={() => router.push(`/hives/${hiveId}/inspections`)} variant="secondary" />
+          <PrimaryButton label="Visa trender & analys" onPress={() => router.push(`/hives/${hiveId}/trends`)} variant="secondary" />
         </View>
       ) : (
         <EmptyStateCard title="Ingen historik ännu" description="När du loggar första genomgången eller händelsen visas den här." />

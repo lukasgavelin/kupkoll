@@ -14,11 +14,12 @@ import { parseKupkollImportJson } from '@/lib/import';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme, useThemeMode } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
+import { UserSettings } from '@/types/domain';
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const { isDarkMode, toggleThemeMode } = useThemeMode();
-  const { apiaries, events, hives, inspections, manualTasks, replaceAllData } = useKupkoll();
+  const { apiaries, events, hives, inspections, manualTasks, replaceAllData, userSettings, updateUserSettings } = useKupkoll();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
@@ -202,11 +203,20 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
           <View style={styles.exportAction}>
             <PrimaryButton
               fullWidth
-              iconName="download-outline"
-              label={isExporting ? 'Skapar export...' : 'Exportera som JSON'}
+              iconName="cloud-upload-outline"
+              label="Spara säkerhetskopia till molnet"
               onPress={() => {
                 void handleExport();
               }}
+            />
+            <PrimaryButton
+              fullWidth
+              iconName="download-outline"
+              label={isExporting ? 'Skapar export...' : 'Exportera till lokal JSON-fil'}
+              onPress={() => {
+                void handleExport();
+              }}
+              variant="secondary"
             />
             <PrimaryButton
               fullWidth
@@ -223,6 +233,24 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               <Text style={theme.textStyles.caption}>Import ersätter befintlig data i appen med innehållet i JSON-filen.</Text>
               {importStatus ? <Text style={theme.textStyles.caption}>{importStatus}</Text> : null}
             </View>
+          </View>
+        </AppCard>
+        <AppCard>
+          <Text style={theme.textStyles.heading}>App-anpassning</Text>
+          <Text style={theme.textStyles.body}>Välj din erfarenhetsnivå för att anpassa hur många påminnelser och råd Kupkoll ger dig.</Text>
+          <View style={styles.themeHeader}>
+            <View style={styles.themeCopy}>
+              <Text style={theme.textStyles.bodyStrong}>Erfaren biodlare</Text>
+              <Text style={styles.infoItem}>Döljer generella larm och påminnelser för inaktiva kupor och svärmperiod.</Text>
+            </View>
+            <Switch
+              onValueChange={(val) => {
+                updateUserSettings({ experienceLevel: val ? 'experienced' : 'beginner' });
+              }}
+              thumbColor={userSettings.experienceLevel === 'experienced' ? theme.colors.surface : theme.colors.surfaceRaised}
+              trackColor={{ false: theme.colors.borderStrong, true: theme.colors.accent }}
+              value={userSettings.experienceLevel === 'experienced'}
+            />
           </View>
         </AppCard>
         <AppCard>

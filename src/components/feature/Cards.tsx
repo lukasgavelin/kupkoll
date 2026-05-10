@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -294,6 +294,13 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
       {weatherSummary ? <Text style={theme.textStyles.caption}>Väder: {weatherSummary}</Text> : null}
       {inspection.weather?.note ? <Text style={theme.textStyles.caption}>Vädernotis: {inspection.weather.note}</Text> : null}
       <Text style={theme.textStyles.body}>{inspection.notes}</Text>
+      {inspection.imageUris && inspection.imageUris.length > 0 ? (
+        <View style={styles.imageGrid}>
+          {inspection.imageUris.map((uri) => (
+            <Image key={uri} source={{ uri }} style={styles.imagePreview} />
+          ))}
+        </View>
+      ) : null}
     </AppCard>
   );
 }
@@ -318,6 +325,13 @@ export function HiveEventSnapshot({ event }: { event: HiveEvent }) {
         </View>
       ) : null}
       <Text style={theme.textStyles.body}>{event.notes}</Text>
+      {event.imageUris && event.imageUris.length > 0 ? (
+        <View style={styles.imageGrid}>
+          {event.imageUris.map((uri) => (
+            <Image key={uri} source={{ uri }} style={styles.imagePreview} />
+          ))}
+        </View>
+      ) : null}
     </AppCard>
   );
 }
@@ -375,6 +389,18 @@ function createStyles(theme: Theme) {
     },
     recommendationCardSeasonal: {
       borderLeftColor: theme.colors.sage,
+    },
+    imageGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.xs,
+    },
+    imagePreview: {
+      width: 80,
+      height: 80,
+      borderRadius: theme.radii.md,
+      backgroundColor: theme.colors.surfaceMuted,
     },
   });
 }
