@@ -21,7 +21,7 @@ const hiveBoxSystems: HiveBoxSystem[] = ['Lågnormal', 'Svea', 'Langstroth', 'Da
 export default function NewHiveScreen() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ apiaryId?: string }>();
-  const { addHive, apiaries, getApiaryById } = useKupkoll();
+  const { addHive, apiaries, getApiaryById, hives } = useKupkoll();
   const styles = createStyles(theme);
   const [selectedApiaryId, setSelectedApiaryId] = useState(params.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState('');
@@ -57,6 +57,8 @@ export default function NewHiveScreen() {
       return;
     }
 
+    const isFirstHive = hives.length === 0;
+
     const hive = addHive({
       apiaryId: selectedApiaryId,
       name: trimmedName,
@@ -67,7 +69,11 @@ export default function NewHiveScreen() {
       notes: notes.trim() || 'Ingen anteckning ännu.',
     });
 
-    router.replace(`/hives/${hive.id}`);
+    if (isFirstHive) {
+      router.replace(`/inspections/new?hiveId=${hive.id}`);
+    } else {
+      router.replace(`/hives/${hive.id}`);
+    }
   }
 
   if (!apiaries.length) {
