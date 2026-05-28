@@ -145,7 +145,12 @@ export function StatCard({ value, label, onPress }: { value: string; label: stri
   }
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.statPressable, pressed && styles.pressed]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.statPressable, pressed && styles.pressed]}
+    >
       <AppCard style={styles.statCard}>
         <Text style={theme.textStyles.overline}>{label}</Text>
         <Text style={styles.statValue}>{value}</Text>
@@ -162,7 +167,13 @@ export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: n
   const zoneLabel = getZoneBadgeLabel(apiary);
 
   return (
-    <Pressable onPress={() => router.push(`/apiaries/${apiary.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Bigård: ${apiary.name}. ${hiveCount} kupor. ${displayLocation}.`}
+      accessibilityHint="Dubbelklicka för att öppna bigårdens detaljer"
+      onPress={() => router.push(`/apiaries/${apiary.id}`)}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+    >
       <AppCard>
         <View style={styles.rowBetween}>
           <View style={styles.textColumn}>
@@ -192,7 +203,13 @@ export function HiveCard({ hive, apiaryLabel }: { hive: Hive; apiaryLabel: strin
   ].filter((segment): segment is string => Boolean(segment));
 
   return (
-    <Pressable onPress={() => router.push(`/hives/${hive.id}`)} style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Kupa: ${hive.name}. Status: ${hive.status}. ${queenSegments.join(', ')}.`}
+      accessibilityHint="Dubbelklicka för att öppna kupans detaljer"
+      onPress={() => router.push(`/hives/${hive.id}`)}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+    >
       <AppCard>
         <View style={styles.rowBetween}>
           <View style={styles.textColumn}>
