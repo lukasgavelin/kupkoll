@@ -20,6 +20,8 @@ export function PrimaryButton({ label, onPress, variant = 'primary', size = 'def
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
