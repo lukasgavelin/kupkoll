@@ -17,13 +17,6 @@ type ApiaryLocationFieldProps = {
   onLocationDetailsChange: (value?: ApiaryLocationDetails) => void;
 };
 
-type ReverseMunicipalityLookup = {
-  municipality?: string;
-  county?: string;
-  locality?: string;
-  countryCode?: string;
-};
-
 function cleanSegment(value?: string | null) {
   return value?.trim() || undefined;
 }
@@ -53,40 +46,6 @@ function extractMunicipality(result: Location.LocationGeocodedAddress) {
   }
 
   return undefined;
-}
-
-async function fetchMunicipalityFromCoordinates(coordinates: Coordinates): Promise<ReverseMunicipalityLookup | undefined> {
-  const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
-  url.searchParams.set('latitude', coordinates.latitude.toString());
-  url.searchParams.set('longitude', coordinates.longitude.toString());
-  url.searchParams.set('localityLanguage', 'sv');
-
-  const response = await fetch(url.toString());
-
-  if (!response.ok) {
-    return undefined;
-  }
-
-  const payload = (await response.json()) as {
-    city?: string;
-    locality?: string;
-    principalSubdivision?: string;
-    localityInfo?: {
-      administrative?: Array<{ name?: string; adminLevel?: number; type?: string }>;
-    };
-    countryCode?: string;
-  };
-
-  const adminItems = payload.localityInfo?.administrative ?? [];
-  const municipalityFromAdmin = adminItems.find((item) => item.adminLevel === 7 || item.type?.toLowerCase().includes('municipality'))?.name;
-  const municipality = cleanSegment(municipalityFromAdmin) || cleanSegment(payload.city) || cleanSegment(payload.locality);
-
-  return {
-    municipality,
-    county: cleanSegment(payload.principalSubdivision),
-    locality: cleanSegment(payload.locality) || cleanSegment(payload.city),
-    countryCode: cleanSegment(payload.countryCode),
-  };
 }
 
 function formatLocationFromReverseGeocode(result: Location.LocationGeocodedAddress) {
@@ -176,34 +135,6 @@ export function ApiaryLocationField({
           onLocationDetailsChange(nextDetails);
         }
       } catch {
-      }
-
-      if (!nextDetails?.municipality) {
-        try {
-          const fallbackDetails = await fetchMunicipalityFromCoordinates(nextCoordinates);
-
-          if (fallbackDetails?.municipality || fallbackDetails?.county) {
-            nextDetails = {
-              source: 'auto',
-              municipality: fallbackDetails.municipality,
-              county: fallbackDetails.county,
-              locality: fallbackDetails.locality,
-              countryCode: fallbackDetails.countryCode,
-              zone: inferZone(nextCoordinates.latitude),
-            };
-
-            onLocationDetailsChange(nextDetails);
-
-            if (!location.trim()) {
-              const fallbackLabel = [fallbackDetails.municipality, fallbackDetails.county].filter(Boolean).join(', ');
-
-              if (fallbackLabel) {
-                onLocationChange(fallbackLabel);
-              }
-            }
-          }
-        } catch {
-        }
       }
 
       if (!nextDetails) {
