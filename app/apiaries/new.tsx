@@ -14,7 +14,7 @@ import { ApiaryLocationDetails, Coordinates } from '@/types/domain';
 
 export default function NewApiaryScreen() {
   const theme = useTheme();
-  const { addApiary } = useKupkoll();
+  const { addApiary, apiaries } = useKupkoll();
   const styles = createStyles(theme);
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
@@ -71,6 +71,8 @@ export default function NewApiaryScreen() {
       return;
     }
 
+    const isFirstApiary = apiaries.length === 0;
+
     const apiary = addApiary({
       name: trimmedName,
       location: resolvedLocation,
@@ -79,7 +81,11 @@ export default function NewApiaryScreen() {
       locationDetails,
     });
 
-    router.replace(`/apiaries/${apiary.id}`);
+    if (isFirstApiary) {
+      router.replace(`/hives/new?apiaryId=${apiary.id}`);
+    } else {
+      router.replace(`/apiaries/${apiary.id}`);
+    }
   }
 
   return (

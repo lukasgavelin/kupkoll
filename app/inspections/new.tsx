@@ -7,12 +7,18 @@ import { useKupkoll } from '@/store/KupkollContext';
 
 export default function NewInspectionScreen() {
   const params = useLocalSearchParams<{ hiveId?: string }>();
-  const { getApiaryById, getHiveById } = useKupkoll();
+  const { getApiaryById, getHiveById, dashboard } = useKupkoll();
   const hive = params.hiveId ? getHiveById(params.hiveId) : undefined;
   const apiary = hive ? getApiaryById(hive.apiaryId) : undefined;
-  const description = hive
+  const isFirstInspection = dashboard.latestInspections.length === 0;
+
+  let description = hive
     ? `${hive.name}${apiary ? ` · ${apiary.name}` : ''}. Välj typ av genomgång och bekräfta läget.`
     : 'Välj kupa och logga det du såg vid besöket.';
+
+  if (isFirstInspection) {
+    description = `Steg 3 av 3. ${description}`;
+  }
 
   return (
     <Screen>
