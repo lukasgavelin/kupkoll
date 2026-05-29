@@ -204,23 +204,14 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
             <PrimaryButton
               fullWidth
               iconName="cloud-upload-outline"
-              label="Spara säkerhetskopia till molnet"
+              label={isExporting ? 'Skapar export...' : 'Spara/Exportera säkerhetskopia'}
               onPress={() => {
                 void handleExport();
               }}
             />
             <PrimaryButton
               fullWidth
-              iconName="download-outline"
-              label={isExporting ? 'Skapar export...' : 'Exportera till lokal JSON-fil'}
-              onPress={() => {
-                void handleExport();
-              }}
-              variant="secondary"
-            />
-            <PrimaryButton
-              fullWidth
-              iconName="cloud-upload-outline"
+              iconName="cloud-download-outline"
               label={isImporting ? 'Importerar...' : 'Importera JSON-backup'}
               onPress={() => {
                 void handleImport();

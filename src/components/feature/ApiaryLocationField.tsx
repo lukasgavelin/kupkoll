@@ -145,7 +145,7 @@ export function ApiaryLocationField({
       const permission = await Location.requestForegroundPermissionsAsync();
 
       if (!permission.granted) {
-          Alert.alert('Platsåtkomst nekad', 'Tillåt platsåtkomst för att hämta bigårdens position från enheten.');
+        Alert.alert('Platsåtkomst nekad', 'Tillåt platsåtkomst för att hämta bigårdens position från enheten.');
         return;
       }
 

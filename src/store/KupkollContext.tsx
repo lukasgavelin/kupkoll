@@ -184,7 +184,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     };
 
     saveInspectionSync(inspection);
-    setInspections((current) => [inspection, ...current].slice(0, current.length + 1)); // We still append it for the UI/Context
+    setInspections((current) => [inspection, ...current]); // We still append it for the UI/Context
     
     setHives((current) =>
       current.map((hive) => {
