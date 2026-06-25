@@ -1,4 +1,5 @@
 import { Hive, NewHiveInput, QueenHistoryInput, QueenMarkingColor, QueenStatus } from '@/types/domain';
+import * as Crypto from 'expo-crypto';
 
 export type QueenHistoryDraftEntry = {
   id: string;
@@ -20,7 +21,7 @@ export const queenStatuses: QueenStatus[] = ['Bekräftad', 'Osäker', 'Behöver 
 
 export function createQueenHistoryDraftEntry(overrides: Partial<QueenHistoryDraftEntry> = {}): QueenHistoryDraftEntry {
   return {
-    id: `queen-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `queen-draft-${Date.now()}-${Crypto.randomUUID()}`,
     year: '',
     note: '',
     ...overrides,
