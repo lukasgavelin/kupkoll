@@ -82,7 +82,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
 
 
 
-  const derived = useMemo(() => buildDerivedSignals(apiaries, hives, inspections, userSettings), [apiaries, hives, inspections, userSettings]);
+  const derived = useMemo(() => buildDerivedSignals(apiaries, hives, inspections, userSettings, events), [apiaries, hives, inspections, userSettings, events]);
   const tasks = useMemo(() => getUpcomingTasks([...manualTasks, ...derived.tasks]), [manualTasks, derived.tasks]);
   const latestInspectionMap = useMemo(() => getLatestInspectionMap(inspections), [inspections]);
   const dashboard = useMemo(

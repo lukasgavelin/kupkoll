@@ -26,6 +26,8 @@ export const hiveEventTypes = [
   'Invintring startad',
   'Invintring slutförd',
   'Stödfodring',
+  'Varroabehandling',
+  'Uppföljande varroamätning',
   'Vinterförlust',
   'Rensningsflyg observerad',
   'Samhälle dött/avvecklat',
@@ -108,6 +110,8 @@ export type InspectionVarroaDetails = {
   treatmentNote?: string;
 };
 
+export type VarroaTreatmentMethod = 'Oxalsyra droppning' | 'Oxalsyra förångning' | 'Bandbehandling' | 'Myrsyra' | 'Annan metod';
+
 export type HiveEventDetails = {
   mergedWithHiveName?: string;
   queenYear?: string;
@@ -120,6 +124,10 @@ export type HiveEventDetails = {
   honeySuperCount?: number;
   harvestSummary?: string;
   feedingSummary?: string;
+  varroaTreatmentMethod?: VarroaTreatmentMethod;
+  varroaTreatmentNote?: string;
+  varroaMeasurementValue?: string;
+  varroaControlMethod?: VarroaControlMethod;
 };
 
 export type Inspection = {

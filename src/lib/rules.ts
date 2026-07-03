@@ -1,4 +1,4 @@
-import { Apiary, Hive, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task, UserSettings } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task, UserSettings } from '@/types/domain';
 import { getApiaryRegion, getApiarySeasonLabel, getLatestInspectionMap, getRecommendedInspectionCadenceDays } from '@/lib/selectors';
 
 type DerivedResult = {
@@ -11,12 +11,28 @@ type RuleContext = {
   hive: Hive;
   inspection: Inspection;
   inspectionHistory: Inspection[];
+  latestEvent?: HiveEvent;
   now: Date;
   season: SeasonLabel;
   daysSinceLastInspection: number;
   regionLabel: string;
   inspectionCadenceDays: number;
   userSettings?: UserSettings;
+};
+
+type NoInspectionRuleContext = {
+  apiary?: Apiary;
+  hive: Hive;
+  now: Date;
+  season: SeasonLabel;
+  userSettings?: UserSettings;
+};
+
+type NoInspectionRule = {
+  id: string;
+  shouldApply: (context: NoInspectionRuleContext) => boolean;
+  buildRecommendation: (context: NoInspectionRuleContext) => Recommendation;
+  buildTask?: (context: NoInspectionRuleContext) => Task;
 };
 
 type DecisionRule = {
@@ -117,6 +133,39 @@ function getVarroaPriority(inspection: Inspection): Task['priority'] {
 
 function getVarroaDueInDays(inspection: Inspection) {
   return inspection.varroaLevel === 'Hög' ? 1 : 4;
+}
+
+/** Returnerar drottningens ålder i hela år, eller undefined om queenYear saknas. */
+function getQueenAgeYears(hive: Hive, now: Date): number | undefined {
+  if (!hive.queenYear || !/^\d{4}$/.test(hive.queenYear)) {
+    return undefined;
+  }
+
+  return now.getFullYear() - Number(hive.queenYear);
+}
+
+/**
+ * Returnerar true om senaste händelse är en Varroabehandling utförd de senaste 5–14 dagarna
+ * och ingen uppföljande varroamätning har skett sedan dess.
+ */
+function needsVarroaFollowUp(latestEvent: HiveEvent | undefined, inspectionHistory: Inspection[], now: Date): boolean {
+  if (!latestEvent || latestEvent.type !== 'Varroabehandling') {
+    return false;
+  }
+
+  const treatmentDate = new Date(latestEvent.performedAt);
+  const daysSinceTreatment = differenceInDays(now, treatmentDate);
+
+  if (daysSinceTreatment < 5 || daysSinceTreatment > 14) {
+    return false;
+  }
+
+  // Kontrollera om det finns en genomgång med varroakontroll EFTER behandlingen
+  const hasFollowUp = inspectionHistory.some(
+    (insp) => insp.varroaDetails?.checked && new Date(insp.performedAt) > treatmentDate,
+  );
+
+  return !hasFollowUp;
 }
 
 function hasPoorInspectionWeather(inspection: Inspection) {
@@ -260,29 +309,54 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'seasonal-swarm-risk',
-    shouldApply: ({ season, hive, inspection }) =>
-      season === 'Svärmperiod' &&
-      hive.strength === 'Starkt' &&
-      inspection.eggsSeen &&
-      !inspection.queenCells &&
-      !inspection.swarmSigns &&
-      hasGoodInspectionWeather(inspection),
-    buildRecommendation: (context) =>
-      createRecommendation(context, {
+    shouldApply: ({ season, hive, inspection, now }) => {
+      if (
+        season !== 'Svärmperiod' ||
+        hive.strength !== 'Starkt' ||
+        !inspection.eggsSeen ||
+        inspection.queenCells ||
+        inspection.swarmSigns ||
+        !hasGoodInspectionWeather(inspection)
+      ) {
+        return false;
+      }
+
+      // Ung drottning (< 1 år) svärmar mer sällan – supprimera varningen
+      const queenAge = getQueenAgeYears(hive, now);
+      if (queenAge !== undefined && queenAge < 1) {
+        return false;
+      }
+
+      return true;
+    },
+    buildRecommendation: (context) => {
+      const queenAge = getQueenAgeYears(context.hive, context.now);
+      const isOldQueen = queenAge !== undefined && queenAge >= 2;
+
+      return createRecommendation(context, {
         id: 'seasonal-swarm',
-        title: 'Möjlig svärmperiod',
-        detail: 'Det verkar vara svärmperiod och samhället ser starkt ut med äggläggning igång. Det kan vara bra att kontrollera svärmceller, utrymme och om avläggare kan bli aktuell.',
-        severity: 'warning',
+        title: isOldQueen ? 'Förhöjd svärmrisk – gammal drottning' : 'Möjlig svärmperiod',
+        detail: isOldQueen
+          ? `Drottningen är ${queenAge} år gammal och samhället är starkt under svärmperioden. Äldre drottningar har högre svärmbenägenhet – kontrollera svärmceller och utrymme tätt.`
+          : 'Det verkar vara svärmperiod och samhället ser starkt ut med äggläggning igång. Det kan vara bra att kontrollera svärmceller, utrymme och om avläggare kan bli aktuell.',
+        severity: isOldQueen ? 'critical' : 'warning',
         kind: 'seasonal',
-      }),
-    buildTask: (context) =>
-      createTask(context, {
+      });
+    },
+    buildTask: (context) => {
+      const queenAge = getQueenAgeYears(context.hive, context.now);
+      const isOldQueen = queenAge !== undefined && queenAge >= 2;
+
+      return createTask(context, {
         id: 'seasonal-swarm',
-        title: 'Överväg förebyggande svärmkontroll',
-        description: `Det kan vara bra att kontrollera ${context.hive.name} för svärmceller, utrymmesbehov och eventuell avläggare medan svärmtrycket byggs upp.`,
-        dueInDays: 3,
-        priority: 'Medel',
-      }),
+        title: isOldQueen ? 'Svärmkontroll – gammal drottning' : 'Överväg förebyggande svärmkontroll',
+        description: isOldQueen
+          ? `${context.hive.name} har en ${queenAge} år gammal drottning under svärmperioden. Kontrollera svärmceller och fundera på avläggare eller drottningbyte.`
+          : `Det kan vara bra att kontrollera ${context.hive.name} för svärmceller, utrymmesbehov och eventuell avläggare medan svärmtrycket byggs upp.`,
+        dueInDays: isOldQueen ? 1 : 3,
+        priority: isOldQueen ? 'Hög' : 'Medel',
+      });
+    },
   },
   {
     id: 'follow-up-in-better-weather',
@@ -315,7 +389,7 @@ const decisionRules: DecisionRule[] = [
       createRecommendation(context, {
         id: 'weak',
         title: 'Samhället verkar svagt',
-        detail: 'Lite yngel, svag styrka eller tunt foderläge kan tyda på att samhället kan behöva tätare uppföljning, stödfodring eller förstärkning.',
+        detail: 'Lite yngel eller svag styrka kan tyda på att samhället behöver tätare uppföljning, utjämning med yngelram eller annan stödåtgärd.',
         severity: 'warning',
         kind: 'alert',
       }),
@@ -326,28 +400,6 @@ const decisionRules: DecisionRule[] = [
         description: `Det kan vara klokt att bedöma om ${context.hive.name} kan behöva stödfodring, utjämning med yngelram eller annan stödåtgärd för att komma i balans.`,
         dueInDays: 4,
         priority: taskPriorityFromStrength(context.hive.strength),
-      }),
-  },
-  {
-    id: 'inactive-hive',
-    shouldApply: ({ daysSinceLastInspection, inspectionCadenceDays, userSettings }) => 
-      userSettings?.experienceLevel !== 'experienced' && 
-      daysSinceLastInspection >= inspectionCadenceDays,
-    buildRecommendation: (context) =>
-      createRecommendation(context, {
-        id: 'inactive-hive',
-        title: 'Kan vara dags för ny genomgång',
-        detail: `Ingen genomgång har registrerats på ${context.daysSinceLastInspection} dagar. För ${context.regionLabel.toLowerCase()} i det här säsongsläget kan det ofta vara rimligt att följa kupan ungefär var ${context.inspectionCadenceDays}:e dag.`,
-        severity: 'info',
-        kind: 'reminder',
-      }),
-    buildTask: (context) =>
-      createTask(context, {
-        id: 'inactive-hive',
-        title: 'Överväg ny genomgång',
-        description: `${context.hive.name} följs just nu relativt glest i förhållande till säsong och region. Det kan vara bra att lägga in en ny genomgång för att få uppdaterat läge.`,
-        dueInDays: 1,
-        priority: 'Medel',
       }),
   },
   {
@@ -396,59 +448,243 @@ const decisionRules: DecisionRule[] = [
         priority: 'Hög',
       }),
   },
+  // L5: Akut foderbrist under vår/vinter
   {
-    id: 'winter-prep',
-    shouldApply: ({ inspection, season, hive }) =>
-      season === 'Invintring' && (inspection.actionNeeded || !inspection.honey || hive.strength !== 'Starkt'),
+    id: 'food-shortage-spring',
+    shouldApply: ({ inspection, season }) =>
+      !inspection.honey && (season === 'Vårutveckling' || season === 'Vintertillsyn'),
     buildRecommendation: (context) =>
       createRecommendation(context, {
-        id: 'winter',
-        title: 'Förbered invintring',
-        detail: 'Det kan vara dags att planera invintring. Samhället kan behöva rätt fodermängd, en varroaplan och tillräcklig vinterstyrka.',
+        id: 'food-spring',
+        title: 'Kan saknas honung – stödfodra?',
+        detail: 'Ingen honung eller foderkrans registrerades. Under vår- och vintertillsyn är foderbrist en vanlig orsak till koloniförlust – kontrollera och stödfodra vid behov.',
+        severity: 'critical',
+        kind: 'alert',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'food-spring',
+        title: 'Kontrollera foderläget och stödfodra',
+        description: `${context.hive.name} visade inga tecken på honung vid senaste genomgången under ${context.season.toLowerCase()}. Foderbrist under vår kan snabbt leda till svält – prioritera ett besök.`,
+        dueInDays: 1,
+        priority: 'Hög',
+      }),
+  },
+  // L5: Låg pollenreserv under svärmperiod
+  {
+    id: 'pollen-shortage-swarm',
+    shouldApply: ({ inspection, season }) =>
+      !inspection.pollen && season === 'Svärmperiod',
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'pollen-swarm',
+        title: 'Låg pollenreserv under svärmperiod',
+        detail: 'Pollen är nödvändigt för yngeluppfödning under svärmperioden. Inget pollen noterades – kontrollera om draget är svagt och om stödutfodring kan behövas.',
+        severity: 'warning',
+        kind: 'alert',
+      }),
+  },
+  // L6: Invintring – vinterfoder saknas (kritisk)
+  {
+    id: 'winter-no-food',
+    shouldApply: ({ inspection, season }) =>
+      (season === 'Invintring' || season === 'Vinterro') && !inspection.honey,
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'winter-food',
+        title: 'Vinterfoder saknas – akut risk',
+        detail: 'Ingen honung registrerades under invintring eller vinterro. Otillräckligt vinterfoder är en av de vanligaste orsakerna till vinterförlust – komplettera omedelbart.',
+        severity: 'critical',
+        kind: 'alert',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'winter-food',
+        title: 'Komplettera vinterfoder snarast',
+        description: `${context.hive.name} hade ingen registrerad honung vid senaste genomgången under ${context.season.toLowerCase()}. Otillräckligt vinterfoder är kritisk – prioritera ett besök direkt.`,
+        dueInDays: 1,
+        priority: 'Hög',
+      }),
+  },
+  // L6: Invintring – osäker drottningstatus
+  {
+    id: 'winter-queen-uncertain',
+    shouldApply: ({ hive, season }) =>
+      (season === 'Invintring' || season === 'Vinterro') && hive.queenStatus !== 'Bekräftad',
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'winter-queen',
+        title: 'Osäker drottningstatus inför vintern',
+        detail: `Drottningens status är "${context.hive.queenStatus}". Samhällen som går in i vintern utan bekräftad drottning riskerar att vara drottninglösa och gå förlorade.`,
+        severity: 'warning',
+        kind: 'alert',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'winter-queen',
+        title: 'Bekräfta drottningstatus inför vintern',
+        description: `Säkerställ att ${context.hive.name} har en äggläggande drottning inför övervintringen. Samhällen utan drottning bör förenas med ett annat samhälle.`,
+        dueInDays: 5,
+        priority: 'Hög',
+      }),
+  },
+  // L6: Invintring – svagt samhälle
+  {
+    id: 'winter-weak-colony',
+    shouldApply: ({ hive, season }) =>
+      (season === 'Invintring' || season === 'Vinterro') && hive.strength === 'Svagt',
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'winter-weak',
+        title: 'Svagt samhälle inför vintern',
+        detail: 'Svaga samhällen överlever sällan vintern på egen hand. Överväg att förena samhället med ett annat starkare samhälle i god tid.',
         severity: 'warning',
         kind: 'seasonal',
       }),
     buildTask: (context) =>
       createTask(context, {
-        id: 'winter',
-        title: 'Överväg invintringsplan',
-        description: `Det kan vara klokt att se över invintringsfoder, varroabehandling och vinterstyrka i ${context.hive.name} innan höstens beslut blir akuta.`,
+        id: 'winter-weak',
+        title: 'Överväg förening inför vintern',
+        description: `${context.hive.name} verkar svagt inför övervintringen. Förening med ett starkare samhälle kan rädda bägge coloniers genetiska material.`,
         dueInDays: 7,
+        priority: 'Medel',
+      }),
+  },
+  // L8: Uppföljande varroamätning efter behandling
+  {
+    id: 'varroa-follow-up',
+    shouldApply: ({ latestEvent, inspectionHistory, now }) =>
+      needsVarroaFollowUp(latestEvent, inspectionHistory, now),
+    buildRecommendation: (context) =>
+      createRecommendation(context, {
+        id: 'varroa-follow-up',
+        title: 'Uppföljande varroamätning rekommenderas',
+        detail: 'En varroabehandling genomfördes nyligen. Uppföljande mätning 7–10 dagar efter behandling rekommenderas för att kontrollera effekten och avgöra om ny behandling behövs.',
+        severity: 'info',
+        kind: 'reminder',
+      }),
+    buildTask: (context) =>
+      createTask(context, {
+        id: 'varroa-follow-up',
+        title: 'Gör uppföljande varroamätning',
+        description: `Logga en uppföljande varroamätning för ${context.hive.name} för att kontrollera behandlingseffekten. Välj Händelse → Uppföljande varroamätning.`,
+        dueInDays: 3,
         priority: 'Medel',
       }),
   },
 ];
 
-export function buildDerivedSignals(apiaries: Apiary[], hives: Hive[], inspections: Inspection[], userSettings?: UserSettings): DerivedResult {
+// L4: Regler för kupor som saknar genomgång
+const noInspectionRules: NoInspectionRule[] = [
+  {
+    id: 'no-inspection',
+    shouldApply: ({ season }) =>
+      season !== 'Vinterro' && season !== 'Vintertillsyn',
+    buildRecommendation: ({ hive, season }) => ({
+      id: `rec-no-inspection-${hive.id}`,
+      hiveId: hive.id,
+      title: 'Ingen genomgång registrerad ännu',
+      detail: `${hive.name} har inga genomgångar sparade. Logga den första genomgången för att börja få råd och uppföljning anpassade till kupans läge.`,
+      severity: 'info' as RecommendationSeverity,
+      kind: 'reminder' as RecommendationKind,
+      season,
+      createdAt: new Date().toISOString(),
+    }),
+    buildTask: ({ hive }) => ({
+      id: `task-no-inspection-${hive.id}`,
+      title: 'Logga första genomgången',
+      description: `${hive.name} saknar genomgångar. Logga den första för att komma igång med historik och beslutsstöd.`,
+      dueDate: addDays(new Date(), 2),
+      hiveId: hive.id,
+      priority: 'Medel' as Task['priority'],
+      source: 'Beslutsstöd' as Task['source'],
+      completed: false,
+    }),
+  },
+];
+
+// L3: Inactive-hive – gäller alla erfarenhetsnivåer med anpassad kadence
+function getInactiveHiveThreshold(
+  inspectionCadenceDays: number,
+  season: SeasonLabel,
+  userSettings: UserSettings | undefined,
+): number {
+  const multiplier = userSettings?.experienceLevel === 'experienced' ? 2 : 1;
+  const threshold = inspectionCadenceDays * multiplier;
+
+  // Under svärmperioden: max 10 dagar oavsett erfarenhet
+  if (season === 'Svärmperiod') {
+    return Math.min(threshold, 10);
+  }
+
+  return threshold;
+}
+
+export function buildDerivedSignals(
+  apiaries: Apiary[],
+  hives: Hive[],
+  inspections: Inspection[],
+  userSettings?: UserSettings,
+  events?: HiveEvent[],
+): DerivedResult {
   const latestInspections = getLatestInspectionMap(inspections);
   const inspectionHistoryMap = getInspectionHistoryMap(inspections);
   const apiaryMap = apiaries.reduce<Record<string, Apiary>>((map, apiary) => {
     map[apiary.id] = apiary;
     return map;
   }, {});
+
+  // Bygg upp en map med senaste händelsen per kupa
+  const latestEventMap = (events ?? []).reduce<Record<string, HiveEvent>>((map, event) => {
+    const current = map[event.hiveId];
+
+    if (!current || new Date(event.performedAt) > new Date(current.performedAt)) {
+      map[event.hiveId] = event;
+    }
+
+    return map;
+  }, {});
+
   const now = new Date();
   const recommendations: Recommendation[] = [];
   const tasks: Task[] = [];
 
   for (const hive of hives) {
     const inspection = latestInspections[hive.id];
+    const apiary = apiaryMap[hive.apiaryId];
+    const season = getApiarySeasonLabel(apiary, now);
 
+    // L4: Kupor utan genomgång – egna regler
     if (!inspection) {
+      const noInspContext: NoInspectionRuleContext = { apiary, hive, now, season, userSettings };
+
+      for (const rule of noInspectionRules) {
+        if (!rule.shouldApply(noInspContext)) {
+          continue;
+        }
+
+        recommendations.push(rule.buildRecommendation(noInspContext));
+
+        if (rule.buildTask) {
+          tasks.push(rule.buildTask(noInspContext));
+        }
+      }
+
       continue;
     }
 
-    const apiary = apiaryMap[hive.apiaryId];
-    const season = getApiarySeasonLabel(apiary, now);
     const regionLabel = getApiaryRegion(apiary);
     const inspectionHistory = inspectionHistoryMap[hive.id] ?? [inspection];
     const daysSinceLastInspection = differenceInDays(now, new Date(inspection.performedAt));
     const inspectionCadenceDays = getRecommendedInspectionCadenceDays(season, regionLabel);
+    const latestEvent = latestEventMap[hive.id];
 
     const context: RuleContext = {
       apiary,
       hive,
       inspection,
       inspectionHistory,
+      latestEvent,
       now,
       season,
       daysSinceLastInspection,
@@ -456,6 +692,30 @@ export function buildDerivedSignals(apiaries: Apiary[], hives: Hive[], inspectio
       inspectionCadenceDays,
       userSettings,
     };
+
+    // L3: Inactive-hive med erfarenhetsanpassad kadence
+    const inactiveThreshold = getInactiveHiveThreshold(inspectionCadenceDays, season, userSettings);
+    if (daysSinceLastInspection >= inactiveThreshold) {
+      const isExperienced = userSettings?.experienceLevel === 'experienced';
+      recommendations.push(
+        createRecommendation(context, {
+          id: 'inactive-hive',
+          title: 'Kan vara dags för ny genomgång',
+          detail: `Ingen genomgång har registrerats på ${daysSinceLastInspection} dagar. För ${regionLabel.toLowerCase()} i det här säsongsläget kan det${isExperienced ? ' möjligen' : ''} vara rimligt att följa kupan ungefär var ${inspectionCadenceDays}:e dag.`,
+          severity: 'info',
+          kind: 'reminder',
+        }),
+      );
+      tasks.push(
+        createTask(context, {
+          id: 'inactive-hive',
+          title: 'Överväg ny genomgång',
+          description: `${hive.name} följs just nu glest i förhållande till säsong och region. Det kan vara bra att lägga in en ny genomgång för att få uppdaterat läge.`,
+          dueInDays: 1,
+          priority: 'Medel',
+        }),
+      );
+    }
 
     for (const rule of decisionRules) {
       if (!rule.shouldApply(context)) {
