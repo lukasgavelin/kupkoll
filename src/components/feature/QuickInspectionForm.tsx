@@ -105,6 +105,23 @@ const detailedToggleLabels: Array<{ key: Extract<BooleanKey, 'openBrood' | 'capp
   { key: 'pollen', label: 'Pollen' },
 ];
 
+const yngelLabels: Array<{ key: BooleanKey; label: string }> = [
+  { key: 'queenSeen', label: 'Drottning sedd' },
+  { key: 'eggsSeen', label: 'Ägg sedda' },
+  { key: 'openBrood', label: 'Öppet yngel' },
+  { key: 'cappedBrood', label: 'Täckt yngel' },
+];
+
+const foderLabels: Array<{ key: BooleanKey; label: string }> = [
+  { key: 'honey', label: 'Honung/foderkrans' },
+  { key: 'pollen', label: 'Pollen' },
+];
+
+const svarmLabels: Array<{ key: BooleanKey; label: string }> = [
+  { key: 'queenCells', label: 'Drottningceller' },
+  { key: 'swarmSigns', label: 'Svärmtecken' },
+];
+
 const inspectionModes: Array<{ value: InspectionMode; label: string; description: string }> = [
   {
     value: 'Snabb genomgång',
@@ -509,224 +526,319 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
         </View>
       </AppCard>
 
-      <AppCard>
-        <Text style={theme.textStyles.heading}>4. Justera det som sticker ut</Text>
-        <Text style={theme.textStyles.caption}>
-          {inspectionMode === 'Snabb genomgång'
-            ? 'Om förvalet stämmer kan du gå vidare direkt. Ändra bara det som avviker.'
-            : 'Utgå från förvalet och fyll på med fler fält i nästa steg.'}
-        </Text>
-        <Text style={theme.textStyles.caption}>Nu matchar: {activePreset ? activePreset.label : 'Egen bedömning efter dina justeringar'}</Text>
-        <View style={styles.optionGrid}>
-          {quickToggleLabels.map((item) => {
-            const selected = values[item.key];
-            return (
-              <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Text style={styles.inlineLabel}>Hur upplevdes kupan?</Text>
-        <View style={styles.optionGrid}>
-          {temperaments.map((value) => {
-            const selected = value === temperament;
-            return (
-              <Pressable key={value} onPress={() => setTemperament(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Text style={styles.inlineLabel}>Varroa kontrollerad?</Text>
-        <View style={styles.optionGrid}>
-          <Pressable onPress={() => updateVarroaChecked(true)} style={[styles.option, styles.largeOption, varroaChecked && styles.optionSelected]}>
-            <Text style={[styles.optionLabel, varroaChecked && styles.optionSelectedText]}>Ja</Text>
-          </Pressable>
-          <Pressable onPress={() => updateVarroaChecked(false)} style={[styles.option, styles.largeOption, !varroaChecked && styles.optionSelected]}>
-            <Text style={[styles.optionLabel, !varroaChecked && styles.optionSelectedText]}>Nej</Text>
-          </Pressable>
-        </View>
-        {varroaChecked ? (
-          <>
-            <Text style={styles.inlineLabel}>Hur ser varroaläget ut?</Text>
+      {inspectionMode === 'Snabb genomgång' ? (
+        <>
+          {/* Snabb genomgång: Justera det som sticker ut */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>4. Justera det som sticker ut</Text>
+            <Text style={theme.textStyles.caption}>
+              Om förvalet stämmer kan du gå vidare direkt. Ändra bara det som avviker.
+            </Text>
+            <Text style={theme.textStyles.caption}>Nu matchar: {activePreset ? activePreset.label : 'Egen bedömning efter dina justeringar'}</Text>
             <View style={styles.optionGrid}>
-              {measuredVarroaLevels.map((value) => {
-                const selected = value === varroaLevel;
+              {quickToggleLabels.map((item) => {
+                const selected = values[item.key];
                 return (
-                  <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                  <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={styles.inlineLabel}>Hur upplevdes kupan?</Text>
+            <View style={styles.optionGrid}>
+              {temperaments.map((value) => {
+                const selected = value === temperament;
+                return (
+                  <Pressable key={value} onPress={() => setTemperament(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
                     <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
                   </Pressable>
                 );
               })}
             </View>
-          </>
-        ) : (
-          <Text style={theme.textStyles.caption}>Varroa lämnas som ej kontrollerad tills du gör en kontroll.</Text>
-        )}
-      </AppCard>
-
-      {inspectionMode === 'Fördjupad genomgång' ? (
-        <AppCard>
-          <Text style={theme.textStyles.heading}>5. Fördjupa genomgången</Text>
-          <Text style={theme.textStyles.caption}>Lägg till det som är relevant för just den här kupan.</Text>
-
-          <Text style={styles.inlineLabel}>Yngel och resurser</Text>
-          <View style={styles.optionGrid}>
-            {detailedToggleLabels.map((item) => {
-              const selected = values[item.key];
-              return (
-                <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                  <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text style={styles.inlineLabel}>Fördjupad varroakontroll</Text>
-          <Text style={theme.textStyles.caption}>Fyll i detta när varroa är kontrollerad och du vill följa upp metod och behandling.</Text>
-          {varroaChecked ? (
-            <>
-              <View style={styles.optionGrid}>
-                {varroaControlMethods.map((value) => {
-                  const selected = value === varroaControlMethod;
-                  return (
-                    <Pressable key={value} onPress={() => setVarroaControlMethod(selected ? undefined : value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                      <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.inlineLabel}>Mätvärde</Text>
-              <TextInput
-                onChangeText={setVarroaMeasurementValue}
-                placeholder="Exempel: 6 kvalster/24 h eller 3%"
-                placeholderTextColor={theme.colors.textMuted}
-                style={styles.input}
-                value={varroaMeasurementValue}
-              />
-
-              <Text style={styles.inlineLabel}>Behandling utförd?</Text>
-              <View style={styles.optionGrid}>
-                <Pressable onPress={() => setVarroaTreatmentPerformed(true)} style={[styles.option, styles.largeOption, varroaTreatmentPerformed && styles.optionSelected]}>
-                  <Text style={[styles.optionLabel, varroaTreatmentPerformed && styles.optionSelectedText]}>Ja</Text>
-                </Pressable>
-                <Pressable onPress={() => setVarroaTreatmentPerformed(false)} style={[styles.option, styles.largeOption, !varroaTreatmentPerformed && styles.optionSelected]}>
-                  <Text style={[styles.optionLabel, !varroaTreatmentPerformed && styles.optionSelectedText]}>Nej</Text>
-                </Pressable>
-              </View>
-
-              <Text style={styles.inlineLabel}>Behandlingsnotering</Text>
-              <TextInput
-                multiline
-                onChangeText={setVarroaTreatmentNote}
-                placeholder="Exempel: vad som gjorts och när du vill följa upp"
-                placeholderTextColor={theme.colors.textMuted}
-                style={[styles.input, styles.textArea]}
-                textAlignVertical="top"
-                value={varroaTreatmentNote}
-              />
-            </>
-          ) : (
-            <Text style={theme.textStyles.caption}>Aktivera först att varroa är kontrollerad i genomgången ovan.</Text>
-          )}
-
-          <Text style={styles.inlineLabel}>Åtgärd eller behandling under besöket</Text>
-          <TextInput
-            onChangeText={setTreatmentText}
-            placeholder="Exempel: myrsyra, oxalsyra, rambyte eller ingen åtgärd"
-            placeholderTextColor={theme.colors.textMuted}
-            style={styles.input}
-            value={treatmentText}
-          />
-
-          <View style={styles.eventGuidanceCard}>
-            <Text style={theme.textStyles.bodyStrong}>Sådant som passar bättre som händelse</Text>
-            <Text style={theme.textStyles.caption}>Det som ändrar samhällets historik är oftast tydligare som en egen händelse.</Text>
+            <Text style={styles.inlineLabel}>Varroa kontrollerad?</Text>
             <View style={styles.optionGrid}>
-              {eventShortcutTypes.map((type) => (
-                <Pressable key={type} onPress={() => openEventShortcut(type)} style={styles.option}>
-                  <Text style={styles.optionLabel}>{type}</Text>
-                </Pressable>
+              <Pressable onPress={() => updateVarroaChecked(true)} style={[styles.option, styles.largeOption, varroaChecked && styles.optionSelected]}>
+                <Text style={[styles.optionLabel, varroaChecked && styles.optionSelectedText]}>Ja</Text>
+              </Pressable>
+              <Pressable onPress={() => updateVarroaChecked(false)} style={[styles.option, styles.largeOption, !varroaChecked && styles.optionSelected]}>
+                <Text style={[styles.optionLabel, !varroaChecked && styles.optionSelectedText]}>Nej</Text>
+              </Pressable>
+            </View>
+            {varroaChecked ? (
+              <>
+                <Text style={styles.inlineLabel}>Hur ser varroaläget ut?</Text>
+                <View style={styles.optionGrid}>
+                  {measuredVarroaLevels.map((value) => {
+                    const selected = value === varroaLevel;
+                    return (
+                      <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                        <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            ) : (
+              <Text style={theme.textStyles.caption}>Varroa lämnas som ej kontrollerad tills du gör en kontroll.</Text>
+            )}
+          </AppCard>
+        </>
+      ) : (
+        <>
+          {/* Fördjupad genomgång: Yngelstatus */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>4. Yngelstatus</Text>
+            <Text style={theme.textStyles.caption}>Bedöm drottningens närvaro, äggläggning och yngelstadier.</Text>
+            <View style={styles.optionGrid}>
+              {yngelLabels.map((item) => {
+                const selected = values[item.key];
+                return (
+                  <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </AppCard>
+
+          {/* Fördjupad genomgång: Foderstatus */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>5. Foderstatus</Text>
+            <Text style={theme.textStyles.caption}>Kontrollera om det finns tillräckligt med honung/foderkrans och pollen.</Text>
+            <View style={styles.optionGrid}>
+              {foderLabels.map((item) => {
+                const selected = values[item.key];
+                return (
+                  <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </AppCard>
+
+          {/* Fördjupad genomgång: Svärmtecken */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>6. Svärmtecken</Text>
+            <Text style={theme.textStyles.caption}>Notera om samhället bygger drottningceller (svärmceller, nödceller, stilla byte) eller visar andra svärmtecken.</Text>
+            <View style={styles.optionGrid}>
+              {svarmLabels.map((item) => {
+                const selected = values[item.key];
+                return (
+                  <Pressable key={item.key} onPress={() => toggleValue(item.key)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{item.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </AppCard>
+
+          {/* Fördjupad genomgång: Varroa */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>7. Varroa</Text>
+            <Text style={theme.textStyles.caption}>Logga eventuella mätvärden och metoder för varroakvalster.</Text>
+            <Text style={styles.inlineLabel}>Varroa kontrollerad?</Text>
+            <View style={styles.optionGrid}>
+              <Pressable onPress={() => updateVarroaChecked(true)} style={[styles.option, styles.largeOption, varroaChecked && styles.optionSelected]}>
+                <Text style={[styles.optionLabel, varroaChecked && styles.optionSelectedText]}>Ja</Text>
+              </Pressable>
+              <Pressable onPress={() => updateVarroaChecked(false)} style={[styles.option, styles.largeOption, !varroaChecked && styles.optionSelected]}>
+                <Text style={[styles.optionLabel, !varroaChecked && styles.optionSelectedText]}>Nej</Text>
+              </Pressable>
+            </View>
+
+            {varroaChecked ? (
+              <>
+                <Text style={styles.inlineLabel}>Varroanivå</Text>
+                <View style={styles.optionGrid}>
+                  {measuredVarroaLevels.map((value) => {
+                    const selected = value === varroaLevel;
+                    return (
+                      <Pressable key={value} onPress={() => setVarroaLevel(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                        <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.inlineLabel}>Mätmetod</Text>
+                <View style={styles.optionGrid}>
+                  {varroaControlMethods.map((value) => {
+                    const selected = value === varroaControlMethod;
+                    return (
+                      <Pressable key={value} onPress={() => setVarroaControlMethod(selected ? undefined : value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                        <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.inlineLabel}>Mätvärde</Text>
+                <TextInput
+                  onChangeText={setVarroaMeasurementValue}
+                  placeholder="Exempel: 6 kvalster/24 h eller 3%"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={styles.input}
+                  value={varroaMeasurementValue}
+                />
+
+                <Text style={styles.inlineLabel}>Behandling utförd?</Text>
+                <View style={styles.optionGrid}>
+                  <Pressable onPress={() => setVarroaTreatmentPerformed(true)} style={[styles.option, styles.largeOption, varroaTreatmentPerformed && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, varroaTreatmentPerformed && styles.optionSelectedText]}>Ja</Text>
+                  </Pressable>
+                  <Pressable onPress={() => setVarroaTreatmentPerformed(false)} style={[styles.option, styles.largeOption, !varroaTreatmentPerformed && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, !varroaTreatmentPerformed && styles.optionSelectedText]}>Nej</Text>
+                  </Pressable>
+                </View>
+
+                <Text style={styles.inlineLabel}>Behandlingsnotering</Text>
+                <TextInput
+                  multiline
+                  onChangeText={setVarroaTreatmentNote}
+                  placeholder="Exempel: vad som gjorts och när du vill följa upp"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={[styles.input, styles.textArea]}
+                  textAlignVertical="top"
+                  value={varroaTreatmentNote}
+                />
+              </>
+            ) : (
+              <Text style={theme.textStyles.caption}>Varroa lämnas som ej kontrollerad tills du gör en kontroll.</Text>
+            )}
+          </AppCard>
+
+          {/* Fördjupad genomgång: Väder vid genomgången */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>8. Väder vid genomgången</Text>
+            <Text style={theme.textStyles.caption}>När bigården har en sparad plats fylls temperatur, vind och väderläge i automatiskt. Justera vid behov.</Text>
+            <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
+            {selectedApiary?.coordinates ? (
+              <PrimaryButton
+                label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : autoWeatherStatus === 'error' ? 'Försök igen' : 'Hämta igen'}
+                onPress={() => {
+                  if (!selectedApiary.coordinates || autoWeatherStatus === 'loading') {
+                    return;
+                  }
+                  void loadAutoWeather(selectedApiary.coordinates);
+                }}
+                size="compact"
+                variant="secondary"
+              />
+            ) : null}
+            <Text style={styles.inlineLabel}>Väderläge</Text>
+            <View style={styles.optionGrid}>
+              {weatherConditions.map((value) => {
+                const selected = value === weatherCondition;
+                return (
+                  <Pressable key={value} onPress={() => setWeatherCondition(selected ? undefined : value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={styles.inlineLabel}>Vind</Text>
+            <View style={styles.optionGrid}>
+              {weatherWinds.map((value) => {
+                const selected = value === weatherWind;
+                return (
+                  <Pressable key={value} onPress={() => setWeatherWind(selected ? undefined : value)} style={[styles.option, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={styles.inlineLabel}>Temperatur</Text>
+            <TextInput
+              keyboardType="decimal-pad"
+              onChangeText={setTemperatureText}
+              placeholder="Exempel: 17,5"
+              placeholderTextColor={theme.colors.textMuted}
+              style={styles.input}
+              value={temperatureText}
+            />
+          </AppCard>
+
+          {/* Fördjupad genomgång: Sammanfattning & noteringar */}
+          <AppCard>
+            <Text style={theme.textStyles.heading}>9. Sammanfattning & noteringar</Text>
+            <Text style={theme.textStyles.caption}>Avsluta genomgången med anteckningar, temperament och eventuellt bilder.</Text>
+
+            <Text style={styles.inlineLabel}>Hur upplevdes kupans temperament?</Text>
+            <View style={styles.optionGrid}>
+              {temperaments.map((value) => {
+                const selected = value === temperament;
+                return (
+                  <Pressable key={value} onPress={() => setTemperament(value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                    <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.inlineLabel}>Behöver kupan följas upp extra snart?</Text>
+            <View style={styles.optionGrid}>
+              <Pressable onPress={() => setValues((c) => ({ ...c, actionNeeded: true }))} style={[styles.option, styles.largeOption, values.actionNeeded && styles.optionSelected]}>
+                <Text style={[styles.optionLabel, values.actionNeeded && styles.optionSelectedText]}>Ja</Text>
+              </Pressable>
+              <Pressable onPress={() => setValues((c) => ({ ...c, actionNeeded: false }))} style={[styles.option, styles.largeOption, !values.actionNeeded && styles.optionSelected]}>
+                <Text style={[styles.optionLabel, !values.actionNeeded && styles.optionSelectedText]}>Nej</Text>
+              </Pressable>
+            </View>
+
+            <Text style={styles.inlineLabel}>Åtgärd eller behandling under besöket</Text>
+            <TextInput
+              onChangeText={setTreatmentText}
+              placeholder="Exempel: myrsyra, oxalsyra, rambyte eller ingen åtgärd"
+              placeholderTextColor={theme.colors.textMuted}
+              style={styles.input}
+              value={treatmentText}
+            />
+
+            <View style={styles.eventGuidanceCard}>
+              <Text style={theme.textStyles.bodyStrong}>Sådant som passar bättre som händelse</Text>
+              <Text style={theme.textStyles.caption}>Det som ändrar samhällets historik är oftast tydligare som en egen händelse.</Text>
+              <View style={styles.optionGrid}>
+                {eventShortcutTypes.map((type) => (
+                  <Pressable key={type} onPress={() => openEventShortcut(type)} style={styles.option}>
+                    <Text style={styles.optionLabel}>{type}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <PrimaryButton label="Öppna alla händelser" onPress={() => openEventShortcut()} variant="secondary" size="compact" />
+            </View>
+
+            <Text style={styles.inlineLabel}>Fria anteckningar</Text>
+            <TextInput
+              multiline
+              onChangeText={setNoteText}
+              placeholder="Skriv det du vill minnas från genomgången"
+              placeholderTextColor={theme.colors.textMuted}
+              style={[styles.input, styles.textArea]}
+              textAlignVertical="top"
+              value={noteText}
+            />
+
+            <Text style={styles.inlineLabel}>Bilder</Text>
+            <Text style={theme.textStyles.caption}>Lägg till foton från genomgången (t.ex. yngelbild eller misstänkt sjukdom).</Text>
+            <View style={styles.imageGrid}>
+              {imageUris.map((uri, index) => (
+                <View key={uri} style={styles.imageWrapper}>
+                  <Image source={{ uri }} style={styles.imagePreview} />
+                  <Pressable style={styles.removeImageButton} onPress={() => removeImage(index)}>
+                    <Text style={styles.removeImageText}>✕</Text>
+                  </Pressable>
+                </View>
               ))}
             </View>
-            <PrimaryButton label="Öppna alla händelser" onPress={() => openEventShortcut()} variant="secondary" size="compact" />
-          </View>
-
-          <Text style={styles.inlineLabel}>Fria anteckningar</Text>
-          <TextInput
-            multiline
-            onChangeText={setNoteText}
-            placeholder="Skriv det du vill minnas från genomgången"
-            placeholderTextColor={theme.colors.textMuted}
-            style={[styles.input, styles.textArea]}
-            textAlignVertical="top"
-            value={noteText}
-          />
-
-          <Text style={styles.inlineLabel}>Bilder</Text>
-          <Text style={theme.textStyles.caption}>Lägg till foton från genomgången (t.ex. yngelbild eller misstänkt sjukdom).</Text>
-          <View style={styles.imageGrid}>
-            {imageUris.map((uri, index) => (
-              <View key={uri} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.imagePreview} />
-                <Pressable style={styles.removeImageButton} onPress={() => removeImage(index)}>
-                  <Text style={styles.removeImageText}>✕</Text>
-                </Pressable>
-              </View>
-            ))}
-          </View>
-          <View style={styles.optionGrid}>
-            <PrimaryButton label="Ta bild" iconName="camera-outline" onPress={() => handlePickImage(true)} variant="secondary" />
-            <PrimaryButton label="Välj från galleri" iconName="image-outline" onPress={() => handlePickImage(false)} variant="secondary" />
-          </View>
-        </AppCard>
-      ) : null}
-
-      <AppCard>
-        <Text style={theme.textStyles.heading}>{inspectionMode === 'Snabb genomgång' ? '5. Väder vid genomgången' : '6. Väder vid genomgången'}</Text>
-        <Text style={theme.textStyles.caption}>När bigården har en sparad plats fylls temperatur, vind och väderläge i automatiskt. Justera vid behov.</Text>
-        <Text style={theme.textStyles.caption}>{autoWeatherHint}</Text>
-        {selectedApiary?.coordinates ? <PrimaryButton label={autoWeatherStatus === 'loading' ? 'Hämtar väder...' : autoWeatherStatus === 'error' ? 'Försök igen' : 'Hämta igen'} onPress={() => {
-          if (!selectedApiary.coordinates || autoWeatherStatus === 'loading') {
-            return;
-          }
-
-          void loadAutoWeather(selectedApiary.coordinates);
-        }} size="compact" variant="secondary" /> : null}
-        <Text style={styles.inlineLabel}>Väderläge</Text>
-        <View style={styles.optionGrid}>
-          {weatherConditions.map((value) => {
-            const selected = value === weatherCondition;
-            return (
-              <Pressable key={value} onPress={() => setWeatherCondition(selected ? undefined : value)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
-                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Text style={styles.inlineLabel}>Vind</Text>
-        <View style={styles.optionGrid}>
-          {weatherWinds.map((value) => {
-            const selected = value === weatherWind;
-            return (
-              <Pressable key={value} onPress={() => setWeatherWind(selected ? undefined : value)} style={[styles.option, selected && styles.optionSelected]}>
-                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Text style={styles.inlineLabel}>Temperatur</Text>
-        <TextInput
-          keyboardType="decimal-pad"
-          onChangeText={setTemperatureText}
-          placeholder="Exempel: 17,5"
-          placeholderTextColor={theme.colors.textMuted}
-          style={styles.input}
-          value={temperatureText}
-        />
-      </AppCard>
+            <View style={styles.optionGrid}>
+              <PrimaryButton label="Ta bild" iconName="camera-outline" onPress={() => handlePickImage(true)} variant="secondary" />
+              <PrimaryButton label="Välj från galleri" iconName="image-outline" onPress={() => handlePickImage(false)} variant="secondary" />
+            </View>
+          </AppCard>
+        </>
+      )}
 
       <AppCard style={styles.summaryCard}>
         <View style={styles.summaryTopRow}>
