@@ -9,9 +9,20 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { confirmDestructiveAction } from '@/lib/confirm';
-import { formatDateLabel, getApiaryDisplayLocation } from '@/lib/selectors';
+import { formatDateLabel, getApiaryDisplayLocation, getApiarySeasonLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { theme } from '@/theme';
+
+function getQueenMarkingHex(color: string | undefined): string | undefined {
+  switch (color) {
+    case 'Vit': return '#FFFFFF';
+    case 'Gul': return '#F5C518';
+    case 'Röd': return '#E8312A';
+    case 'Grön': return '#2DB84B';
+    case 'Blå': return '#3B82F6';
+    default: return undefined;
+  }
+}
 
 export default function HiveDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
@@ -37,6 +48,22 @@ export default function HiveDetailScreen() {
   const latestEvent = events[0];
   const tasks = getTasksForHive(hive.id);
   const queenHistory = [...hive.queenHistory].sort((left, right) => right.year.localeCompare(left.year));
+
+  const queenColorHex = getQueenMarkingHex(hive.queenMarkingColor);
+  const now = new Date();
+  const season = apiary ? getApiarySeasonLabel(apiary, now) : undefined;
+  
+  const queenAge = hive.queenYear && /^\d{4}$/.test(hive.queenYear)
+    ? now.getFullYear() - Number(hive.queenYear)
+    : undefined;
+
+  const queenWarnings: string[] = [];
+  if (queenAge !== undefined && queenAge >= 2) {
+    queenWarnings.push(`Drottningen är ${queenAge} år gammal – äldre drottningar har högre svärmrisk.`);
+  }
+  if (hive.queenStatus !== 'Bekräftad' && season && season !== 'Vinterro' && season !== 'Vintertillsyn') {
+    queenWarnings.push(`Osäker drottningstatus under aktiv säsong (${season.toLowerCase()}).`);
+  }
 
   async function confirmDelete() {
     const shouldDelete = await confirmDestructiveAction({
@@ -81,10 +108,19 @@ export default function HiveDetailScreen() {
         <View style={styles.metaGrid}>
           <MetaItem label="Drottningstatus" value={hive.queenStatus} />
           <MetaItem label="Drottningens år" value={hive.queenYear ?? 'Inte angivet'} />
-          <MetaItem label="Märkningsfärg" value={hive.queenMarkingColor ?? 'Inte angivet'} />
+          <MetaItem colorHex={queenColorHex} label="Märkningsfärg" value={hive.queenMarkingColor ?? 'Inte angivet'} />
           <MetaItem label="Ursprung" value={hive.queenOrigin ?? 'Inte angivet'} />
           <MetaItem label="Införd" value={hive.queenIntroducedAt ? formatDateLabel(hive.queenIntroducedAt) : 'Inte angivet'} />
         </View>
+        {queenWarnings.length > 0 ? (
+          <View style={styles.warningsContainer}>
+            {queenWarnings.map((warning, index) => (
+              <View key={index} style={styles.warningItem}>
+                <Text style={styles.warningText}>⚠️ {warning}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
         {queenHistory.length ? (
           <View style={styles.queenHistoryList}>
             {queenHistory.map((entry) => (
@@ -126,11 +162,16 @@ export default function HiveDetailScreen() {
   );
 }
 
-function MetaItem({ label, value }: { label: string; value: string }) {
+function MetaItem({ label, value, colorHex }: { label: string; value: string; colorHex?: string }) {
   return (
     <View style={styles.metaItem}>
       <Text style={theme.textStyles.caption}>{label}</Text>
-      <Text style={theme.textStyles.bodyStrong}>{value}</Text>
+      <View style={styles.metaValueRow}>
+        {colorHex ? (
+          <View style={[styles.colorDot, { backgroundColor: colorHex, borderColor: theme.colors.border }]} />
+        ) : null}
+        <Text style={theme.textStyles.bodyStrong}>{value}</Text>
+      </View>
     </View>
   );
 }
@@ -144,6 +185,33 @@ const styles = StyleSheet.create({
   metaItem: {
     width: '47%',
     gap: theme.spacing.xs,
+  },
+  metaValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  warningsContainer: {
+    marginTop: theme.spacing.md,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  warningItem: {
+    backgroundColor: theme.colors.surfaceMuted,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.accent,
+  },
+  warningText: {
+    ...theme.textStyles.caption,
+    color: theme.colors.text,
   },
   sectionList: {
     gap: theme.spacing.lg,
