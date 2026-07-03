@@ -84,6 +84,10 @@ function getHiveEventTone(event: HiveEvent) {
     return 'warning' as const;
   }
 
+  if (event.type === 'Varroabehandling') {
+    return 'warning' as const;
+  }
+
   if (event.type === 'Rensningsflyg observerad' || event.type === 'Skattning/slungning') {
     return 'calm' as const;
   }
@@ -192,14 +196,39 @@ export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: n
   );
 }
 
+/** Konverterar märkningsfärg till hex-färg för visuell representation. */
+function getQueenMarkingHex(color: string | undefined): string | undefined {
+  switch (color) {
+    case 'Vit': return '#FFFFFF';
+    case 'Gul': return '#F5C518';
+    case 'Röd': return '#E8312A';
+    case 'Grön': return '#2DB84B';
+    case 'Blå': return '#3B82F6';
+    default: return undefined;
+  }
+}
+
 export function HiveCard({ hive, apiaryLabel }: { hive: Hive; apiaryLabel: string }) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : 'calm';
+  const queenColorHex = getQueenMarkingHex(hive.queenMarkingColor);
+
+  const now = new Date();
+  const daysSince = hive.lastInspectionAt
+    ? Math.floor((now.getTime() - new Date(hive.lastInspectionAt).getTime()) / (1000 * 60 * 60 * 24))
+    : undefined;
+
+  const daysBadgeTone = daysSince === undefined ? 'info' : daysSince > 14 ? 'critical' : daysSince > 7 ? 'warning' : 'calm';
+  const daysBadgeLabel = daysSince === undefined
+    ? 'Ej genomgången'
+    : daysSince === 0
+      ? 'Genomgången idag'
+      : `${daysSince} dagar sedan`;
+
   const queenSegments = [
     `Drottning: ${hive.queenStatus}`,
     hive.queenYear ? `Årgång ${hive.queenYear}` : undefined,
-    hive.queenMarkingColor ? `Märkning ${hive.queenMarkingColor.toLowerCase()}` : undefined,
   ].filter((segment): segment is string => Boolean(segment));
 
   return (
@@ -216,15 +245,22 @@ export function HiveCard({ hive, apiaryLabel }: { hive: Hive; apiaryLabel: strin
             <Text style={theme.textStyles.heading}>{hive.name}</Text>
             <Text style={theme.textStyles.caption}>{apiaryLabel}</Text>
           </View>
-          <StatusBadge label={hive.status} tone={statusTone} />
+          <View style={styles.badgeColumn}>
+            <StatusBadge label={hive.status} tone={statusTone} />
+            <StatusBadge label={daysBadgeLabel} tone={daysBadgeTone} />
+          </View>
         </View>
         <View style={styles.inlineWrap}>
+          {queenColorHex ? (
+            <View style={[styles.queenColorDot, { backgroundColor: queenColorHex, borderColor: theme.colors.border }]} />
+          ) : null}
           <Text style={theme.textStyles.caption}>{queenSegments.join(' · ')}</Text>
+        </View>
+        <View style={styles.inlineWrap}>
           <Text style={theme.textStyles.caption}>Styrka: {hive.strength}</Text>
           <Text style={theme.textStyles.caption}>Temperament: {hive.temperament}</Text>
           <Text style={theme.textStyles.caption}>Kupsystem: {hive.boxSystem}</Text>
         </View>
-        <Text style={theme.textStyles.caption}>{hive.lastInspectionAt ? `Senast genomgången ${formatDateLabel(hive.lastInspectionAt)}` : 'Ingen genomgång sparad ännu'}</Text>
       </AppCard>
     </Pressable>
   );
@@ -234,6 +270,22 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
   const theme = useTheme();
   const styles = createStyles(theme);
   const tone = task.priority === 'Hög' ? 'critical' : task.priority === 'Medel' ? 'warning' : 'info';
+
+  function handleLogNow() {
+    if (!task.hiveId) {
+      router.push('/inspections/new');
+      return;
+    }
+
+    // Varroauppgifter skickas till händelsevyn med rätt förifylld typ
+    if (task.id.startsWith('varroa')) {
+      router.push(`/events/new?hiveId=${task.hiveId}&type=${encodeURIComponent('Uppföljande varroamätning')}` as never);
+      return;
+    }
+
+    // Drottning- och genomgångsuppgifter går till genomgångsformuläret
+    router.push(`/inspections/new?hiveId=${task.hiveId}` as never);
+  }
 
   return (
     <AppCard>
@@ -247,6 +299,14 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
       {hiveName ? <Text style={theme.textStyles.caption}>{hiveName}</Text> : null}
       <Text style={theme.textStyles.body}>{task.description}</Text>
       <Text style={theme.textStyles.caption}>{getTaskSourceLabel(task.source)}</Text>
+      {task.source === 'Beslutsstöd' ? (
+        <Pressable
+          onPress={handleLogNow}
+          style={({ pressed }) => [styles.logNowButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.logNowLabel}>Logga nu →</Text>
+        </Pressable>
+      ) : null}
     </AppCard>
   );
 }
@@ -418,6 +478,26 @@ function createStyles(theme: Theme) {
       height: 80,
       borderRadius: theme.radii.md,
       backgroundColor: theme.colors.surfaceMuted,
+    },
+    queenColorDot: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      borderWidth: 1,
+      alignSelf: 'center',
+    },
+    logNowButton: {
+      alignSelf: 'flex-start',
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      borderRadius: theme.radii.md,
+      backgroundColor: theme.colors.surfaceMuted,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    logNowLabel: {
+      ...theme.textStyles.bodyStrong,
+      color: theme.colors.text,
     },
   });
 }

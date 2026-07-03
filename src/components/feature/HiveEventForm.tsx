@@ -10,7 +10,7 @@ import { queenMarkingColors, queenStatuses } from '@/lib/queen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import { HiveEventDetails, HiveEventType, hiveEventTypes, QueenMarkingColor, QueenStatus } from '@/types/domain';
+import { HiveEventDetails, HiveEventType, hiveEventTypes, QueenMarkingColor, QueenStatus, VarroaControlMethod, VarroaTreatmentMethod } from '@/types/domain';
 
 type HiveEventFormProps = {
   initialHiveId?: string;
@@ -27,6 +27,8 @@ const defaultNotes: Record<HiveEventType, string> = {
   'Invintring startad': 'Invintringen har påbörjats.',
   'Invintring slutförd': 'Invintringen är markerad som slutförd.',
   'Stödfodring': 'Stödfodring registrerad.',
+  'Varroabehandling': 'Varroabehandling genomförd.',
+  'Uppföljande varroamätning': 'Uppföljande varroamätning genomförd.',
   'Vinterförlust': 'Vinterförlust noterad för samhället.',
   'Rensningsflyg observerad': 'Rensningsflyg observerad.',
   'Samhälle dött/avvecklat': 'Samhället är markerat som dött eller avvecklat.',
@@ -62,11 +64,28 @@ function getHeaderCopy(type: HiveEventType) {
     };
   }
 
+  if (type === 'Varroabehandling') {
+    return {
+      title: 'Logga varroabehandling',
+      description: 'Registrera utförd behandling med metod och notering. Uppföljande mätning rekommenderas om 7–10 dagar.',
+    };
+  }
+
+  if (type === 'Uppföljande varroamätning') {
+    return {
+      title: 'Uppföljande varroamätning',
+      description: 'Kontrollera effekten av senaste behandlingen. Välj metod och ange mätvärdet.',
+    };
+  }
+
   return {
     title: 'Logga en händelse',
     description: 'Logga större händelser när något har förändrats i samhället.',
   };
 }
+
+const varroaTreatmentMethods: VarroaTreatmentMethod[] = ['Oxalsyra droppning', 'Oxalsyra förångning', 'Bandbehandling', 'Myrsyra', 'Annan metod'];
+const varroaControlMethods: VarroaControlMethod[] = ['Nedfall', 'Skakprov', 'Sockerprov', 'Alkoholprov', 'Annan metod'];
 
 function isValidIsoDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -95,6 +114,10 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
   const [honeySuperCount, setHoneySuperCount] = useState('');
   const [harvestSummary, setHarvestSummary] = useState('');
   const [feedingSummary, setFeedingSummary] = useState('');
+  const [varroaTreatmentMethod, setVarroaTreatmentMethod] = useState<VarroaTreatmentMethod | undefined>(undefined);
+  const [varroaTreatmentNote, setVarroaTreatmentNote] = useState('');
+  const [varroaControlMethod, setVarroaControlMethod] = useState<VarroaControlMethod | undefined>(undefined);
+  const [varroaMeasurementValue, setVarroaMeasurementValue] = useState('');
 
   const selectedHive = useMemo(() => hives.find((item) => item.id === selectedHiveId), [hives, selectedHiveId]);
   const selectedApiary = useMemo(() => apiaries.find((item) => item.id === selectedHive?.apiaryId), [apiaries, selectedHive?.apiaryId]);
@@ -102,6 +125,8 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
   const headerCopy = getHeaderCopy(selectedType);
   const isQueenChange = selectedType === 'Drottning bytt';
   const isQueenMarking = selectedType === 'Drottning märkt/årgång';
+  const isVarroaTreatment = selectedType === 'Varroabehandling';
+  const isVarroaFollowUp = selectedType === 'Uppföljande varroamätning';
 
   useEffect(() => {
     if (initialType && hiveEventTypes.includes(initialType as HiveEventType)) {
@@ -158,6 +183,10 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
       honeySuperCount: parsedHoneySuperCount,
       harvestSummary: harvestSummary.trim() || undefined,
       feedingSummary: feedingSummary.trim() || undefined,
+      varroaTreatmentMethod: isVarroaTreatment ? varroaTreatmentMethod : undefined,
+      varroaTreatmentNote: (isVarroaTreatment || isVarroaFollowUp) ? varroaTreatmentNote.trim() || undefined : undefined,
+      varroaMeasurementValue: isVarroaFollowUp ? varroaMeasurementValue.trim() || undefined : undefined,
+      varroaControlMethod: isVarroaFollowUp ? varroaControlMethod : undefined,
     };
 
     return Object.values(details).some((value) => value !== undefined) ? details : undefined;
@@ -331,6 +360,86 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
                 />
               </View>
             )}
+          </View>
+        </AppCard>
+      ) : null}
+
+      {isVarroaTreatment ? (
+        <AppCard>
+          <Text style={theme.textStyles.bodyStrong}>Varroabehandling</Text>
+          <Text style={theme.textStyles.caption}>Välj metod och lägg till en notering om dos och tidpunkt. Uppföljande mätning rekommenderas om 7–10 dagar.</Text>
+          <View style={styles.inputList}>
+            <View style={styles.inputGroup}>
+              <Text style={theme.textStyles.caption}>Behandlingsmetod</Text>
+              <View style={styles.chipWrap}>
+                {varroaTreatmentMethods.map((method) => {
+                  const isSelected = method === varroaTreatmentMethod;
+
+                  return (
+                    <Pressable key={method} onPress={() => setVarroaTreatmentMethod(isSelected ? undefined : method)} style={({ pressed }) => [styles.chip, styles.eventChip, isSelected && styles.chipSelected, pressed && styles.chipPressed]}>
+                      <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>{method}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={theme.textStyles.caption}>Dos och notering (valfritt)</Text>
+              <TextInput
+                multiline
+                placeholder="Exempel: 3,5 ml oxalsyra per ramellarnas mellanrum, behandlade 8 ramar"
+                placeholderTextColor={theme.colors.textMuted}
+                style={[styles.input, styles.notesInput]}
+                textAlignVertical="top"
+                value={varroaTreatmentNote}
+                onChangeText={setVarroaTreatmentNote}
+              />
+            </View>
+          </View>
+        </AppCard>
+      ) : null}
+
+      {isVarroaFollowUp ? (
+        <AppCard>
+          <Text style={theme.textStyles.bodyStrong}>Uppföljande mätning</Text>
+          <Text style={theme.textStyles.caption}>Kontrollera effekten av behandlingen. Välj mätmetod och ange mätvärdet.</Text>
+          <View style={styles.inputList}>
+            <View style={styles.inputGroup}>
+              <Text style={theme.textStyles.caption}>Mätmetod</Text>
+              <View style={styles.chipWrap}>
+                {varroaControlMethods.map((method) => {
+                  const isSelected = method === varroaControlMethod;
+
+                  return (
+                    <Pressable key={method} onPress={() => setVarroaControlMethod(isSelected ? undefined : method)} style={({ pressed }) => [styles.chip, styles.eventChip, isSelected && styles.chipSelected, pressed && styles.chipPressed]}>
+                      <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>{method}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={theme.textStyles.caption}>Mätvärde</Text>
+              <TextInput
+                placeholder="Exempel: 2 kvalster/24 h eller 1,5%"
+                placeholderTextColor={theme.colors.textMuted}
+                style={styles.input}
+                value={varroaMeasurementValue}
+                onChangeText={setVarroaMeasurementValue}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={theme.textStyles.caption}>Notering (valfritt)</Text>
+              <TextInput
+                multiline
+                placeholder="Exempel: bra effekt av behandlingen, ny kontroll om 2 veckor"
+                placeholderTextColor={theme.colors.textMuted}
+                style={[styles.input, styles.notesInput]}
+                textAlignVertical="top"
+                value={varroaTreatmentNote}
+                onChangeText={setVarroaTreatmentNote}
+              />
+            </View>
           </View>
         </AppCard>
       ) : null}
