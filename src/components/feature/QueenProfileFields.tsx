@@ -2,9 +2,10 @@ import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { QueenHistoryDraftEntry, QueenProfileDraft, queenMarkingColors, queenStatuses } from '@/lib/queen';
+import { QueenHistoryDraftEntry, QueenProfileDraft, getQueenMarkingColorFromYear, getQueenMarkingColorMismatch, queenMarkingColors, queenStatuses } from '@/lib/queen';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
+import { QueenMarkingColor } from '@/types/domain';
 
 type QueenProfileFieldsProps = {
   value: QueenProfileDraft;
@@ -17,12 +18,37 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const suggestedColor = getQueenMarkingColorFromYear(value.queenYear);
+  const colorMismatch = getQueenMarkingColorMismatch(value.queenYear, value.queenMarkingColor);
+
   function updateEntry(entryId: string, patch: Partial<QueenHistoryDraftEntry>) {
     onChange({
       ...value,
       queenHistory: value.queenHistory.map((entry) => (entry.id === entryId ? { ...entry, ...patch } : entry)),
     });
   }
+
+  function handleYearChange(next: string) {
+    const cleaned = next.replace(/[^0-9]/g, '');
+    const autoColor = getQueenMarkingColorFromYear(cleaned);
+
+    // Auto-föreslå färg om fältet är tomt och år är komplett
+    if (autoColor && !value.queenMarkingColor) {
+      onChange({ ...value, queenYear: cleaned, queenMarkingColor: autoColor });
+    } else {
+      onChange({ ...value, queenYear: cleaned });
+    }
+  }
+
+  /** Färgkoderna för de internationella märkningsfärgerna */
+  const colorHexMap: Record<QueenMarkingColor, string> = {
+    'Vit': '#FFFFFF',
+    'Gul': '#F5C518',
+    'Röd': '#E8312A',
+    'Grön': '#2DB84B',
+    'Blå': '#3B82F6',
+    'Omärkt': 'transparent',
+  };
 
   return (
     <View style={styles.container}>
@@ -46,27 +72,45 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
         <TextInput
           keyboardType="number-pad"
           maxLength={4}
-          onChangeText={(next) => onChange({ ...value, queenYear: next.replace(/[^0-9]/g, '') })}
+          onChangeText={handleYearChange}
           placeholder="Exempel: 2025"
           placeholderTextColor={theme.colors.textMuted}
           style={styles.input}
           value={value.queenYear}
         />
+        {suggestedColor && !value.queenMarkingColor ? (
+          <Text style={styles.hintText}>Enligt det internationella systemet: år {value.queenYear} → {suggestedColor.toLowerCase()}</Text>
+        ) : null}
       </View>
 
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Märkningsfärg</Text>
+        <Text style={[theme.textStyles.caption, { marginBottom: 4 }]}>
+          Int. system: 1/6=Vit · 2/7=Gul · 3/8=Röd · 4/9=Grön · 5/0=Blå
+        </Text>
         <View style={styles.optionGrid}>
           {queenMarkingColors.map((color) => {
             const selected = color === value.queenMarkingColor;
+            const hex = colorHexMap[color];
+            const showDot = color !== 'Omärkt';
 
             return (
               <Pressable key={color} onPress={() => onChange({ ...value, queenMarkingColor: color })} style={[styles.option, selected && styles.optionSelected]}>
-                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{color}</Text>
+                <View style={styles.colorOptionRow}>
+                  {showDot ? (
+                    <View style={[styles.colorDot, { backgroundColor: hex, borderColor: selected ? theme.colors.surface : theme.colors.border }]} />
+                  ) : null}
+                  <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{color}</Text>
+                </View>
               </Pressable>
             );
           })}
         </View>
+        {colorMismatch ? (
+          <View style={styles.mismatchBox}>
+            <Text style={styles.mismatchText}>⚠️ {colorMismatch}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.fieldGroup}>
@@ -184,6 +228,33 @@ function createStyles(theme: Theme) {
     optionSelectedText: {
       color: theme.colors.surface,
     },
+    colorOptionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    colorDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    hintText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.textMuted,
+      fontStyle: 'italic',
+    },
+    mismatchBox: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: theme.radii.md,
+      padding: theme.spacing.md,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.warning ?? '#F59E0B',
+    },
+    mismatchText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+    },
     historyHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -207,4 +278,4 @@ function createStyles(theme: Theme) {
       flex: 1,
     },
   });
-}
+}
