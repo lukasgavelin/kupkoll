@@ -7,8 +7,8 @@ Det här dokumentet beskriver vad som är klart i projektet, vad som återstår 
 Följande releasegrund är nu satt i projektet:
 
 - Android package name: `com.lukasgavelin.kupkoll`
-- Android `versionCode`: `2`
-- Appversion i Expo synkad till `1.2.1`
+- Android `versionCode`: `3`
+- Appversion i Expo synkad till `1.2.2`
 - EAS Build-konfiguration finns i `eas.json`
 
 Det här räcker för att påbörja Android-releaseflödet, men inte för publicering i Google Play utan ytterligare material och kontokonfiguration.
