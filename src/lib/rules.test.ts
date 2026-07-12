@@ -92,7 +92,13 @@ describe('buildDerivedSignals', () => {
     const result = buildDerivedSignals([createApiary()], [hive], [inspection]);
 
     expect(result.recommendations.map((item) => item.title)).toEqual(
-      expect.arrayContaining(['Samhället verkar svagt', 'Följ upp drottningstatus', 'Förbered invintring']),
+      expect.arrayContaining([
+        'Samhället verkar svagt',
+        'Följ upp drottningstatus',
+        'Svagt samhälle inför vintern',
+        'Osäker drottningstatus inför vintern',
+        'Vinterfoder saknas – akut risk',
+      ]),
     );
     expect(result.tasks.every((item) => item.source === 'Beslutsstöd')).toBe(true);
   });

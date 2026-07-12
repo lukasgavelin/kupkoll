@@ -249,7 +249,7 @@ function createStyles(theme: Theme) {
       borderRadius: theme.radii.md,
       padding: theme.spacing.md,
       borderLeftWidth: 3,
-      borderLeftColor: theme.colors.warning ?? '#F59E0B',
+      borderLeftColor: theme.severityColors.warning.text,
     },
     mismatchText: {
       ...theme.textStyles.caption,
