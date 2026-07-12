@@ -45,8 +45,21 @@ Appen är byggd med React Native och Expo och stödjer **Android**, **iOS** och 
 - React Native
 - TypeScript
 - Expo Router
-- AsyncStorage
+- Expo SQLite (med WAL-journalisering för hög driftsäkerhet)
 - Vitest
+
+## Erfarenhetsanpassning (Erfaren/Nybörjare)
+
+Kupkoll anpassar sitt beteende och gränssnitt efter biodlarens erfarenhetsnivå:
+
+- **Erfaren biodlare (standard)**:
+  - Ett rent och fokuserat gränssnitt fritt från hjälptexter för maximal inmatningshastighet.
+  - Glesare påminnelser för tillsyn baserat på säsong och region (cadence-faktor x2).
+- **Nybörjarläge**:
+  - Aktiveras under App-anpassning i Inställningar.
+  - Tydliga, pedagogiska hjälpkort under genomgångens olika delar (yngelstatus, foderstatus, svärmtecken, varroametoder).
+  - Hjälptexter vid skapande av kupor (t.ex. förklaringar av kupsystem och drottningens märkfärg).
+  - Tätare kontroller och rekommendationer (t.ex. larm för inaktiva kupor samt "följ upp i bättre flygväder"-larm).
 
 ## Blomningsmodell (Drag Calendar)
 
