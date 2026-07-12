@@ -1,5 +1,5 @@
 import { monthLabels, inspectionCadenceDaysBySeason, regionalOrder, regionalProfileMonthIndices, seasonProfiles, SwedishRegion } from '@/data/seasonModel';
-import { Apiary, ApiaryZone, Hive, Inspection, SeasonLabel, Task } from '@/types/domain';
+import { Apiary, ApiaryZone, Hive, HiveEvent, Inspection, SeasonLabel, Task } from '@/types/domain';
 
 export type SeasonStatus = {
   season: SeasonLabel;
@@ -293,4 +293,16 @@ export function getDashboardStats(params: {
     criticalCount: params.criticalCount,
     latestInspections,
   };
+}
+
+export function getInspectionsForHive(inspections: Inspection[], hiveId: string): Inspection[] {
+  return [...inspections]
+    .filter((inspection) => inspection.hiveId === hiveId)
+    .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime());
+}
+
+export function getEventsForHive(events: HiveEvent[], hiveId: string): HiveEvent[] {
+  return [...events]
+    .filter((event) => event.hiveId === hiveId)
+    .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime());
 }

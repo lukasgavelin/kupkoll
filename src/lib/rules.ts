@@ -128,6 +128,38 @@ function createTask(
   };
 }
 
+function createRecommendationNoInspection(
+  context: NoInspectionRuleContext,
+  params: { id: string; title: string; detail: string; severity: RecommendationSeverity; kind: RecommendationKind },
+): Recommendation {
+  return {
+    id: `rec-${params.id}-${context.hive.id}`,
+    hiveId: context.hive.id,
+    title: params.title,
+    detail: params.detail,
+    severity: params.severity,
+    kind: params.kind,
+    season: context.season,
+    createdAt: context.now.toISOString(),
+  };
+}
+
+function createTaskNoInspection(
+  context: NoInspectionRuleContext,
+  params: { id: string; title: string; description: string; priority: Task['priority']; dueInDays: number },
+): Task {
+  return {
+    id: buildTaskId(`task-${params.id}`, context.hive.id),
+    title: params.title,
+    description: params.description,
+    dueDate: addDays(context.now, params.dueInDays),
+    hiveId: context.hive.id,
+    priority: params.priority,
+    source: 'Beslutsstöd',
+    completed: false,
+  };
+}
+
 function getVarroaSeverity(inspection: Inspection): RecommendationSeverity {
   return inspection.varroaLevel === 'Hög' ? 'critical' : 'warning';
 }
@@ -585,26 +617,22 @@ const noInspectionRules: NoInspectionRule[] = [
     id: 'no-inspection',
     shouldApply: ({ season }) =>
       season !== 'Vinterro' && season !== 'Vintertillsyn',
-    buildRecommendation: ({ hive, season }) => ({
-      id: `rec-no-inspection-${hive.id}`,
-      hiveId: hive.id,
-      title: 'Ingen genomgång registrerad ännu',
-      detail: `${hive.name} har inga genomgångar sparade. Logga den första genomgången för att börja få råd och uppföljning anpassade till kupans läge.`,
-      severity: 'info' as RecommendationSeverity,
-      kind: 'reminder' as RecommendationKind,
-      season,
-      createdAt: new Date().toISOString(),
-    }),
-    buildTask: ({ hive }) => ({
-      id: `task-no-inspection-${hive.id}`,
-      title: 'Logga första genomgången',
-      description: `${hive.name} saknar genomgångar. Logga den första för att komma igång med historik och beslutsstöd.`,
-      dueDate: addDays(new Date(), 2),
-      hiveId: hive.id,
-      priority: 'Medel' as Task['priority'],
-      source: 'Beslutsstöd' as Task['source'],
-      completed: false,
-    }),
+    buildRecommendation: (context) =>
+      createRecommendationNoInspection(context, {
+        id: 'no-inspection',
+        title: 'Ingen genomgång registrerad ännu',
+        detail: `${context.hive.name} har inga genomgångar sparade. Logga den första genomgången för att börja få råd och uppföljning anpassade till kupans läge.`,
+        severity: 'info',
+        kind: 'reminder',
+      }),
+    buildTask: (context) =>
+      createTaskNoInspection(context, {
+        id: 'no-inspection',
+        title: 'Logga första genomgången',
+        description: `${context.hive.name} saknar genomgångar. Logga den första för att komma igång med historik och beslutsstöd.`,
+        dueInDays: 2,
+        priority: 'Medel',
+      }),
   },
 ];
 

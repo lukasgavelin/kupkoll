@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ApiaryLocationField } from '@/components/feature/ApiaryLocationField';
 import { AppCard } from '@/components/ui/AppCard';
@@ -15,7 +15,7 @@ import { ApiaryLocationDetails, Coordinates } from '@/types/domain';
 export default function NewApiaryScreen() {
   const theme = useTheme();
   const { addApiary, apiaries } = useKupkoll();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');

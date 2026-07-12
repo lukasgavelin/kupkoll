@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Platform, StyleSheet, Switch, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
@@ -24,7 +24,7 @@ export default function SettingsScreen() {
   const [isImporting, setIsImporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const exportFacts = [
     { label: 'Bigårdar', value: apiaries.length, fullWidth: false },
     { label: 'Kupor', value: hives.length, fullWidth: false },

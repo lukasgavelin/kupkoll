@@ -4,7 +4,7 @@ import * as Crypto from 'expo-crypto';
 import { applyHiveEventToHive } from '@/lib/queenEvents';
 import { buildDerivedSignals } from '@/lib/rules';
 import { deleteApiarySync, deleteHiveSync, replaceAllDataLegacySync, saveApiarySync, saveHiveEventSync, saveHiveSync, saveInspectionSync, saveUserSettingsSync } from '@/lib/db';
-import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
+import { getDashboardStats, getEventsForHive, getInspectionsForHive, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { KupkollAppState, normalizeQueenHistory } from '@/lib/storage';
 import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
 
@@ -245,14 +245,8 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),
       getHiveById: (id) => hives.find((hive) => hive.id === id),
       getHivesByApiary: (apiaryId) => hives.filter((hive) => hive.apiaryId === apiaryId),
-      getInspectionsForHive: (hiveId) =>
-        [...inspections]
-          .filter((inspection) => inspection.hiveId === hiveId)
-          .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime()),
-      getEventsForHive: (hiveId) =>
-        [...events]
-          .filter((event) => event.hiveId === hiveId)
-          .sort((left, right) => new Date(right.performedAt).getTime() - new Date(left.performedAt).getTime()),
+      getInspectionsForHive: (hiveId) => getInspectionsForHive(inspections, hiveId),
+      getEventsForHive: (hiveId) => getEventsForHive(events, hiveId),
       getRecommendationsForHive: (hiveId) => derived.recommendations.filter((item) => item.hiveId === hiveId),
       getTasksForHive: (hiveId) => tasks.filter((task) => task.hiveId === hiveId),
     }),

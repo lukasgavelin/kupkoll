@@ -185,7 +185,7 @@ function buildDetailedInspectionNote(input: { noteText: string; activePreset?: I
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
   const theme = useTheme();
   const { addInspection, apiaries, hives } = useKupkoll();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [inspectionMode, setInspectionMode] = useState<InspectionMode>('Snabb genomgång');
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);

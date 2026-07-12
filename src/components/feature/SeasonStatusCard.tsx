@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
@@ -8,7 +9,7 @@ import { Theme } from '@/theme';
 
 export function SeasonStatusCard({ status }: { status: SeasonStatus }) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const primaryItems = status.focusItems.slice(0, 2);
   const watchItem = status.watchItems[0];
   const locationLabel = status.locationLabel ?? status.regionLabel;

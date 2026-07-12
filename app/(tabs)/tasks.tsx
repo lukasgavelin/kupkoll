@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
@@ -17,7 +18,7 @@ import type { Task } from '@/types/domain';
 export default function TasksScreen() {
   const theme = useTheme();
   const { apiaries, hives, tasks, recommendations, getHiveById, getApiaryById } = useKupkoll();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
   const firstHive = hives[0];

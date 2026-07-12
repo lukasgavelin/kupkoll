@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { QueenProfileFields } from '@/components/feature/QueenProfileFields';
 import { AppCard } from '@/components/ui/AppCard';
@@ -22,7 +22,7 @@ export default function NewHiveScreen() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ apiaryId?: string }>();
   const { addHive, apiaries, getApiaryById, hives } = useKupkoll();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [selectedApiaryId, setSelectedApiaryId] = useState(params.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState('');
   const [strength, setStrength] = useState<HiveStrength>('Medel');

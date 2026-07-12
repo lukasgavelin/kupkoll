@@ -19,7 +19,7 @@ import { Theme } from '@/theme';
 export default function HomeScreen() {
   const theme = useTheme();
   const { dashboard, hives, apiaries } = useKupkoll();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const quickHive = hives[0];
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;

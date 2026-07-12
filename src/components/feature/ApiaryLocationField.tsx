@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { formatCoordinates } from '@/lib/mapLinks';
@@ -89,7 +89,7 @@ export function ApiaryLocationField({
 }: ApiaryLocationFieldProps) {
   const theme = useTheme();
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const hasTrustedMunicipality = locationDetails?.source === 'auto' || Boolean(locationDetails?.county?.trim()) || Boolean(coordinates);
   const detectedPlace = hasTrustedMunicipality ? [locationDetails?.municipality, locationDetails?.county].filter(Boolean).join(', ') : '';
   const locationModeLabel = locationDetails?.source === 'manual' ? 'Manuellt justerad plats' : 'Automatisk platsupplösning';
