@@ -1,9 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, QueenHistoryEntry, QueenMarkingColor, QueenStatus, Task, VarroaControlMethod, VarroaLevel } from '@/types/domain';
 
-const KUPKOLL_APP_STATE_STORAGE_KEY = 'kupkoll:app-state';
-const LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY = 'beehaven:app-state';
 const KUPKOLL_APP_STATE_VERSION = 7;
 
 export type KupkollAppState = {
@@ -365,37 +361,4 @@ export function parsePersistedKupkollState(input: unknown): KupkollAppState | nu
     events: candidate.events ?? [],
     manualTasks: candidate.manualTasks,
   });
-}
-
-export async function loadKupkollState(): Promise<KupkollAppState> {
-  try {
-    const currentRaw = await AsyncStorage.getItem(KUPKOLL_APP_STATE_STORAGE_KEY);
-    const legacyRaw = currentRaw ? null : await AsyncStorage.getItem(LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY);
-    const raw = currentRaw ?? legacyRaw;
-
-    if (!raw) {
-      return createSeedKupkollState();
-    }
-
-    const parsed = JSON.parse(raw);
-    const state = parsePersistedKupkollState(parsed) ?? createSeedKupkollState();
-
-    if (!currentRaw && legacyRaw) {
-      await saveKupkollState(state);
-      await AsyncStorage.removeItem(LEGACY_BEEHAVEN_APP_STATE_STORAGE_KEY);
-    }
-
-    return state;
-  } catch {
-    return createSeedKupkollState();
-  }
-}
-
-export async function saveKupkollState(state: KupkollAppState) {
-  const payload: PersistedKupkollAppState = {
-    version: KUPKOLL_APP_STATE_VERSION,
-    ...state,
-  };
-
-  await AsyncStorage.setItem(KUPKOLL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
 }
