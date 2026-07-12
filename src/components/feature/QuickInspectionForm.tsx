@@ -12,7 +12,7 @@ import { fetchInspectionWeather } from '@/lib/weather';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import { Coordinates, HiveEventType, HiveTemperament, InspectionAdvancedDetails, InspectionMode, InspectionWeatherCondition, InspectionWeatherWind, VarroaControlMethod, VarroaLevel } from '@/types/domain';
+import { HiveEventType, HiveTemperament, InspectionAdvancedDetails, InspectionMode, InspectionWeatherCondition, InspectionWeatherWind, VarroaControlMethod, VarroaLevel } from '@/types/domain';
 
 type BooleanKey = 'queenSeen' | 'eggsSeen' | 'openBrood' | 'cappedBrood' | 'honey' | 'pollen' | 'queenCells' | 'swarmSigns' | 'actionNeeded';
 
@@ -208,16 +208,18 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const selectedApiary = useMemo(() => apiaries.find((item) => item.id === selectedHive?.apiaryId), [apiaries, selectedHive?.apiaryId]);
   const activePreset = useMemo(() => inspectionPresets.find((preset) => matchesPreset(values, temperament, varroaLevel, preset)), [temperament, values, varroaLevel]);
 
-  async function loadAutoWeather(coordinates: Coordinates) {
+  async function fetchWeatherForCoordinates(coordinates: { latitude: number; longitude: number }) {
     setAutoWeatherStatus('loading');
+    const weather = await fetchInspectionWeather(coordinates);
+    setWeatherCondition(weather.condition);
+    setWeatherWind(weather.wind);
+    setTemperatureText(formatTemperatureInput(weather.temperatureC));
+    setAutoWeatherStatus('ready');
+  }
 
+  async function loadAutoWeather(coordinates: { latitude: number; longitude: number }) {
     try {
-      const weather = await fetchInspectionWeather(coordinates);
-
-      setWeatherCondition(weather.condition);
-      setWeatherWind(weather.wind);
-      setTemperatureText(formatTemperatureInput(weather.temperatureC));
-      setAutoWeatherStatus('ready');
+      await fetchWeatherForCoordinates(coordinates);
     } catch {
       setAutoWeatherStatus('error');
     }
@@ -246,27 +248,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
     const { coordinates } = selectedApiary;
 
-    if (!coordinates) {
-      setAutoWeatherStatus('unavailable');
-      return () => {
-        cancelled = true;
-      };
-    }
-
     void (async () => {
-      setAutoWeatherStatus('loading');
-
       try {
-        const weather = await fetchInspectionWeather(coordinates);
-
-        if (cancelled) {
-          return;
-        }
-
-        setWeatherCondition(weather.condition);
-        setWeatherWind(weather.wind);
-        setTemperatureText(formatTemperatureInput(weather.temperatureC));
-        setAutoWeatherStatus('ready');
+        await fetchWeatherForCoordinates(coordinates);
       } catch {
         if (!cancelled) {
           setAutoWeatherStatus('error');

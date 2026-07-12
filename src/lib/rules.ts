@@ -46,16 +46,21 @@ function buildTaskId(prefix: string, hiveId: string) {
   return `${prefix}-${hiveId}`;
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const VARROA_FOLLOW_UP_MIN_DAYS = 5;
+const VARROA_FOLLOW_UP_MAX_DAYS = 14;
+const SWARM_SEASON_MAX_INSPECTION_DAYS = 10;
+
 function taskPriorityFromStrength(strength: HiveStrength): Task['priority'] {
   return strength === 'Svagt' ? 'Hög' : 'Medel';
 }
 
 function addDays(date: Date, days: number) {
-  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+  return new Date(date.getTime() + days * MS_PER_DAY).toISOString();
 }
 
 function differenceInDays(later: Date, earlier: Date) {
-  return Math.floor((later.getTime() - earlier.getTime()) / (24 * 60 * 60 * 1000));
+  return Math.floor((later.getTime() - earlier.getTime()) / MS_PER_DAY);
 }
 
 function getInspectionHistoryMap(inspections: Inspection[]) {
@@ -156,7 +161,7 @@ function needsVarroaFollowUp(latestEvent: HiveEvent | undefined, inspectionHisto
   const treatmentDate = new Date(latestEvent.performedAt);
   const daysSinceTreatment = differenceInDays(now, treatmentDate);
 
-  if (daysSinceTreatment < 5 || daysSinceTreatment > 14) {
+  if (daysSinceTreatment < VARROA_FOLLOW_UP_MIN_DAYS || daysSinceTreatment > VARROA_FOLLOW_UP_MAX_DAYS) {
     return false;
   }
 
@@ -614,7 +619,7 @@ function getInactiveHiveThreshold(
 
   // Under svärmperioden: max 10 dagar oavsett erfarenhet
   if (season === 'Svärmperiod') {
-    return Math.min(threshold, 10);
+    return Math.min(threshold, SWARM_SEASON_MAX_INSPECTION_DAYS);
   }
 
   return threshold;

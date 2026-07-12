@@ -145,13 +145,20 @@ function formatCountyLabel(value?: string) {
   return `${trimmed} län`;
 }
 
+function hasTrustedMunicipality(apiary: Apiary): boolean {
+  return (
+    apiary.locationDetails?.source === 'auto' ||
+    Boolean(apiary.locationDetails?.county?.trim()) ||
+    Boolean(apiary.coordinates)
+  );
+}
+
 export function getApiaryDisplayLocation(apiary?: Apiary) {
   if (!apiary) {
     return undefined;
   }
 
-  const hasTrustedMunicipality = apiary.locationDetails?.source === 'auto' || Boolean(apiary.locationDetails?.county?.trim()) || Boolean(apiary.coordinates);
-  const municipality = hasTrustedMunicipality ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
+  const municipality = hasTrustedMunicipality(apiary) ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
   const county = formatCountyLabel(apiary.locationDetails?.county);
   const locality = apiary.locationDetails?.locality?.trim();
   const fallbackLocation = apiary.location.trim();
@@ -180,8 +187,7 @@ export function getApiaryMunicipalityLabel(apiary?: Apiary) {
     return undefined;
   }
 
-  const hasTrustedMunicipality = apiary.locationDetails?.source === 'auto' || Boolean(apiary.locationDetails?.county?.trim()) || Boolean(apiary.coordinates);
-  const municipality = hasTrustedMunicipality ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
+  const municipality = hasTrustedMunicipality(apiary) ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
 
   return municipality;
 }

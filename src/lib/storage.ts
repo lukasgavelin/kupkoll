@@ -76,7 +76,7 @@ function normalizeIsoDate(value: unknown): string | undefined {
   return Number.isNaN(parsed.getTime()) ? undefined : trimmed;
 }
 
-function normalizeQueenHistory(value: unknown): QueenHistoryEntry[] {
+export function normalizeQueenHistory(value: unknown): QueenHistoryEntry[] {
   if (!Array.isArray(value)) {
     return [];
   }

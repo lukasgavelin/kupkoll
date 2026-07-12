@@ -5,8 +5,8 @@ import { applyHiveEventToHive } from '@/lib/queenEvents';
 import { buildDerivedSignals } from '@/lib/rules';
 import { deleteApiarySync, deleteHiveSync, replaceAllDataLegacySync, saveApiarySync, saveHiveEventSync, saveHiveSync, saveInspectionSync, saveUserSettingsSync } from '@/lib/db';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
-import { KupkollAppState } from '@/lib/storage';
-import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, QueenHistoryEntry, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
+import { KupkollAppState, normalizeQueenHistory } from '@/lib/storage';
+import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
@@ -53,26 +53,6 @@ function deriveHiveStatus(input: NewInspectionInput): Pick<Hive, 'status' | 'que
   };
 }
 
-function buildQueenHistoryEntries(entries?: NewHiveInput['queenHistory']): QueenHistoryEntry[] {
-  const timestamp = Date.now();
-
-  return (entries ?? [])
-    .map((entry, index) => {
-      const year = entry.year.trim();
-      const note = entry.note.trim();
-
-      if (!year || !note) {
-        return null;
-      }
-
-      return {
-        id: `queen-history-${timestamp}-${index}`,
-        year,
-        note,
-      };
-    })
-    .filter((entry): entry is QueenHistoryEntry => Boolean(entry));
-}
 
 export function KupkollProvider({ children, initialData }: { children: ReactNode; initialData: KupkollAppState & { userSettings: UserSettings } }) {
   const [apiaries, setApiaries] = useState<Apiary[]>(initialData.apiaries);
@@ -115,7 +95,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       id: `hive-${Crypto.randomUUID()}`,
       status: 'Under uppbyggnad',
       ...input,
-      queenHistory: buildQueenHistoryEntries(input.queenHistory),
+      queenHistory: normalizeQueenHistory(input.queenHistory),
     };
 
     saveHiveSync(hive);
@@ -150,7 +130,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     const updatedHive: Hive = {
       ...currentHive,
       ...input,
-      queenHistory: buildQueenHistoryEntries(input.queenHistory),
+      queenHistory: normalizeQueenHistory(input.queenHistory),
     };
 
     saveHiveSync(updatedHive);

@@ -80,11 +80,12 @@ function getHiveEventTone(event: HiveEvent) {
     return 'critical' as const;
   }
 
-  if (event.type === 'Samhälle förenat' || event.type === 'Invintring startad' || event.type === 'Invintring slutförd') {
-    return 'warning' as const;
-  }
-
-  if (event.type === 'Varroabehandling') {
+  if (
+    event.type === 'Samhälle förenat' ||
+    event.type === 'Invintring startad' ||
+    event.type === 'Invintring slutförd' ||
+    event.type === 'Varroabehandling'
+  ) {
     return 'warning' as const;
   }
 
