@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { QueenHistoryDraftEntry, QueenProfileDraft, getQueenMarkingColorFromYear, getQueenMarkingColorMismatch, queenMarkingColors, queenStatuses } from '@/lib/queen';
 import { useTheme } from '@/store/ThemeContext';
+import { useKupkoll } from '@/store/KupkollContext';
 import { Theme } from '@/theme';
 import { QueenMarkingColor } from '@/types/domain';
 
@@ -16,6 +17,7 @@ type QueenProfileFieldsProps = {
 
 export const QueenProfileFields = memo(function QueenProfileFields({ value, onChange, onAddHistoryEntry, onRemoveHistoryEntry }: QueenProfileFieldsProps) {
   const theme = useTheme();
+  const { userSettings } = useKupkoll();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const suggestedColor = getQueenMarkingColorFromYear(value.queenYear);
@@ -85,6 +87,9 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
 
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Märkningsfärg</Text>
+        {userSettings?.experienceLevel === 'beginner' ? (
+          <Text style={styles.helpText}>💡 Drottningen märks med en specifik färg baserat på födelseår för att underlätta att hitta henne och hålla koll på hennes ålder.</Text>
+        ) : null}
         <Text style={[theme.textStyles.caption, { marginBottom: 4 }]}>
           Int. system: 1/6=Vit · 2/7=Gul · 3/8=Röd · 4/9=Grön · 5/0=Blå
         </Text>
@@ -254,6 +259,16 @@ function createStyles(theme: Theme) {
     mismatchText: {
       ...theme.textStyles.caption,
       color: theme.colors.text,
+    },
+    helpText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.surfaceMuted,
+      padding: theme.spacing.md,
+      borderRadius: theme.radii.md,
+      marginTop: theme.spacing.xs,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.accent,
     },
     historyHeader: {
       flexDirection: 'row',

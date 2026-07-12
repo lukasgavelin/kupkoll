@@ -88,7 +88,7 @@ export function loadAllDataSync() {
   const tasks = tasksRows.map((r) => JSON.parse(r.data) as Task);
 
   const settingsRow = db.getFirstSync<{ value: string }>('SELECT value FROM Settings WHERE id = "userSettings"');
-  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { experienceLevel: 'beginner' as const };
+  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { experienceLevel: 'experienced' as const };
 
   return {
     apiaries,

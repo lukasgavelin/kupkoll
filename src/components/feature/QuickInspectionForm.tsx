@@ -184,7 +184,7 @@ function buildDetailedInspectionNote(input: { noteText: string; activePreset?: I
 
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
   const theme = useTheme();
-  const { addInspection, apiaries, hives } = useKupkoll();
+  const { addInspection, apiaries, hives, userSettings } = useKupkoll();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [inspectionMode, setInspectionMode] = useState<InspectionMode>('Snabb genomgång');
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
@@ -574,6 +574,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <AppCard>
             <Text style={theme.textStyles.heading}>4. Yngelstatus</Text>
             <Text style={theme.textStyles.caption}>Bedöm drottningens närvaro, äggläggning och yngelstadier.</Text>
+            {userSettings?.experienceLevel === 'beginner' ? (
+              <Text style={styles.helpText}>💡 Drottning sedd / Ägg sedda: Om du ser ägg (små vita stift i botten på cellerna) betyder det att drottningen varit här inom 3 dygn, även om du inte lyckas se henne själv. Öppet yngel är larver, täckt yngel är förpuppade bin.</Text>
+            ) : null}
             <View style={styles.optionGrid}>
               {yngelLabels.map((item) => {
                 const selected = values[item.key];
@@ -590,6 +593,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <AppCard>
             <Text style={theme.textStyles.heading}>5. Foderstatus</Text>
             <Text style={theme.textStyles.caption}>Kontrollera om det finns tillräckligt med honung/foderkrans och pollen.</Text>
+            {userSettings?.experienceLevel === 'beginner' ? (
+              <Text style={styles.helpText}>💡 Foderkransen (täckt eller öppen honung) ligger oftast som en båge ovanför och runt ynglet. Pollen är proteinfoder för yngeluppfödning och lagras i celler nära yngelklotet.</Text>
+            ) : null}
             <View style={styles.optionGrid}>
               {foderLabels.map((item) => {
                 const selected = values[item.key];
@@ -606,6 +612,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <AppCard>
             <Text style={theme.textStyles.heading}>6. Svärmtecken</Text>
             <Text style={theme.textStyles.caption}>Notera om samhället bygger drottningceller (svärmceller, nödceller, stilla byte) eller visar andra svärmtecken.</Text>
+            {userSettings?.experienceLevel === 'beginner' ? (
+              <Text style={styles.helpText}>💡 Drottningceller (svärmceller) byggs oftast längs ramens kanter eller i hål i vaxkakan. Om de innehåller larver eller är täckta är svärmrisken mycket hög och åtgärder behövs.</Text>
+            ) : null}
             <View style={styles.optionGrid}>
               {svarmLabels.map((item) => {
                 const selected = values[item.key];
@@ -622,6 +631,9 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
           <AppCard>
             <Text style={theme.textStyles.heading}>7. Varroa</Text>
             <Text style={theme.textStyles.caption}>Logga eventuella mätvärden och metoder för varroakvalster.</Text>
+            {userSettings?.experienceLevel === 'beginner' ? (
+              <Text style={styles.helpText}>💡 Naturligt nedfall mäts på en bottenplatta under några dygn. Skakprov (socker/alkohol) mäts på cirka 3 dl bin för att beräkna andelen kvalster per 100 bin (%).</Text>
+            ) : null}
             <Text style={styles.inlineLabel}>Varroa kontrollerad?</Text>
             <View style={styles.optionGrid}>
               <Pressable onPress={() => updateVarroaChecked(true)} style={[styles.option, styles.largeOption, varroaChecked && styles.optionSelected]}>
@@ -1006,6 +1018,16 @@ function createStyles(theme: Theme) {
       ...theme.textStyles.label,
       color: theme.colors.textMuted,
       marginTop: theme.spacing.md,
+    },
+    helpText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.surfaceMuted,
+      padding: theme.spacing.md,
+      borderRadius: theme.radii.md,
+      marginTop: theme.spacing.sm,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.accent,
     },
   });
 }

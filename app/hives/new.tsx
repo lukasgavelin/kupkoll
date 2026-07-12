@@ -21,7 +21,7 @@ const hiveBoxSystems: HiveBoxSystem[] = ['Lågnormal', 'Svea', 'Langstroth', 'Da
 export default function NewHiveScreen() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ apiaryId?: string }>();
-  const { addHive, apiaries, getApiaryById, hives } = useKupkoll();
+  const { addHive, apiaries, getApiaryById, hives, userSettings } = useKupkoll();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [selectedApiaryId, setSelectedApiaryId] = useState(params.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState('');
@@ -149,6 +149,9 @@ export default function NewHiveScreen() {
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Kupsystem</Text>
+          {userSettings?.experienceLevel === 'beginner' ? (
+            <Text style={styles.helpText}>💡 Lågnormal är det absolut vanligaste kupsystemet i Sverige. Svea är också vanligt i äldre kupor, medan Langstroth och Dadant är internationella standarder som rymmer mer vaxkaka.</Text>
+          ) : null}
           <View style={styles.optionGrid}>
             {hiveBoxSystems.map((value) => {
               const selected = value === boxSystem;
@@ -193,6 +196,16 @@ function createStyles(theme: Theme) {
   return StyleSheet.create({
     fieldGroup: {
       gap: theme.spacing.sm,
+    },
+    helpText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.surfaceMuted,
+      padding: theme.spacing.md,
+      borderRadius: theme.radii.md,
+      marginTop: theme.spacing.xs,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.accent,
     },
     label: {
       ...theme.textStyles.label,

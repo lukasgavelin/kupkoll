@@ -228,11 +228,11 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
         </AppCard>
         <AppCard>
           <Text style={theme.textStyles.heading}>App-anpassning</Text>
-          <Text style={theme.textStyles.body}>Välj din erfarenhetsnivå för att anpassa hur många påminnelser och råd Kupkoll ger dig.</Text>
+          <Text style={theme.textStyles.body}>Välj din erfarenhetsnivå för att anpassa hur mycket stöd, påminnelser och råd Kupkoll ger dig.</Text>
           <View style={styles.themeHeader}>
             <View style={styles.themeCopy}>
-              <Text style={theme.textStyles.bodyStrong}>Erfaren biodlare</Text>
-              <Text style={styles.infoItem}>Döljer generella larm och påminnelser för inaktiva kupor och svärmperiod.</Text>
+              <Text style={theme.textStyles.bodyStrong}>Erfaren biodlare (standard)</Text>
+              <Text style={styles.infoItem}>Ger ett rent gränssnitt. Inaktivera för att visa pedagogiska hjälptexter under genomgångar och få tätare tillsynspåminnelser.</Text>
             </View>
             <Switch
               onValueChange={(val) => {
