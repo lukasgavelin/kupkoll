@@ -1,0 +1,1112 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-12T18:05:51.632Z",
+  "plants": {
+    "corylus avellana": {
+      "scientificName": "Corylus avellana",
+      "commonName": "Hassel",
+      "minLatitude": 55.38,
+      "maxLatitude": 63.29,
+      "sampleSize": 2981,
+      "slopes": [
+        5.166,
+        4.485,
+        4.337,
+        3.073,
+        2.568
+      ],
+      "intercepts": [
+        -244.56,
+        -195.86,
+        -178.708,
+        -90.978,
+        -50.646
+      ],
+      "nectarScore": 0,
+      "pollenScore": 3,
+      "dragScore": 3,
+      "season": "tidig_vår"
+    },
+    "alnus glutinosa": {
+      "scientificName": "Alnus glutinosa",
+      "commonName": "Klibbal",
+      "minLatitude": 55.39,
+      "maxLatitude": 63.29,
+      "sampleSize": 1291,
+      "slopes": [
+        2.589,
+        3.094,
+        2.68,
+        2.103,
+        1.666
+      ],
+      "intercepts": [
+        -75.727,
+        -96.793,
+        -66.324,
+        -23.372,
+        10.501
+      ],
+      "nectarScore": 0,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "tidig_vår"
+    },
+    "alnus incana": {
+      "scientificName": "Alnus incana",
+      "commonName": "Gråal",
+      "minLatitude": 55.41,
+      "maxLatitude": 66.6,
+      "sampleSize": 609,
+      "slopes": [
+        4.62,
+        4.728,
+        3.998,
+        3.428,
+        2.751
+      ],
+      "intercepts": [
+        -202.043,
+        -199.441,
+        -147.731,
+        -104.222,
+        -56.132
+      ],
+      "nectarScore": 0,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "tidig_vår"
+    },
+    "tussilago farfara": {
+      "scientificName": "Tussilago farfara",
+      "commonName": "Tussilago",
+      "minLatitude": 55.39,
+      "maxLatitude": 66.6,
+      "sampleSize": 3894,
+      "slopes": [
+        4.123,
+        3.973,
+        3.645,
+        3.263,
+        2.115
+      ],
+      "intercepts": [
+        -160.353,
+        -143.245,
+        -116.901,
+        -84.097,
+        -3.207
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 4,
+      "season": "tidig_vår"
+    },
+    "salix caprea": {
+      "scientificName": "Salix caprea",
+      "commonName": "Sälg",
+      "minLatitude": 55.25,
+      "maxLatitude": 68.35,
+      "sampleSize": 3447,
+      "slopes": [
+        3.606,
+        3.553,
+        3.399,
+        2.916,
+        2.586
+      ],
+      "intercepts": [
+        -115.469,
+        -106.65,
+        -91.595,
+        -55.156,
+        -26.985
+      ],
+      "nectarScore": 2,
+      "pollenScore": 3,
+      "dragScore": 5,
+      "season": "tidig_vår"
+    },
+    "salix cinerea": {
+      "scientificName": "Salix cinerea",
+      "commonName": "Gråsälg",
+      "minLatitude": 55.25,
+      "maxLatitude": 68.35,
+      "sampleSize": 3447,
+      "slopes": [
+        3.606,
+        3.553,
+        3.399,
+        2.916,
+        2.586
+      ],
+      "intercepts": [
+        -115.469,
+        -106.65,
+        -91.595,
+        -55.156,
+        -26.985
+      ],
+      "nectarScore": 2,
+      "pollenScore": 3,
+      "dragScore": 5,
+      "season": "tidig_vår"
+    },
+    "salix aurita": {
+      "scientificName": "Salix aurita",
+      "commonName": "Öronsälg",
+      "minLatitude": 55.25,
+      "maxLatitude": 68.35,
+      "sampleSize": 3447,
+      "slopes": [
+        3.606,
+        3.553,
+        3.399,
+        2.916,
+        2.586
+      ],
+      "intercepts": [
+        -115.469,
+        -106.65,
+        -91.595,
+        -55.156,
+        -26.985
+      ],
+      "nectarScore": 2,
+      "pollenScore": 3,
+      "dragScore": 4,
+      "season": "tidig_vår"
+    },
+    "galanthus nivalis": {
+      "scientificName": "Galanthus nivalis",
+      "commonName": "Snödroppe",
+      "minLatitude": 55.23,
+      "maxLatitude": 65.59,
+      "sampleSize": 799,
+      "slopes": [
+        3.919,
+        4.801,
+        4.594,
+        3.919,
+        4.087
+      ],
+      "intercepts": [
+        -176.896,
+        -221.256,
+        -202.236,
+        -152.707,
+        -151.522
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "tidig_vår"
+    },
+    "eranthis hyemalis": {
+      "scientificName": "Eranthis hyemalis",
+      "commonName": "Vintergäck",
+      "minLatitude": 55.23,
+      "maxLatitude": 63.29,
+      "sampleSize": 528,
+      "slopes": [
+        4.965,
+        5.088,
+        4.144,
+        3.595,
+        3.546
+      ],
+      "intercepts": [
+        -240.117,
+        -238.611,
+        -177.104,
+        -137.065,
+        -121.769
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "tidig_vår"
+    },
+    "hepatica nobilis": {
+      "scientificName": "Hepatica nobilis",
+      "commonName": "Blåsippa",
+      "minLatitude": 55.41,
+      "maxLatitude": 66.06,
+      "sampleSize": 4328,
+      "slopes": [
+        4.081,
+        4.011,
+        3.938,
+        3.452,
+        2.811
+      ],
+      "intercepts": [
+        -157.614,
+        -145.396,
+        -135.184,
+        -96.316,
+        -48.434
+      ],
+      "nectarScore": 1,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "vår"
+    },
+    "anemone nemorosa": {
+      "scientificName": "Anemone nemorosa",
+      "commonName": "Vitsippa",
+      "minLatitude": 55.35,
+      "maxLatitude": 67.17,
+      "sampleSize": 5389,
+      "slopes": [
+        4.523,
+        4.231,
+        4.02,
+        3.441,
+        2.882
+      ],
+      "intercepts": [
+        -167,
+        -144.416,
+        -126.157,
+        -83.574,
+        -41.275
+      ],
+      "nectarScore": 1,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "vår"
+    },
+    "primula veris": {
+      "scientificName": "Primula veris",
+      "commonName": "Gullviva",
+      "minLatitude": 55.41,
+      "maxLatitude": 65.1,
+      "sampleSize": 2171,
+      "slopes": [
+        3.354,
+        2.772,
+        2.776,
+        2.655,
+        2.88
+      ],
+      "intercepts": [
+        -81.407,
+        -42.395,
+        -38.622,
+        -25.844,
+        -31.88
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "vår"
+    },
+    "caltha palustris": {
+      "scientificName": "Caltha palustris",
+      "commonName": "Kabbeleka",
+      "minLatitude": 55.38,
+      "maxLatitude": 68.37,
+      "sampleSize": 1718,
+      "slopes": [
+        3.741,
+        3.762,
+        3.829,
+        3.778,
+        3.687
+      ],
+      "intercepts": [
+        -102.168,
+        -99.126,
+        -99.285,
+        -90.905,
+        -77.304
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "vår"
+    },
+    "ranunculus ficaria": {
+      "scientificName": "Ranunculus ficaria",
+      "commonName": "Svalört",
+      "minLatitude": 55.45,
+      "maxLatitude": 62.61,
+      "sampleSize": 697,
+      "slopes": [
+        5.051,
+        4.438,
+        4.166,
+        3.5,
+        2.715
+      ],
+      "intercepts": [
+        -200.811,
+        -159.529,
+        -138.191,
+        -92.635,
+        -40.658
+      ],
+      "nectarScore": 1,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "vår"
+    },
+    "acer platanoides": {
+      "scientificName": "Acer platanoides",
+      "commonName": "Lönn",
+      "minLatitude": 55.41,
+      "maxLatitude": 64.62,
+      "sampleSize": 2044,
+      "slopes": [
+        3.48,
+        3.482,
+        3.422,
+        3.426,
+        3.69
+      ],
+      "intercepts": [
+        -88.873,
+        -84.946,
+        -78.075,
+        -73.324,
+        -83.222
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 4,
+      "season": "vår"
+    },
+    "prunus padus": {
+      "scientificName": "Prunus padus",
+      "commonName": "Hägg",
+      "minLatitude": 55.3,
+      "maxLatitude": 68.35,
+      "sampleSize": 3325,
+      "slopes": [
+        3.111,
+        2.917,
+        2.892,
+        2.938,
+        2.821
+      ],
+      "intercepts": [
+        -58.251,
+        -42.046,
+        -36.725,
+        -35.06,
+        -22.57
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "vår"
+    },
+    "prunus avium": {
+      "scientificName": "Prunus avium",
+      "commonName": "Sötkörsbär",
+      "minLatitude": 55.41,
+      "maxLatitude": 64.35,
+      "sampleSize": 988,
+      "slopes": [
+        2.954,
+        2.574,
+        2.315,
+        2.324,
+        2.163
+      ],
+      "intercepts": [
+        -52.479,
+        -26.095,
+        -8.012,
+        -3.544,
+        10.668
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 4,
+      "season": "vår"
+    },
+    "prunus spinosa": {
+      "scientificName": "Prunus spinosa",
+      "commonName": "Slån",
+      "minLatitude": 55.49,
+      "maxLatitude": 62.61,
+      "sampleSize": 1078,
+      "slopes": [
+        3.162,
+        2.735,
+        2.518,
+        2.603,
+        2.48
+      ],
+      "intercepts": [
+        -65.841,
+        -36.747,
+        -20.099,
+        -20.01,
+        -7.529
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "vår"
+    },
+    "taraxacum officinale": {
+      "scientificName": "Taraxacum officinale",
+      "commonName": "Maskros",
+      "minLatitude": 55.55,
+      "maxLatitude": 67.95,
+      "sampleSize": 283,
+      "slopes": [
+        3.065,
+        3.553,
+        3.504,
+        3.711,
+        3.675
+      ],
+      "intercepts": [
+        -63.573,
+        -87.091,
+        -78.112,
+        -86.939,
+        -78.161
+      ],
+      "nectarScore": 2,
+      "pollenScore": 3,
+      "dragScore": 5,
+      "season": "vår"
+    },
+    "vaccinium myrtillus": {
+      "scientificName": "Vaccinium myrtillus",
+      "commonName": "Blåbär",
+      "minLatitude": 55.54,
+      "maxLatitude": 68.36,
+      "sampleSize": 1890,
+      "slopes": [
+        3.397,
+        3.224,
+        3.16,
+        3.286,
+        3.21
+      ],
+      "intercepts": [
+        -74.816,
+        -60.717,
+        -52.488,
+        -54.594,
+        -44.614
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 4,
+      "season": "försommar"
+    },
+    "vaccinium vitis-idaea": {
+      "scientificName": "Vaccinium vitis-idaea",
+      "commonName": "Lingon",
+      "minLatitude": 55.6,
+      "maxLatitude": 68.36,
+      "sampleSize": 1258,
+      "slopes": [
+        2.405,
+        2.7,
+        2.795,
+        3.018,
+        2.593
+      ],
+      "intercepts": [
+        1.741,
+        -10.339,
+        -12.439,
+        -19.646,
+        14.511
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "försommar"
+    },
+    "fragaria vesca": {
+      "scientificName": "Fragaria vesca",
+      "commonName": "Smultron",
+      "minLatitude": 55.49,
+      "maxLatitude": 65.26,
+      "sampleSize": 1407,
+      "slopes": [
+        2.618,
+        2.544,
+        2.561,
+        2.458,
+        2.715
+      ],
+      "intercepts": [
+        -20.977,
+        -12.595,
+        -10.017,
+        1.833,
+        -5.831
+      ],
+      "nectarScore": 1,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "försommar"
+    },
+    "anthriscus sylvestris": {
+      "scientificName": "Anthriscus sylvestris",
+      "commonName": "Hundkäx",
+      "minLatitude": 55.41,
+      "maxLatitude": 68.36,
+      "sampleSize": 1366,
+      "slopes": [
+        2.242,
+        2.164,
+        2.156,
+        1.989,
+        1.502
+      ],
+      "intercepts": [
+        9.402,
+        17.059,
+        21.04,
+        37.13,
+        75.887
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "försommar"
+    },
+    "trifolium pratense": {
+      "scientificName": "Trifolium pratense",
+      "commonName": "Rödklöver",
+      "minLatitude": 55.56,
+      "maxLatitude": 65.06,
+      "sampleSize": 191,
+      "slopes": [
+        2.375,
+        1.844,
+        1.76,
+        2.401,
+        0.235
+      ],
+      "intercepts": [
+        17.406,
+        52.79,
+        60.03,
+        29.821,
+        168.931
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 4,
+      "season": "försommar",
+      "isAgricultural": true
+    },
+    "trifolium repens": {
+      "scientificName": "Trifolium repens",
+      "commonName": "Vitklöver",
+      "minLatitude": 55.56,
+      "maxLatitude": 66.77,
+      "sampleSize": 206,
+      "slopes": [
+        3.885,
+        3.651,
+        3.177,
+        1.635,
+        -0.884
+      ],
+      "intercepts": [
+        -70.103,
+        -53.609,
+        -21.049,
+        78.755,
+        239.671
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "försommar",
+      "isAgricultural": true
+    },
+    "rubus idaeus": {
+      "scientificName": "Rubus idaeus",
+      "commonName": "Hallon",
+      "minLatitude": 55.5,
+      "maxLatitude": 67.16,
+      "sampleSize": 967,
+      "slopes": [
+        2.629,
+        2.536,
+        2.653,
+        2.642,
+        3.085
+      ],
+      "intercepts": [
+        -5.777,
+        5.827,
+        3.756,
+        11.75,
+        -7.096
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "försommar"
+    },
+    "sorbus aucuparia": {
+      "scientificName": "Sorbus aucuparia",
+      "commonName": "Rönn",
+      "minLatitude": 55.39,
+      "maxLatitude": 67.21,
+      "sampleSize": 1977,
+      "slopes": [
+        3.125,
+        2.62,
+        2.529,
+        2.724,
+        2.769
+      ],
+      "intercepts": [
+        -46.815,
+        -11.062,
+        -1.685,
+        -7.805,
+        -4.991
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "försommar"
+    },
+    "tilia cordata": {
+      "scientificName": "Tilia cordata",
+      "commonName": "Lind",
+      "minLatitude": 55.39,
+      "maxLatitude": 62.61,
+      "sampleSize": 570,
+      "slopes": [
+        6.682,
+        4.381,
+        1.488,
+        0.559,
+        0.639
+      ],
+      "intercepts": [
+        -227.399,
+        -82.575,
+        96.712,
+        158.431,
+        162.349
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "sommar"
+    },
+    "tilia platyphyllos": {
+      "scientificName": "Tilia platyphyllos",
+      "commonName": "Skogslind",
+      "minLatitude": 55.39,
+      "maxLatitude": 62.61,
+      "sampleSize": 570,
+      "slopes": [
+        6.682,
+        4.381,
+        1.488,
+        0.559,
+        0.639
+      ],
+      "intercepts": [
+        -227.399,
+        -82.575,
+        96.712,
+        158.431,
+        162.349
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "sommar"
+    },
+    "epilobium angustifolium": {
+      "scientificName": "Epilobium angustifolium",
+      "commonName": "Mjölke",
+      "minLatitude": 55.5,
+      "maxLatitude": 68.36,
+      "sampleSize": 1120,
+      "slopes": [
+        1.708,
+        1.749,
+        1.98,
+        2.361,
+        1.375
+      ],
+      "intercepts": [
+        73.241,
+        77.092,
+        68.544,
+        54.211,
+        127.475
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "sommar"
+    },
+    "filipendula ulmaria": {
+      "scientificName": "Filipendula ulmaria",
+      "commonName": "Älggräs",
+      "minLatitude": 55.5,
+      "maxLatitude": 67.16,
+      "sampleSize": 871,
+      "slopes": [
+        1.499,
+        1.556,
+        1.637,
+        1.865,
+        2.646
+      ],
+      "intercepts": [
+        88.734,
+        88.998,
+        87.204,
+        78.924,
+        39.474
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "sommar"
+    },
+    "leucanthemum vulgare": {
+      "scientificName": "Leucanthemum vulgare",
+      "commonName": "Prästkrage",
+      "minLatitude": 55.41,
+      "maxLatitude": 66.6,
+      "sampleSize": 1055,
+      "slopes": [
+        3.445,
+        3.43,
+        3.57,
+        3.327,
+        2.926
+      ],
+      "intercepts": [
+        -49.585,
+        -43.981,
+        -48.639,
+        -28.227,
+        6.265
+      ],
+      "nectarScore": 1,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "sommar"
+    },
+    "campanula rotundifolia": {
+      "scientificName": "Campanula rotundifolia",
+      "commonName": "Liten blåklocka",
+      "minLatitude": 55.53,
+      "maxLatitude": 66.6,
+      "sampleSize": 878,
+      "slopes": [
+        1.158,
+        0.87,
+        0.735,
+        -0.187,
+        -2.855
+      ],
+      "intercepts": [
+        100.654,
+        124.319,
+        137.79,
+        203.285,
+        384.208
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "sommar"
+    },
+    "geranium sylvaticum": {
+      "scientificName": "Geranium sylvaticum",
+      "commonName": "Midsommarblomster",
+      "minLatitude": 55.55,
+      "maxLatitude": 68.36,
+      "sampleSize": 1480,
+      "slopes": [
+        1.992,
+        2.386,
+        2.466,
+        2.643,
+        2.679
+      ],
+      "intercepts": [
+        26.215,
+        6.213,
+        5.153,
+        2.001,
+        8.108
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 2,
+      "season": "sommar"
+    },
+    "vicia cracca": {
+      "scientificName": "Vicia cracca",
+      "commonName": "Kråkvicker",
+      "minLatitude": 55.54,
+      "maxLatitude": 65.83,
+      "sampleSize": 163,
+      "slopes": [
+        1.501,
+        1.018,
+        1.035,
+        1.159,
+        1.253
+      ],
+      "intercepts": [
+        67.81,
+        99.68,
+        103.725,
+        101.658,
+        102.319
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "sommar"
+    },
+    "lotus corniculatus": {
+      "scientificName": "Lotus corniculatus",
+      "commonName": "Käringtand",
+      "minLatitude": 55.54,
+      "maxLatitude": 63.17,
+      "sampleSize": 152,
+      "slopes": [
+        2.306,
+        1.869,
+        1.042,
+        0.769,
+        0.528
+      ],
+      "intercepts": [
+        6.756,
+        36.653,
+        90.174,
+        113.012,
+        136.024
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "sommar"
+    },
+    "thymus serpyllum": {
+      "scientificName": "Thymus serpyllum",
+      "commonName": "Backtimjan",
+      "minLatitude": 55.65,
+      "maxLatitude": 61.14,
+      "sampleSize": 15,
+      "slopes": [
+        3.5,
+        3.5,
+        3.5,
+        3.5,
+        3.5
+      ],
+      "intercepts": [
+        -37.338,
+        -25.538,
+        -14.738,
+        -11.538,
+        -10.738
+      ],
+      "nectarScore": 2,
+      "pollenScore": 1,
+      "dragScore": 2,
+      "season": "sommar"
+    },
+    "calluna vulgaris": {
+      "scientificName": "Calluna vulgaris",
+      "commonName": "Ljung",
+      "minLatitude": 55.41,
+      "maxLatitude": 66.6,
+      "sampleSize": 669,
+      "slopes": [
+        -0.952,
+        -0.527,
+        -0.876,
+        -1.562,
+        -2.588
+      ],
+      "intercepts": [
+        255.854,
+        237.51,
+        263.894,
+        315.621,
+        390.986
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "sensommar"
+    },
+    "centaurea jacea": {
+      "scientificName": "Centaurea jacea",
+      "commonName": "Rödklint",
+      "minLatitude": 55.41,
+      "maxLatitude": 60.53,
+      "sampleSize": 46,
+      "slopes": [
+        2.894,
+        0.182,
+        -2.101,
+        -2.458,
+        -3.139
+      ],
+      "intercepts": [
+        13.469,
+        180.175,
+        319.843,
+        344.719,
+        392.308
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "sensommar"
+    },
+    "cirsium arvense": {
+      "scientificName": "Cirsium arvense",
+      "commonName": "Åkertistel",
+      "minLatitude": 57.63,
+      "maxLatitude": 59.86,
+      "sampleSize": 23,
+      "slopes": [
+        1.081,
+        2.974,
+        4.055,
+        -0.36,
+        -6.353
+      ],
+      "intercepts": [
+        115.702,
+        6.93,
+        -54.368,
+        211.099,
+        571.877
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 4,
+      "season": "sensommar"
+    },
+    "solidago virgaurea": {
+      "scientificName": "Solidago virgaurea",
+      "commonName": "Gullris",
+      "minLatitude": 55.44,
+      "maxLatitude": 68.37,
+      "sampleSize": 423,
+      "slopes": [
+        -0.82,
+        -1.309,
+        -1.618,
+        -2.217,
+        -2.874
+      ],
+      "intercepts": [
+        243.793,
+        280.138,
+        305.722,
+        352.295,
+        403.306
+      ],
+      "nectarScore": 2,
+      "pollenScore": 2,
+      "dragScore": 3,
+      "season": "sensommar"
+    },
+    "brassica napus": {
+      "scientificName": "Brassica napus",
+      "commonName": "Raps",
+      "minLatitude": 55.56,
+      "maxLatitude": 59.84,
+      "sampleSize": 59,
+      "slopes": [
+        4.782,
+        3.578,
+        4.479,
+        5.68,
+        5.358
+      ],
+      "intercepts": [
+        -149.733,
+        -77.118,
+        -125.973,
+        -190.05,
+        -162.606
+      ],
+      "nectarScore": 3,
+      "pollenScore": 3,
+      "dragScore": 5,
+      "season": "vår",
+      "notes": "Starkt regionalt drag i jordbrukslandskap",
+      "isAgricultural": true
+    },
+    "brassica rapa": {
+      "scientificName": "Brassica rapa",
+      "commonName": "Rybs",
+      "minLatitude": 55,
+      "maxLatitude": 69,
+      "sampleSize": 0,
+      "slopes": [
+        2.675,
+        3.077,
+        3.207,
+        3.479,
+        3.479
+      ],
+      "intercepts": [
+        -33.586,
+        -49.462,
+        -49.627,
+        -55.337,
+        -45.337
+      ],
+      "nectarScore": 3,
+      "pollenScore": 3,
+      "dragScore": 4,
+      "season": "vår",
+      "isAgricultural": true
+    },
+    "phacelia tanacetifolia": {
+      "scientificName": "Phacelia tanacetifolia",
+      "commonName": "Honungsört",
+      "minLatitude": 55,
+      "maxLatitude": 69,
+      "sampleSize": 0,
+      "slopes": [
+        2.402,
+        2.402,
+        2.663,
+        2.663,
+        2.402
+      ],
+      "intercepts": [
+        44.124,
+        54.124,
+        49.793,
+        64.793,
+        94.124
+      ],
+      "nectarScore": 3,
+      "pollenScore": 2,
+      "dragScore": 5,
+      "season": "sommar",
+      "isAgricultural": true
+    }
+  }
+}

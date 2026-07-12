@@ -1,4 +1,78 @@
+import precomputedBloomRegression from '../../../assets/bloomRegression.json';
+
 export type SwedenZone = 'south' | 'middle' | 'north';
+
+export type RegressionPlant = {
+  scientificName: string;
+  commonName: string;
+  minLatitude: number;
+  maxLatitude: number;
+  sampleSize: number;
+  slopes: number[];
+  intercepts: number[];
+  nectarScore: 0 | 1 | 2 | 3;
+  pollenScore: 0 | 1 | 2 | 3;
+  dragScore: 0 | 1 | 2 | 3 | 4 | 5;
+  season: PlantSeason;
+  notes?: string;
+  isAgricultural?: boolean;
+};
+
+const regressionPlants = precomputedBloomRegression.plants as Record<string, RegressionPlant>;
+
+export function getWindowForLatitude(
+  scientificName: string,
+  latitude: number,
+  options: DragCalendarOptions = DEFAULT_OPTIONS,
+): BloomWindow | null {
+  const key = scientificName.toLowerCase().trim();
+  const reg = regressionPlants[key];
+  if (!reg) {
+    return null;
+  }
+
+  // Check presence within range (with 1.0 degree lat buffer margin)
+  if (latitude < reg.minLatitude - 1.0 || latitude > reg.maxLatitude + 1.0) {
+    return null;
+  }
+
+  const evalDoy = (index: number): number => {
+    const raw = reg.slopes[index] * latitude + reg.intercepts[index];
+    return Math.round(Math.min(366, Math.max(1, raw)));
+  };
+
+  const earlyStartDoy = evalDoy(0);
+  const typicalStartDoy = evalDoy(1);
+  const peakDoy = evalDoy(2);
+  const typicalEndDoy = evalDoy(3);
+  const lateEndDoy = evalDoy(4);
+
+  // Normalize order in case regression lines cross
+  const normEarlyStartDoy = earlyStartDoy;
+  const normTypicalStartDoy = Math.max(normEarlyStartDoy, typicalStartDoy);
+  const normPeakDoy = Math.max(normTypicalStartDoy, peakDoy);
+  const normTypicalEndDoy = Math.max(normPeakDoy, typicalEndDoy);
+  const normLateEndDoy = Math.max(normTypicalEndDoy, lateEndDoy);
+
+  return {
+    scientificName: reg.scientificName,
+    commonName: reg.commonName,
+    zone: getZoneFromLatitude(latitude, options),
+    earlyStartDoy: normEarlyStartDoy,
+    typicalStartDoy: normTypicalStartDoy,
+    peakDoy: normPeakDoy,
+    typicalEndDoy: normTypicalEndDoy,
+    lateEndDoy: normLateEndDoy,
+    sampleSize: reg.sampleSize,
+    nectarScore: reg.nectarScore,
+    pollenScore: reg.pollenScore,
+    dragScore: reg.dragScore,
+    season: reg.season,
+    notes: reg.notes,
+    isAgricultural: reg.isAgricultural,
+  };
+}
+
 
 export type PlantSeason = 'tidig_vår' | 'vår' | 'försommar' | 'sommar' | 'sensommar';
 
@@ -538,7 +612,7 @@ function calculateBloomProbability(
   }
 
   if (currentDayOfYear < window.earlyStartDoy) {
-    return interpolate(currentDayOfYear, preStart, window.earlyStartDoy, 0.08, 0.25);
+    return interpolate(currentDayOfYear, preStart, window.earlyStartDoy, 0.0, 0.25);
   }
 
   if (currentDayOfYear < window.typicalStartDoy) {
@@ -553,17 +627,15 @@ function calculateBloomProbability(
     return interpolate(currentDayOfYear, window.peakDoy, window.typicalEndDoy, 1.0, 0.7);
   }
 
-  return interpolate(currentDayOfYear, window.typicalEndDoy, window.lateEndDoy, 0.7, 0.1);
+  return interpolate(currentDayOfYear, window.typicalEndDoy, window.lateEndDoy, 0.7, 0.0);
 }
 
-function getBloomStatus(
+export function getBloomStatus(
   currentDayOfYear: number,
   window: BloomWindow,
-  options: DragCalendarOptions,
+  options: DragCalendarOptions = DEFAULT_OPTIONS,
 ): BloomStatus {
-  const preStart = window.earlyStartDoy - options.preStartBufferDays;
-
-  if (currentDayOfYear < window.typicalStartDoy && currentDayOfYear >= preStart) {
+  if (currentDayOfYear < window.typicalStartDoy) {
     return 'snart';
   }
 

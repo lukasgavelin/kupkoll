@@ -32,6 +32,32 @@ describe('applyTemperatureShiftToWindows', () => {
     expect(shifted[0].lateEndDoy).toBe(126);
   });
 
+  it('scales shift days down for summer and late summer plants', () => {
+    const windows: BloomWindow[] = [
+      {
+        scientificName: 'Calluna vulgaris',
+        commonName: 'Ljung',
+        zone: 'south',
+        earlyStartDoy: 210,
+        typicalStartDoy: 220,
+        peakDoy: 230,
+        typicalEndDoy: 245,
+        lateEndDoy: 260,
+        sampleSize: 10,
+        nectarScore: 3,
+        pollenScore: 2,
+        dragScore: 5,
+        season: 'sensommar',
+      },
+    ];
+
+    // Shift of 12 days scaled by 25% (sensommar factor 0.25) -> Math.round(12 * 0.25) = 3 days
+    const shifted = applyTemperatureShiftToWindows(windows, 12);
+
+    expect(shifted[0].earlyStartDoy).toBe(213);
+    expect(shifted[0].typicalStartDoy).toBe(223);
+  });
+
   it('returns the same array when shift is zero', () => {
     const windows: BloomWindow[] = [
       {

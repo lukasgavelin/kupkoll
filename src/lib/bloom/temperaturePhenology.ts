@@ -102,22 +102,46 @@ function normalizeWindowOrder(window: BloomWindow): BloomWindow {
   };
 }
 
+function getSeasonShiftFactor(season: BloomWindow['season']): number {
+  switch (season) {
+    case 'tidig_vår':
+    case 'vår':
+      return 1.0;
+    case 'försommar':
+      return 0.75;
+    case 'sommar':
+      return 0.5;
+    case 'sensommar':
+      return 0.25;
+    default:
+      return 1.0;
+  }
+}
+
 export function applyTemperatureShiftToWindows(windows: BloomWindow[], shiftDays: number): BloomWindow[] {
   if (!Number.isFinite(shiftDays) || shiftDays === 0) {
     return windows;
   }
 
-  return windows.map((window) =>
-    normalizeWindowOrder({
+  return windows.map((window) => {
+    const factor = getSeasonShiftFactor(window.season);
+    const scaledShift = Math.round(shiftDays * factor);
+
+    if (scaledShift === 0) {
+      return window;
+    }
+
+    return normalizeWindowOrder({
       ...window,
-      earlyStartDoy: shiftDoy(window.earlyStartDoy, shiftDays),
-      typicalStartDoy: shiftDoy(window.typicalStartDoy, shiftDays),
-      peakDoy: shiftDoy(window.peakDoy, shiftDays),
-      typicalEndDoy: shiftDoy(window.typicalEndDoy, shiftDays),
-      lateEndDoy: shiftDoy(window.lateEndDoy, shiftDays),
-    }),
-  );
+      earlyStartDoy: shiftDoy(window.earlyStartDoy, scaledShift),
+      typicalStartDoy: shiftDoy(window.typicalStartDoy, scaledShift),
+      peakDoy: shiftDoy(window.peakDoy, scaledShift),
+      typicalEndDoy: shiftDoy(window.typicalEndDoy, scaledShift),
+      lateEndDoy: shiftDoy(window.lateEndDoy, scaledShift),
+    });
+  });
 }
+
 
 export async function calculateTemperatureShiftDays(
   coordinates: Coordinates,

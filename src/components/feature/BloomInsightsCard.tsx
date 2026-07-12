@@ -7,12 +7,34 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { BloomPrediction } from '@/lib/bloom';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
+import { InspectionWeatherSnapshot } from '@/lib/weather';
+
 
 type Props = {
   predictions: BloomPrediction[];
   zoneLabel: string;
   locationLabel?: string;
+  currentWeather?: InspectionWeatherSnapshot;
+  dragEfficiency?: number;
+  dragEfficiencyLabel?: string;
 };
+
+function getWeatherIcon(condition: string): keyof typeof Ionicons.glyphMap {
+  switch (condition) {
+    case 'Soligt':
+      return 'sunny-outline';
+    case 'Växlande molnighet':
+      return 'partly-sunny-outline';
+    case 'Mulet':
+      return 'cloudy-outline';
+    case 'Duggregn':
+    case 'Regn':
+      return 'rainy-outline';
+    default:
+      return 'thermometer-outline';
+  }
+}
+
 
 function formatStatusLabel(status: BloomPrediction['bloomStatus']) {
   switch (status) {
@@ -60,9 +82,17 @@ function getWikipediaUrl(scientificName: string) {
   return `https://sv.wikipedia.org/wiki/${encodeURIComponent(pageName)}`;
 }
 
-export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Props) {
+export function BloomInsightsCard({
+  predictions,
+  zoneLabel,
+  locationLabel,
+  currentWeather,
+  dragEfficiency,
+  dragEfficiencyLabel,
+}: Props) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
   const topPredictions = predictions.slice(0, 8);
   const [showInfo, setShowInfo] = useState(false);
 
@@ -92,6 +122,22 @@ export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Pro
             : `Bedömningen bygger på historiska observationer i ${zoneLabel} Sverige.`}
         </Text>
         <Text style={styles.disclaimer}>Resultatet visar sannolikheter, inte säkra fakta för varje enskild plats.</Text>
+        
+        {currentWeather && (
+          <View style={[styles.weatherBanner, dragEfficiency === 0 ? styles.weatherBannerAlert : null]}>
+            <Ionicons
+              color={dragEfficiency === 0 ? theme.colors.accent : theme.colors.text}
+              name={getWeatherIcon(currentWeather.condition)}
+              size={18}
+            />
+            <View style={styles.weatherInfo}>
+              <Text style={styles.weatherText}>
+                {dragEfficiencyLabel} ({currentWeather.temperatureC}°C, {currentWeather.condition})
+              </Text>
+            </View>
+          </View>
+        )}
+
         {showInfo ? (
           <View style={styles.infoPanel}>
             <Text style={styles.infoText}>Prioritet visar hur intressant växten är just nu: sannolik blomning och värde för bina.</Text>
@@ -99,12 +145,16 @@ export function BloomInsightsCard({ predictions, zoneLabel, locationLabel }: Pro
             <Text style={styles.infoText}>Växtnamnen är klickbara och öppnar Wikipedia för mer information.</Text>
           </View>
         ) : null}
+
       </View>
 
       {topPredictions.length ? (
         <View style={styles.list}>
           {topPredictions.map((plant) => (
-            <View key={`${plant.scientificName}-${plant.zone}`} style={styles.row}>
+            <View
+              key={`${plant.scientificName}-${plant.zone}`}
+              style={[styles.row, dragEfficiency === 0 ? styles.rowMuted : null]}
+            >
               <View style={styles.mainInfo}>
                 <Pressable
                   accessibilityHint="Öppnar växtens Wikipediasida"
@@ -218,6 +268,32 @@ function createStyles(theme: Theme) {
     emptyText: {
       ...theme.textStyles.caption,
       color: theme.colors.textMuted,
+    },
+    rowMuted: {
+      opacity: 0.6,
+    },
+    weatherBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      padding: theme.spacing.sm,
+      borderRadius: theme.spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      marginTop: theme.spacing.xs,
+    },
+    weatherBannerAlert: {
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.accentSoft,
+    },
+    weatherInfo: {
+      flex: 1,
+    },
+    weatherText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      fontWeight: '600',
     },
   });
 }

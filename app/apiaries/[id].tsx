@@ -11,6 +11,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
+import { InspectionWeatherSnapshot } from '@/lib/weather';
 import { confirmDestructiveAction } from '@/lib/confirm';
 import { formatCoordinates } from '@/lib/mapLinks';
 import { getApiaryDisplayLocation, getApiaryRegion } from '@/lib/selectors';
@@ -24,6 +25,9 @@ export default function ApiaryDetailScreen() {
   const { deleteApiary, getApiaryById, getHivesByApiary } = useKupkoll();
   const apiary = getApiaryById(params.id);
   const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
+  const [bloomWeather, setBloomWeather] = useState<InspectionWeatherSnapshot | undefined>(undefined);
+  const [dragEfficiency, setDragEfficiency] = useState<number | undefined>(undefined);
+  const [dragEfficiencyLabel, setDragEfficiencyLabel] = useState<string | undefined>(undefined);
   const apiaryDisplayLocation = getApiaryDisplayLocation(apiary);
 
   function handleBackNavigation() {
@@ -59,6 +63,9 @@ export default function ApiaryDetailScreen() {
     async function loadPredictions() {
       if (!apiary) {
         setBloomPredictions([]);
+        setBloomWeather(undefined);
+        setDragEfficiency(undefined);
+        setDragEfficiencyLabel(undefined);
         return;
       }
 
@@ -73,10 +80,16 @@ export default function ApiaryDetailScreen() {
 
         if (isMounted) {
           setBloomPredictions(result.predictions);
+          setBloomWeather(result.currentWeather);
+          setDragEfficiency(result.dragEfficiency);
+          setDragEfficiencyLabel(result.dragEfficiencyLabel);
         }
       } catch {
         if (isMounted) {
           setBloomPredictions([]);
+          setBloomWeather(undefined);
+          setDragEfficiency(undefined);
+          setDragEfficiencyLabel(undefined);
         }
       }
     }
@@ -154,7 +167,14 @@ export default function ApiaryDetailScreen() {
         title="Sannolika dragväxter"
         description="Historikbaserad prognos för vilka växter som troligen blommar kring din bigård."
       />
-      <BloomInsightsCard predictions={bloomPredictions} zoneLabel={bloomZoneLabel} locationLabel={apiaryDisplayLocation} />
+      <BloomInsightsCard
+        predictions={bloomPredictions}
+        zoneLabel={bloomZoneLabel}
+        locationLabel={apiaryDisplayLocation}
+        currentWeather={bloomWeather}
+        dragEfficiency={dragEfficiency}
+        dragEfficiencyLabel={dragEfficiencyLabel}
+      />
 
       <SectionHeader eyebrow="Hantera" title="Administrera bigården" />
       <View style={styles.sectionList}>

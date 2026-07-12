@@ -10,6 +10,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { BloomPrediction, getLikelyBloomingPlantsNow } from '@/lib/bloom';
+import { InspectionWeatherSnapshot } from '@/lib/weather';
 import { applySeasonTipSelection, getSeasonTipSelection } from '@/lib/seasonTipRotation';
 import { getPrimaryApiary, getSeasonStatus } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
@@ -31,6 +32,9 @@ export default function HomeScreen() {
   const baseSeasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
   const [seasonStatus, setSeasonStatus] = useState(baseSeasonStatus);
   const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
+  const [bloomWeather, setBloomWeather] = useState<InspectionWeatherSnapshot | undefined>(undefined);
+  const [dragEfficiency, setDragEfficiency] = useState<number | undefined>(undefined);
+  const [dragEfficiencyLabel, setDragEfficiencyLabel] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,10 +75,16 @@ export default function HomeScreen() {
 
         if (isMounted) {
           setBloomPredictions(result.predictions);
+          setBloomWeather(result.currentWeather);
+          setDragEfficiency(result.dragEfficiency);
+          setDragEfficiencyLabel(result.dragEfficiencyLabel);
         }
       } catch {
         if (isMounted) {
           setBloomPredictions([]);
+          setBloomWeather(undefined);
+          setDragEfficiency(undefined);
+          setDragEfficiencyLabel(undefined);
         }
       }
     }
@@ -162,6 +172,9 @@ export default function HomeScreen() {
         predictions={bloomPredictions}
         locationLabel={seasonStatus.locationLabel}
         zoneLabel={seasonStatus.zoneLabel === 'nord' ? 'norra' : seasonStatus.zoneLabel === 'syd' ? 'södra' : 'mellan'}
+        currentWeather={bloomWeather}
+        dragEfficiency={dragEfficiency}
+        dragEfficiencyLabel={dragEfficiencyLabel}
       />
     </Screen>
   );

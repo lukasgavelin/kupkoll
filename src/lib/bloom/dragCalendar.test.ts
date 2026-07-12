@@ -6,6 +6,8 @@ import {
   extractBloomObservations,
   getLikelyBloomingPlants,
   parseCsv,
+  getWindowForLatitude,
+  getBloomStatus,
 } from '@/lib/bloom/dragCalendar';
 
 describe('dragCalendar', () => {
@@ -117,5 +119,41 @@ describe('dragCalendar', () => {
 
     expect(fallbackPrediction).toBeDefined();
     expect(fallbackPrediction?.confidenceScore).toBe(0.35);
+  });
+
+  it('calculates continuous bloom windows based on regression for latitude', () => {
+    // Hassel (Corylus avellana)
+    const southernWindow = getWindowForLatitude('Corylus avellana', 56.0);
+    const northernWindow = getWindowForLatitude('Corylus avellana', 63.0);
+
+    expect(southernWindow).toBeDefined();
+    expect(northernWindow).toBeDefined();
+
+    // In Sweden, spring starts earlier in the south.
+    // So the southern typicalStartDoy should be earlier than northern typicalStartDoy.
+    expect(southernWindow!.typicalStartDoy).toBeLessThan(northernWindow!.typicalStartDoy);
+  });
+
+  it('correctly reports getBloomStatus as soon (snart) for winter days', () => {
+    // A plant blooming in summer (typical start doy 180)
+    const mockWindow = {
+      scientificName: 'Epilobium angustifolium',
+      commonName: 'Mjölke',
+      zone: 'south' as const,
+      earlyStartDoy: 170,
+      typicalStartDoy: 180,
+      peakDoy: 195,
+      typicalEndDoy: 210,
+      lateEndDoy: 230,
+      sampleSize: 100,
+      nectarScore: 3 as const,
+      pollenScore: 2 as const,
+      dragScore: 5 as const,
+      season: 'sommar' as const,
+    };
+
+    // Winter day (DOY 15) should be classified as 'snart' (soon) and not 'nu' (now)
+    const status = getBloomStatus(15, mockWindow);
+    expect(status).toBe('snart');
   });
 });
