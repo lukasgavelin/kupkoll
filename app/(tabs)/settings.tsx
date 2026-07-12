@@ -58,7 +58,7 @@ export default function SettingsScreen() {
       }
 
       if (result.method === 'share') {
-        Alert.alert('Export klar', 'Delningsdialogen är öppen. Spara filen där du vill ha din backup.');
+        Alert.alert('Export klar', 'Delningsdialogen har öppnats. Välj Google Drive, iCloud Drive, Dropbox eller annan lagring för att spara din säkerhetskopia.');
         return;
       }
 
@@ -190,7 +190,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
         <AppCard>
           <View style={styles.backupIntro}>
             <Text style={theme.textStyles.heading}>Backup</Text>
-            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar, händelser och manuella uppgifter.</Text>
+            <Text style={theme.textStyles.body}>Spara en kopia av dina bigårdar, kupor, genomgångar, händelser och manuella uppgifter lokalt eller exportera till molntjänster som Google Drive och iCloud.</Text>
           </View>
           <View style={styles.exportFacts}>
             {exportFacts.map((fact) => (
@@ -219,7 +219,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               variant="secondary"
             />
             <View style={styles.exportMeta}>
-              <Text style={theme.textStyles.caption}>Exporten skapas som JSON och fungerar som säkerhetskopia.</Text>
+              <Text style={theme.textStyles.caption}>Säkerhetskopian sparas som en JSON-fil. Genom att exportera kan du spara filen direkt på Google Drive, iCloud Drive, Dropbox etc. via delningsmenyn.</Text>
               {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
               <Text style={theme.textStyles.caption}>Import ersätter befintlig data i appen med innehållet i JSON-filen.</Text>
               {importStatus ? <Text style={theme.textStyles.caption}>{importStatus}</Text> : null}
