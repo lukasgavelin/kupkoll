@@ -1,9 +1,11 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import * as Crypto from 'expo-crypto';
 
 import { applyHiveEventToHive } from '@/lib/queenEvents';
 import { buildDerivedSignals } from '@/lib/rules';
 import { deleteApiarySync, deleteHiveSync, replaceAllDataLegacySync, saveApiarySync, saveHiveEventSync, saveHiveSync, saveInspectionSync, saveUserSettingsSync } from '@/lib/db';
 import { getDashboardStats, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
+import { KupkollAppState } from '@/lib/storage';
 import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, QueenHistoryEntry, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
@@ -28,7 +30,7 @@ type KupkollContextValue = {
   addInspection: (input: NewInspectionInput) => void;
   addEvent: (input: NewHiveEventInput) => void;
   updateUserSettings: (settings: UserSettings) => void;
-  replaceAllData: (nextState: any) => void;
+  replaceAllData: (nextState: KupkollAppState & { userSettings?: UserSettings }) => void;
   getApiaryById: (id: string) => Apiary | undefined;
   getHiveById: (id: string) => Hive | undefined;
   getHivesByApiary: (apiaryId: string) => Hive[];
@@ -72,7 +74,7 @@ function buildQueenHistoryEntries(entries?: NewHiveInput['queenHistory']): Queen
     .filter((entry): entry is QueenHistoryEntry => Boolean(entry));
 }
 
-export function KupkollProvider({ children, initialData }: { children: ReactNode; initialData: any }) {
+export function KupkollProvider({ children, initialData }: { children: ReactNode; initialData: KupkollAppState & { userSettings: UserSettings } }) {
   const [apiaries, setApiaries] = useState<Apiary[]>(initialData.apiaries);
   const [hives, setHives] = useState<Hive[]>(initialData.hives);
   const [inspections, setInspections] = useState<Inspection[]>(initialData.inspections);
@@ -99,7 +101,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
 
   function addApiary(input: NewApiaryInput) {
     const apiary: Apiary = {
-      id: `apiary-${Date.now()}`,
+      id: `apiary-${Crypto.randomUUID()}`,
       ...input,
     };
 
@@ -110,7 +112,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
 
   function addHive(input: NewHiveInput) {
     const hive: Hive = {
-      id: `hive-${Date.now()}`,
+      id: `hive-${Crypto.randomUUID()}`,
       status: 'Under uppbyggnad',
       ...input,
       queenHistory: buildQueenHistoryEntries(input.queenHistory),
@@ -178,7 +180,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
   function addInspection(input: NewInspectionInput) {
     const now = new Date().toISOString();
     const inspection: Inspection = {
-      id: `insp-${Date.now()}`,
+      id: `insp-${Crypto.randomUUID()}`,
       performedAt: now,
       ...input,
     };
@@ -204,7 +206,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
 
   function addEvent(input: NewHiveEventInput) {
     const event: HiveEvent = {
-      id: `event-${Date.now()}`,
+      id: `event-${Crypto.randomUUID()}`,
       performedAt: new Date().toISOString(),
       ...input,
     };
@@ -226,7 +228,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     setUserSettings(settings);
   }
 
-  function replaceAllData(nextState: any) {
+  function replaceAllData(nextState: KupkollAppState & { userSettings?: UserSettings }) {
     replaceAllDataLegacySync(nextState);
     setApiaries(nextState.apiaries);
     setHives(nextState.hives);
