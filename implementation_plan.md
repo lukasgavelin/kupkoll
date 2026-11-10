@@ -1,89 +1,58 @@
-# Åtgärdsplan för Kupkolls Kritiska Svagheter
+# Genomförda Arkitekturförbättringar för Kupkoll
 
-Här är en strategi för att lösa de tre största tekniska och konceptuella svagheterna i Kupkoll. För de två tyngsta punkterna (lagring och backup) finns det tydliga vägval beroende på hur du vill positionera appen framåt. 
-
-> [!IMPORTANT]
-> Läs igenom alternativen under Databas och Backup noggrant. De påverkar appens framtida arkitektur och affärsmodell (t.ex. kostnader för backend) markant. Välj det spår som bäst matchar din vision, så uppdaterar vi planen efter det.
+Det här dokumentet sammanfattar de genomförda arkitekturlyften som har löst appens tidigare svagheter inom lokal datalagring, backup och regelmotor.
 
 ---
 
-## 1. Databas och Skalbarhet (Bort från AsyncStorage)
+## 1. Databas och Skalbarhet (Genomfört: `expo-sqlite`)
 
-Att byta ut den gigantiska JSON-klumpen mot en riktig databas är prio 1 för appens livslängd.
+**Status:** ✅ Klart och produktionssatt i koden.
 
-### Vägval A: `expo-sqlite` (Rekommenderas)
-Vi ersätter `AsyncStorage` med SQLite, som är det moderna och officiella sättet att bygga offline-first i Expo.
-- [x] **Koduppdatering av KupkollContext**
-  - **Före:** `replaceAllDataSync` körs i en `useEffect` och kraschar datan eftersom endast senaste 3 historikposterna finns i minnet.
-  - **Efter:** Ta bort `useEffect`. Uppdatera `addInspection`, `addEvent`, `addHive` osv. så de anropar `saveInspectionSync`, `saveEventSync` direkt.
-- [x] **Inspektionshistorik via UI**
-  - **Ändring:** Uppdatera `app/hives/[id]/inspections.tsx` så den hämtar hela historiken on-demand via `useFocusEffect` istället för att använda Context.
-* **Fördelar:** Skottsäkert. Ingen minnesläcka (du laddar bara kupa 1:s genomgångar när du klickar på kupa 1). Officiellt stöd via Expo. Extremt snabbt.
-* **Nackdelar:** Kräver en ganska stor omskrivning av `KupkollContext.tsx` och `lib/storage.ts`. Vi måste bygga en migreringsrutin som läser befintlig JSON-data och konverterar det till rader i SQL-tabeller första gången användaren startar den nya versionen.
-* **Insats:** Stor.
+Vi har ersatt den tidigare `AsyncStorage`-lösningen (som sparade hela apptillståndet som en enda JSON-sträng) med en inbäddad SQLite-databas.
 
-### Vägval B: Key-Fragmentation i AsyncStorage
-Istället för att spara allt på nyckeln `kupkoll:app-state`, delar vi upp det: `kupkoll:hive:1`, `kupkoll:inspection:23` etc. 
-* **Fördelar:** Mindre omskrivning. Vi slipper sätta upp SQL-tabeller. Går snabbt att bygga.
-* **Nackdelar:** Fortfarande ingen riktig databas. Att rendera "Senaste genomgångar" innebär att vi måste läsa hundratals nycklar. Löser inte de grundläggande prestandaproblemen på lång sikt.
-* **Insats:** Liten.
-
-### Vägval C: WatermelonDB
-En reaktiv databas ovanpå SQLite.
-* **Fördelar:** Byggd specifikt för React Native och offline-synkning. Hanterar relationer (Kupa -> Genomgångar) extremt elegant.
-* **Nackdelar:** En väldigt tung dependency. Kan ibland ställa till det med Expo-uppdateringar.
-* **Insats:** Stor.
-
-**Målbild:** Byta ut `lib/storage.ts` och låta `KupkollContext` hämta data reaktivt via databasen istället för tunga array-filtreringar i `useMemo`.
+- [x] **Initiering med WAL-läge**: `PRAGMA journal_mode = WAL;` för maximal skrivprestanda och kraschsäkerhet vid fältanvändning (`src/lib/db.ts`).
+- [x] **Strukturerade SQL-tabeller**: Separata tabeller för `Apiaries`, `Hives`, `Inspections`, `HiveEvents`, `Tasks` och `Settings`.
+- [x] **Kaskadradering**: Radering av en bigård eller kupa raderar automatiskt underliggande genomgångar och händelser (`ON DELETE CASCADE`).
+- [x] **Optimerad minnesladdning**: Vid appstart laddas endast de tre senaste genomgångarna/händelserna per kupa in i minnet för omedelbar respons på hemskärmen. Full historik hämtas on-demand när användaren öppnar kupans historikvy.
 
 ---
 
-## 2. Risken för Dataförlust (Backup / Synk)
+## 2. Bildstöd och Fotodokumentation (Genomfört)
 
-Biodlare riskerar att förlora all sin data om telefonen går sönder. Hur löser vi detta?
+**Status:** ✅ Klart och produktionssatt i koden.
 
-### Vägval A: Automatisk moln-backup via iCloud / Google Drive (Rekommenderas)
-Appen är idag anonym (inget konto krävs). Vi bevarar denna känsla genom att nyttja användarens *befintliga* moln. Vi bygger en funktion som automatiskt exporterar appens databas till en dold mapp i användarens iCloud (iOS) eller Google Drive (Android) en gång i veckan.
-- [x] **Bildstöd för genomgångar**
-- [x] **Nytt beroende:** `npx expo install expo-image-picker`
-- [x] **Domänmodell:** Utöka `Inspection` och `HiveEvent` med `imageUris?: string[]`.
-- [x] **UI:** Lägg till knapp i `app/inspections/new.tsx` för att välja bild och spara URL i SQLite.
-* **Fördelar:** 100% anonymt. Inga serverkostnader för dig som utvecklare. Data lever tryggt utanför telefonen.
-* **Nackdelar:** Lite knepigt att sätta upp Google Drive API / iCloud Documents via Expo. 
-* **Insats:** Medel.
-
-### Vägval B: Skapa ett inlogg och Backend (Supabase / Firebase)
-Vi går ifrån "offline first, inget konto" och bygger en riktig inloggning. All data synkas i realtid till en databas (t.ex. Supabase).
-* **Fördelar:** Användaren kan logga in på webben och se samma data. "Modern" app-känsla. Data är alltid 100% säkrat.
-* **Nackdelar:** Du får driftskostnader. Skapar en tröskel (folk måste skapa konto). Kräver nätverk (även om offline-stöd går att bygga).
-* **Insats:** Mycket stor.
-
-### Vägval C: Påtvingad lokal fil-export
-Vi använder `expo-file-system` för att per automatik spara JSON-exporten till telefonens "Nedladdningar" eller "Dokument" vid varje stängning.
-* **Fördelar:** Extremt enkelt.
-* **Nackdelar:** Datan ligger fortfarande kvar på enheten. Tappar de enheten är datan troligtvis ändå borta om telefonen inte gör en total backup via OS:et.
-* **Insats:** Liten.
+- [x] Integrerat `expo-image-picker` med behörighetshantering för både kamera och bildgalleri.
+- [x] Bildreferenser (`imageUris`) sparas i SQLite för både genomgångar och händelser.
+- [x] Förhandsvisning och borttagning av bilder direkt i genomgångsformuläret (`QuickInspectionForm.tsx`).
+- [x] Bildgalleri i kupans historikkort (`Cards.tsx`).
 
 ---
 
-## 3. Rigiditet i Regelsystemet (Anpassning)
+## 3. Backup och Dataportabilitet (Genomfört)
 
-Regelsystemet i `rules.ts` är statiskt. Erfarna biodlare kan bli irriterade på larm som de inte anser relevanta. Detta kan vi lösa oavsett ovanstående vägval.
+**Status:** ✅ Klart och produktionssatt i koden.
 
-### Föreslagen lösning: "Mina Inställningar"
-Vi introducerar ett nytt interface i `types/domain.ts`: `UserSettings`.
-1. **Tröskelvärden:** Användaren kan ställa in hur ofta de vill ha påminnelser (t.ex. "Varna för inaktiv kupa efter 14 dagar, 21 dagar eller Aldrig").
-2. **Stäng av moduler:** Möjlighet att bocka ur "Varna för svärmrisk" om biodlaren använder ett system där de ignorerar detta (t.ex. vid extrem avläggar-produktion).
-3. **Erfarenhetsnivå:** En snabb "toggle" under Inställningar: *Nybörjare* (alla varningar på, utförliga råd) vs *Erfaren* (bara kritiska larm).
-4. Vi modifierar `decisionRules` i `rules.ts` till att acceptera `UserSettings` i sitt `RuleContext`.
+För att bevara appens integritet och hålla den 100 % anonym utan krav på användarkonton:
+- [x] **JSON-export**: Skapar en komplett datadump av användarens bigårdar, kupor, historik och inställningar via `expo-file-system`.
+- [x] **Delning via OS**: Använder `expo-sharing` så att användaren kan spara filen direkt till Google Drive, iCloud Drive, Dropbox eller skicka via e-post/AirDrop.
+- [x] **JSON-import**: `expo-document-picker` och `src/lib/import.ts` möjliggör fullständig återställning av data från en tidigare sparad JSON-fil.
 
 ---
 
-## User Review Required
+## 4. Regelmotor & Erfarenhetsanpassning (Genomfört)
 
-Hur ser du på vägvalen?
-1. **Databas:** Vilken väg föredrar du? (Mitt råd: Vägval A, `expo-sqlite`)
-2. **Backup/Synk:** Vill du behålla appen anonym och gratis i drift (Vägval A) eller vill du bygga en plattform med inlogg (Vägval B)?
-3. **Inställningar:** Tycker du att "Erfarenhetsnivå"-konceptet låter bra för att tämja regelsystemet?
+**Status:** ✅ Klart och produktionssatt i koden.
 
-Svara med vilka spår du vill gå vidare med så börjar vi exekvera!
+- [x] `UserSettings` implementerat med `experienceLevel: 'experienced' | 'beginner'`.
+- [x] **Erfaren biodlare (standard)**: Rent UI utan störande hjälptexter, snabb inmatning och glesare påminnelsekadens.
+- [x] **Nybörjarläge**: Pedagogiska förklaringskort (yngel, foder, svärmtecken, varroametoder, kupsystem) och tätare kontroller.
+- [x] Toggle finns tillgänglig i Inställningar.
+
+---
+
+## 5. Medvetna Avgränsningar i Nuvarande Version
+
+- **Ingen backend/molnsynk i realtid**: Appen förblir medvetet offline-first och fri från serverkostnader/inloggning.
+- **Inga OS-bakgrundsnotiser**: All logik och larm körs lokalt i appen vid användning.
+- **Webbstöd är begränsat till Dev/test**: `expo-sqlite` körs optimalt på iOS och Android; webbläsaren saknar fullständig SQLite-persistens utan särskild WASM-anpassning.
+

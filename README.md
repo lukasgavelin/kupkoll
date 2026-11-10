@@ -1,152 +1,205 @@
 # Kupkoll
 
-Kupkoll är en svensk Expo-app för biodlare som vill hålla ordning på bigårdar, kupor, genomgångar, händelser och uppgifter i ett tydligt arbetsflöde för mobil och webb.
+Kupkoll är en svensk Expo-app (React Native) för biodlare som vill hålla ordning på bigårdar, kupor, genomgångar, händelser och uppgifter direkt i mobilen ute i fält.
 
-Appen fungerar utan konto och sparar data lokalt.
+Appen är byggd med filosofin **Local-first / Offline-first**: den fungerar helt utan konto eller extern backend, och all data sparas lokalt i en inbäddad SQLite-databas.
+
+---
 
 ## Dokumentation
 
 - [Integritetspolicy](./INTEGRITETSPOLICY.md)
-- [Google Play-release](./GOOGLE_PLAY_RELEASE.md)
+- [Licens (MIT)](./LICENSE)
 
-## Plattformsstöd
+---
 
-Appen är byggd med React Native och Expo och stödjer **Android**, **iOS** och **webb** från samma kodbas.
+## Plattformsstatus
 
-| Plattform | Status | Bundle-ID / Package |
-|-----------|--------------|---------------------------------------|
-| Android | Live | `com.lukasgavelin.kupkoll` |
-| iOS | Klar för release | `com.lukasgavelin.kupkoll` |
-| Webb | Dev/test | Metro bundler |
+Appen är byggd med React Native och Expo SDK 55 och hanteras från en gemensam kodbas:
 
-## Det här ingår
+| Plattform | Status | Bundle-ID / Package | Kommentar |
+| :--- | :--- | :--- | :--- |
+| **Android** | Klar för release | `com.lukasgavelin.kupkoll` | Byggbar som installerbar APK eller `.aab` för Google Play via EAS Build. |
+| **iOS** | Klar för release | `com.lukasgavelin.kupkoll` | Stödjer iPhone & iPad, redo för TestFlight/App Store via EAS Build. |
+| **Webb** | Dev/test | Metro bundler (`npm run web`) | Fungerar för utveckling och UI-förhandsgranskning. Ej produktionsklar PWA (kräver anpassat webblagringslager för SQLite). |
 
-- Hemvy som visar vad som behöver göras nu
-- Bigårdar och kupor anpassade för svensk biodling
-- Drottningprofil per kupa med status, årgång, märkning, ursprung och historikrader
-- Genomgångar i snabb eller fördjupad form med observationer, varroakontroll, väder och uppföljning
-- Händelselogg för viktiga biodlingsmoment som drottningbyte, avläggare, skattning och stödfodring
-- Drottningbyten och märkning kan uppdatera kupans drottningkort och historik direkt från händelseflödet
-- Historik per kupa som samlar både genomgångar och händelser i tidsordning
-- Uppgifter och rekommendationer från regelmotor
-- Lokal lagring, mörkt läge och JSON-export för backup av bigårdar, kupor, genomgångar, händelser och uppgifter
+---
 
-## Arbetsflöden
+## Vad som finns i appen idag
 
-- Grundflöde: lägg till bigård, lägg sedan till kupa och fyll i aktuell drottning, logga därefter genomgångar och större händelser från kupans vy
-- Snabb genomgång för ett snabbt lägesbesked i bigården
-- Fördjupad genomgång när du vill logga mer detaljer om varroa, åtgärder och anteckningar
-- Separata händelser för sådant som ändrar samhällets historik, särskilt drottningbyten och märkning
-- Export till JSON för att kunna spara en lokal backup utanför appen
+### 1. Bigårdar och kupor
+- Registrera bigårdar med namn, beskrivning och automatisk GPS-position via enhetens platsfunktion (`expo-location`).
+- Automatisk koppling till svensk kommun och geografisk zon för säsongsanpassning.
+- Stöd för svenska kupsystem: **Lågnormal**, **Svea**, **Langstroth** och **Dadant**.
+- Kupstatus: *Stabilt*, *Under uppbyggnad* eller *Behöver åtgärd*.
 
-## Teknik
+### 2. Drottningprofil och historik
+- Status per kupa: *Bekräftad*, *Osäker* eller *Behöver följas upp*.
+- Internationell färgkodning efter årgång: Vit, Gul, Röd, Grön, Blå samt Omärkt.
+- Drottningens härstamning och årtal.
+- Automatisk drottninghistorik som loggar drottningbyten och märkningar över tid.
 
-- Expo
-- React Native
-- TypeScript
-- Expo Router
-- Expo SQLite (med WAL-journalisering för hög driftsäkerhet)
-- Vitest
+### 3. Genomgångar (Snabb & Fördjupad)
+- **Snabb genomgång**: Snabb inmatning i fält av yngelstatus (ägg, öppet yngel, täckt yngel), drottningobservation, foderläge, temperament och svärmceller.
+- **Fördjupad genomgång**: Detaljerade noteringar om varroa, specifika åtgärder, fria anteckningar och uppföljningsdatum.
+- **Kamera- och bildstöd**: Fota ramar direkt med telefonens kamera eller bifoga foton från bildbiblioteket (`expo-image-picker`). Bilderna visas i kupans historik.
+- **Automatisk väderloggning**: Hämtar temperatur, vind och väderlek automatiskt vid genomgång via SMHI (sekundär fallback till Open-Meteo).
 
-## Erfarenhetsanpassning (Erfaren/Nybörjare)
+### 4. Händelselogg
+- Separata poster för större ingrepp i samhället:
+  - Drottningbyte & Märkning (uppdaterar automatiskt kupans profil och drottninghistorik).
+  - Avläggare (samhällsdelning).
+  - Skattning (honungsskörd).
+  - Stödfodring och invintring.
+  - Varroabehandling.
+- Fullständig tidslinje som samlar både genomgångar och händelser i datumordning.
 
-Kupkoll anpassar sitt beteende och gränssnitt efter biodlarens erfarenhetsnivå:
+### 5. Varroahantering & Trendanalys
+- Stöd för kontrollmetoder: naturligt nedfall, florsockermetod, alkoholtvätt, drönarutskärning, oxalsyra, tymol och myrsyra.
+- Trendvy (`app/hives/[id]/trends.tsx`) med visuella grafer över varroatryck och tillsynsfrekvens.
 
-- **Erfaren biodlare (standard)**:
- - Ett rent och fokuserat gränssnitt fritt från hjälptexter för maximal inmatningshastighet.
- - Glesare påminnelser för tillsyn baserat på säsong och region (cadence-faktor x2).
-- **Nybörjarläge**:
- - Aktiveras under App-anpassning i Inställningar.
- - Tydliga, pedagogiska hjälpkort under genomgångens olika delar (yngelstatus, foderstatus, svärmtecken, varroametoder).
- - Hjälptexter vid skapande av kupor (t.ex. förklaringar av kupsystem och drottningens märkfärg).
- - Tätare kontroller och rekommendationer (t.ex. larm för inaktiva kupor samt "följ upp i bättre flygväder"-larm).
+### 6. Dragkalender & Fenologisk blomningsmodell
+- Precomputed regressionsmodell (`assets/bloomRegression.json`) baserad på 15+ års svenska observationer.
+- Zonindelning (Syd, Mellan, Nord) och glidande latitudberäkning.
+- **Temperaturfenologi (GDD)**: Blomningsfönstren justeras automatiskt framåt eller bakåt baserat på aktuell säsongs värmeackumulering.
+- **Flygeffektivitetsindex**: Beräknar bins dragförutsättningar just nu utifrån temperatur, vindstyrka och nederbörd.
+- Direktlänkar till Wikipedia för identifiering av dragväxter.
 
-## Blomningsmodell (Drag Calendar)
+### 7. Regelmotor & Smarta rekommendationer
+- Deterministisk regelmotor (`src/lib/rules.ts`) som analyserar:
+  - utebliven drottningobservation över tid
+  - förhöjt eller stigande varroatryck
+  - svärmrisk i förhållande till säsong
+  - genomgångstakt (cadence) baserat på säsong och region
+  - tillsynsbehov efter dåligt flygväder
+- Genererar prioriterade uppgifter i uppgiftslistan och varningar på hemskärmen.
 
-Bloom-funktionaliteten är nu renodlad till en modell och en service:
+### 8. Erfarenhetsanpassning (Inställningar)
+- **Erfaren biodlare (standard)**: Rent gränssnitt utan hjälptexter, snabb inmatning och glesare påminnelsekadens.
+- **Nybörjarläge**: Pedagogiska förklaringskort under genomgångar (yngelcykel, foderbehov, svärmceller), hjälptexter vid kupskapande och tätare kontrollintervall.
 
-- `src/lib/bloom/dragCalendar.ts`: innehåller domäntyper, växtlista, CSV-parsing, zonindelning, fönsterbyggnad och prediktioner
-- `src/lib/bloom/bloomService.ts`: laddar CSV-asset, bygger cachad dataset och exponerar `getLikelyBloomingPlantsNow` för UI
-- `src/lib/bloom/temperaturePhenology.ts`: temperaturbaserad fenologi (GDD) som kan skifta blomningsfönster när platskoordinater finns
-- `src/lib/bloom/index.ts`: publikt API för bloom-delen
+### 9. Lagring, Backup och Mörkt läge
+- Lokal SQLite-databas (`expo-sqlite` med Write-Ahead Logging / WAL för hög driftsäkerhet).
+- **JSON-export**: Säkerhetskopiering via telefonens delningsmeny till t.ex. Google Drive, iCloud Drive, Dropbox, e-post eller lokal fil.
+- **JSON-import**: Full återställning från tidigare exporterad säkerhetskopia.
+- Fullt stöd för mörkt och ljust tema.
 
-Modellen utgår från:
+---
 
-- DOY (day-of-year) för tidsfönster
-- Latitudbaserad zon (`south`, `middle`, `north`)
-- Percentilbaserade blomningsfönster per art och zon
-- Fallback-fönster för viktiga jordbruksväxter vid tunt underlag
-- Temperaturjustering av fönstren baserat på historisk väderdata för användarens plats (med säker fallback till DOY-modellen vid API-fel)
+## Vad som inte finns i appen (Medvetna avgränsningar)
 
-I UI visas varje kandidat med:
+För att vara tydlig med appens nuvarande arkitektur och begränsningar:
 
-- Sannolikhet (beräknad blomningssannolikhet just nu)
-- Prioritet (sammanvägd signal av sannolikhet och dragvärde)
-- Datastöd (hur starkt observationsunderlag som finns)
-- Klickbart växtnamn som öppnar artens sida på Wikipedia
+| Område | Status i nuvarande version |
+| :--- | :--- |
+| **Användarkonto / Inloggning** | Finns inte. Appen kräver inget konto och samlar inga användaruppgifter. |
+| **Molnsynkning i realtid** | Finns inte. Det finns ingen central backend (Firebase/Supabase). Backup sker manuellt via JSON-export. |
+| **OS-pushnotiser** | Finns inte. Påminnelser och uppgifter räknas fram av regelmotorn när appen öppnas, men skickar inte bakgrundsnotiser via operativsystemet. |
+| **Fleranvändarläge / Delning** | Finns inte. Flera personer kan inte redigera samma bigård i realtid från olika enheter. |
+| **Produktionsklar webbversion** | Finns inte. Webbversionen är en dev/test-vy via Metro. SQLite-lagringen är inte anpassad för webbläsares IndexedDB. |
 
-Notera:
+---
 
-- Legacy-pipeline för bloom är borttagen för att undvika dubbla implementationer
-- UI-komponenter ska importera bloom-typer från `@/lib/bloom`, inte från separat typfil
+## Teknisk arkitektur
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   Expo / React Native                  │
+│       app/ (Expo Router v55) & src/components/         │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│                    KupkollContext                      │
+│        Globalt tillstånd, aktioner och mutations       │
+└─────────────┬───────────────────────────┬──────────────┘
+              │                           │
+┌─────────────▼───────────────┐ ┌─────────▼──────────────┐
+│       Lokal Persistens      │ │     Ren Affärslogik    │
+│  - SQLite (expo-sqlite WAL) │ │  - rules.ts (Regelmotor)│
+│  - JSON Import / Export     │ │  - dragCalendar.ts     │
+│  - expo-image-picker (Foto) │ │  - selectors.ts        │
+└─────────────────────────────┘ └────────────────────────┘
+```
+
+- **Ramverk**: Expo ~55.0.9, React 19.2.0, React Native 0.83.4
+- **Navigation**: Expo Router (filbaserad navigation med modaler och tabbar)
+- **Databas**: SQLite via `expo-sqlite` (tabeller för Apiaries, Hives, Inspections, HiveEvents, Tasks, Settings)
+- **Logik & Tester**: Plattformsoberoende TypeScript testat med Vitest
+
+---
 
 ## Projektstruktur
 
-- `app/` skärmar och navigation
-- `src/components/` UI och funktionskomponenter
-- `src/store/` globalt app-state
-- `src/lib/` regler, selektorer, lagring, export och väder
-- `src/data/` säsongsmodell
-- `src/types/` domäntyper
-
-## Starta projektet
-
-```bash
-npm install
-npm run web
+```
+kupkoll/
+├── app/                        # Skärmar och navigation (Expo Router)
+│   ├── (tabs)/                 # Huvudflikar (Hem, Bigårdar, Kupor, Uppgifter, Inställningar)
+│   ├── apiaries/               # Skapa, redigera och visa bigård
+│   ├── hives/                  # Skapa, redigera, historik och trender för kupa
+│   ├── inspections/            # Ny genomgång (kamera, snabb- och fördjupningsformulär)
+│   └── events/                 # Nya händelser (drottningbyte, skattning, avläggare etc.)
+├── src/
+│   ├── components/             # UI-komponenter (AppCard, PageHeader, formulär och kort)
+│   ├── data/                   # Statiska modeller (säsonger, integritetspolicy)
+│   ├── lib/
+│   │   ├── bloom/              # Dragkalender, fenologi, väderjustering
+│   │   ├── db.ts               # SQLite-initiering, queries och schemadefinition
+│   │   ├── rules.ts            # Regelmotor för uppgifter och varningar
+│   │   ├── selectors.ts        # Härledda sammanställningar och statistik
+│   │   ├── storage.ts          # Normalisering och migrationslogik
+│   │   ├── export.ts / import.ts # JSON backup/återställning
+│   │   └── weather.ts          # SMHI & Open-Meteo integrationer
+│   ├── store/                  # KupkollContext och ThemeContext
+│   ├── theme/                  # Färger, typografi och avstånd
+│   └── types/                  # Domäntyper (Apiary, Hive, Inspection, Event, Task)
+└── assets/                     # Ikoner, splash screen och regressionsdata
 ```
 
-## Vanliga kommandon
+---
+
+## Starta och köra projektet
 
 ```bash
+# Installera beroenden
+npm install
+
+# Starta utvecklingsservern
 npm run start
+
+# Starta direkt för Android
 npm run android
+
+# Starta direkt för iOS
 npm run ios
+
+# Starta i webbläsare (Dev/test)
 npm run web
+
+# Kör typtestning
 npm run typecheck
+
+# Kör enhetstester
 npm test
 ```
 
-## Android-release
+---
 
-Bygg APK för intern testning:
+## Bygga för release
 
+### Android
 ```bash
+# Bygg testbar APK direkt:
 npx eas build --platform android --profile apk
-```
 
-Bygg release för distribution:
-
-```bash
+# Bygg produktionspaket (.aab):
 npx eas build --platform android --profile production
 ```
 
-## iOS-release
-
-Bygg för iOS Simulator (kräver macOS med Xcode):
-
+### iOS
 ```bash
+# Bygg för simulator (kräver macOS):
 npx eas build --platform ios --profile simulator
-```
 
-Bygg för TestFlight / App Store:
-
-```bash
+# Bygg produktionspaket för TestFlight / App Store:
 npx eas build --platform ios --profile production
-```
-
-Fyll i ditt Apple Developer-konto i `eas.json` → `submit.production.ios` (`appleId`, `ascAppId`, `appleTeamId`) innan du kör submit.
-
-```bash
-npx eas submit --platform ios --profile production
 ```
