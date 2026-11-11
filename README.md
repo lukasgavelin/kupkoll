@@ -9,7 +9,7 @@ Appen är byggd med filosofin **Local-first / Offline-first**: den fungerar helt
 ## Dokumentation
 
 - [Integritetspolicy](./INTEGRITETSPOLICY.md)
-- [Licens (MIT)](./LICENSE)
+- [Licens (PolyForm Noncommercial 1.0.0)](./LICENSE)
 
 ---
 
@@ -203,3 +203,9 @@ npx eas build --platform ios --profile simulator
 # Bygg produktionspaket för TestFlight / App Store:
 npx eas build --platform ios --profile production
 ```
+
+---
+
+## Licens
+
+Licensierad under [PolyForm Noncommercial License 1.0.0](./LICENSE) – fri för personligt och icke-kommersiellt bruk. Kommersiell användning kräver separat licens.
