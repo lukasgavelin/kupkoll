@@ -1,11 +1,16 @@
+import { useMemo } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 export default function NotFoundScreen() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   return (
     <Screen>
       <View style={styles.wrapper}>
@@ -17,9 +22,11 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingTop: theme.spacing.xxxl,
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrapper: {
+      paddingTop: theme.spacing.xxxl,
+      gap: theme.spacing.lg,
+    },
+  });
+}

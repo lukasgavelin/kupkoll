@@ -1,5 +1,5 @@
 import { useFocusEffect, router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveEventSnapshot, InspectionSnapshot } from '@/components/feature/Cards';
@@ -11,9 +11,12 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 export default function HiveInspectionHistoryScreen() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const params = useLocalSearchParams<{ id: string }>();
   const { getHiveById } = useKupkoll();
   const [inspections, setInspections] = useState<Inspection[]>([]);
@@ -75,8 +78,10 @@ export default function HiveInspectionHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  list: {
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    list: {
+      gap: theme.spacing.lg,
+    },
+  });
+}
