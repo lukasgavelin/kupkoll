@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -182,6 +182,17 @@ function buildDetailedInspectionNote(input: { noteText: string; activePreset?: I
   return 'Fördjupad genomgång sparad.';
 }
 
+function createInspectionImageFilename(uri: string) {
+  const pathWithoutQuery = uri.split('?')[0]?.split('#')[0] ?? '';
+  const lastSegment = pathWithoutQuery.split('/').pop() ?? '';
+  const dotIndex = lastSegment.lastIndexOf('.');
+  const rawExtension = dotIndex >= 0 ? lastSegment.slice(dotIndex + 1).toLowerCase() : '';
+  const sanitizedExtension = /^[a-z0-9]{1,8}$/.test(rawExtension) ? rawExtension : 'jpg';
+  const randomSuffix = Math.random().toString(36).slice(2, 10);
+
+  return `inspection_${Date.now()}_${randomSuffix}.${sanitizedExtension}`;
+}
+
 export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
   const theme = useTheme();
   const { addInspection, apiaries, hives, userSettings } = useKupkoll();
@@ -203,6 +214,23 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const [noteText, setNoteText] = useState('');
   const [treatmentText, setTreatmentText] = useState('');
   const [imageUris, setImageUris] = useState<string[]>([]);
+  const copiedSessionUrisRef = useRef<Set<string>>(new Set());
+  const isSavedRef = useRef(false);
+
+  useEffect(() => {
+    const copiedSessionUris = copiedSessionUrisRef.current;
+
+    return () => {
+      if (isSavedRef.current) {
+        return;
+      }
+
+      copiedSessionUris.forEach((uri) => {
+        void FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
+      });
+      copiedSessionUris.clear();
+    };
+  }, []);
 
   const selectedHive = useMemo(() => hives.find((item) => item.id === selectedHiveId), [hives, selectedHiveId]);
   const selectedApiary = useMemo(() => apiaries.find((item) => item.id === selectedHive?.apiaryId), [apiaries, selectedHive?.apiaryId]);
@@ -273,7 +301,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   async function handlePickImage(useCamera: boolean) {
     try {
       const options: ImagePicker.ImagePickerOptions = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: false,
         quality: 0.8,
       };
@@ -297,14 +325,21 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const uri = result.assets[0].uri;
-        const filename = uri.split('/').pop() || `img_${Date.now()}.jpg`;
+
+        if (!FileSystem.documentDirectory) {
+          setImageUris((current) => [...current, uri]);
+          return;
+        }
+
+        const filename = createInspectionImageFilename(uri);
         const newPath = `${FileSystem.documentDirectory}${filename}`;
-        
+
         await FileSystem.copyAsync({
           from: uri,
           to: newPath,
         });
-        
+
+        copiedSessionUrisRef.current.add(newPath);
         setImageUris((current) => [...current, newPath]);
       }
     } catch (err) {
@@ -313,7 +348,13 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   }
 
   function removeImage(indexToRemove: number) {
+    const uriToRemove = imageUris[indexToRemove];
     setImageUris((current) => current.filter((_, idx) => idx !== indexToRemove));
+
+    if (uriToRemove && copiedSessionUrisRef.current.has(uriToRemove)) {
+      copiedSessionUrisRef.current.delete(uriToRemove);
+      void FileSystem.deleteAsync(uriToRemove, { idempotent: true }).catch(() => {});
+    }
   }
 
   function updateVarroaChecked(nextValue: boolean) {
@@ -413,6 +454,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       ...values,
     });
 
+    isSavedRef.current = true;
     Alert.alert('Genomgång sparad', 'Genomgången är sparad och kupans sida är uppdaterad.');
     router.replace(`/hives/${selectedHiveId}`);
   }
@@ -820,7 +862,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
             <Text style={theme.textStyles.caption}>Lägg till foton från genomgången (t.ex. yngelbild eller misstänkt sjukdom).</Text>
             <View style={styles.imageGrid}>
               {imageUris.map((uri, index) => (
-                <View key={uri} style={styles.imageWrapper}>
+                <View key={`${uri}-${index}`} style={styles.imageWrapper}>
                   <Image source={{ uri }} style={styles.imagePreview} />
                   <Pressable style={styles.removeImageButton} onPress={() => removeImage(index)}>
                     <Text style={styles.removeImageText}>✕</Text>

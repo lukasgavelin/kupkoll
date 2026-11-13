@@ -101,7 +101,9 @@ function downloadWebFile(fileName: string, contents: string) {
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
-  URL.revokeObjectURL(objectUrl);
+  setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+  }, 1000);
 }
 
 export async function exportKupkollData(state: KupkollAppState): Promise<KupkollExportResult> {
