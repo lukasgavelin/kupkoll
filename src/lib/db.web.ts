@@ -169,6 +169,15 @@ export function saveInspectionAndHiveSync(inspection: Inspection, hive: Hive) {
   });
 }
 
+export function deleteInspectionAndUpdateHiveSync(inspectionId: string, hive?: Hive) {
+  const state = readState();
+  writeState({
+    ...state,
+    inspections: state.inspections.filter((i) => i.id !== inspectionId),
+    hives: hive ? upsertById(state.hives, hive) : state.hives,
+  });
+}
+
 export function saveHiveEventSync(event: HiveEvent) {
   const state = readState();
   writeState({

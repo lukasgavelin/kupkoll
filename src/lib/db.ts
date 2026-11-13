@@ -28,12 +28,12 @@ export function withTransactionSync(fn: () => void) {
 export function initDbSync() {
   const db = getDbSync();
   const versionRow = db.getFirstSync<{ user_version: number }>('PRAGMA user_version');
-  const currentVersion = versionRow?.user_version ?? 0;
+  let currentVersion = versionRow?.user_version ?? 0;
 
-  if (currentVersion < DB_SCHEMA_VERSION) {
+  if (currentVersion < 1) {
     db.execSync(`
       PRAGMA journal_mode = WAL;
-      
+
       CREATE TABLE IF NOT EXISTS Settings (
         id TEXT PRIMARY KEY,
         value TEXT NOT NULL
@@ -74,6 +74,13 @@ export function initDbSync() {
         data TEXT NOT NULL
       );
 
+      PRAGMA user_version = 1;
+    `);
+    currentVersion = 1;
+  }
+
+  if (currentVersion < 2) {
+    db.execSync(`
       CREATE INDEX IF NOT EXISTS idx_inspections_hive_performed
         ON Inspections (hiveId, performedAt DESC);
 
@@ -182,6 +189,15 @@ export function saveInspectionAndHiveSync(inspection: Inspection, hive: Hive) {
   withTransactionSync(() => {
     saveInspectionSync(inspection);
     saveHiveSync(hive);
+  });
+}
+
+export function deleteInspectionAndUpdateHiveSync(inspectionId: string, hive?: Hive) {
+  withTransactionSync(() => {
+    deleteInspectionSync(inspectionId);
+    if (hive) {
+      saveHiveSync(hive);
+    }
   });
 }
 

@@ -103,13 +103,14 @@ export default function HomeScreen() {
           setDragEfficiencyLabel(result.dragEfficiencyLabel);
           setBloomError(null);
         }
-      } catch {
+      } catch (err) {
         if (isMounted) {
+          const detail = err instanceof Error && err.message ? ` (${err.message})` : '';
           setBloomPredictions([]);
           setBloomWeather(undefined);
           setDragEfficiency(undefined);
           setDragEfficiencyLabel(undefined);
-          setBloomError('Kunde inte ladda blomningsdata just nu. Kontrollera anslutningen och försök igen.');
+          setBloomError(`Kunde inte ladda blomningsdata just nu${detail}. Kontrollera anslutningen och försök igen.`);
         }
       } finally {
         if (isMounted) {

@@ -1,10 +1,9 @@
-import { useFocusEffect, router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveEventSnapshot, InspectionSnapshot } from '@/components/feature/Cards';
 import { confirmDestructiveAction } from '@/lib/confirm';
-import { loadEventsForHiveSync, loadInspectionsForHiveSync } from '@/lib/db';
 import { HiveEvent, Inspection } from '@/types/domain';
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
@@ -19,19 +18,10 @@ export default function HiveInspectionHistoryScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const params = useLocalSearchParams<{ id: string }>();
-  const { getHiveById, deleteInspection, deleteEvent } = useKupkoll();
-  const [inspections, setInspections] = useState<Inspection[]>([]);
-  const [events, setEvents] = useState<HiveEvent[]>([]);
+  const { getHiveById, getInspectionsForHive, getEventsForHive, deleteInspection, deleteEvent } = useKupkoll();
   const hive = getHiveById(params.id);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (hive) {
-        setInspections(loadInspectionsForHiveSync(hive.id));
-        setEvents(loadEventsForHiveSync(hive.id));
-      }
-    }, [hive?.id])
-  );
+  const inspections = hive ? getInspectionsForHive(hive.id) : [];
+  const events = hive ? getEventsForHive(hive.id) : [];
 
   async function handleDeleteInspection(inspection: Inspection) {
     const confirmed = await confirmDestructiveAction({
@@ -41,7 +31,6 @@ export default function HiveInspectionHistoryScreen() {
 
     if (confirmed) {
       deleteInspection(inspection.id);
-      setInspections((current) => current.filter((item) => item.id !== inspection.id));
     }
   }
 
@@ -53,7 +42,6 @@ export default function HiveInspectionHistoryScreen() {
 
     if (confirmed) {
       deleteEvent(event.id);
-      setEvents((current) => current.filter((item) => item.id !== event.id));
     }
   }
 

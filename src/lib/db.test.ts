@@ -37,12 +37,24 @@ describe('db', () => {
     mockDb.getFirstSync.mockReturnValueOnce({ user_version: 0 });
     initDbSync();
 
-    expect(mockDb.execSync).toHaveBeenCalledTimes(2);
+    expect(mockDb.execSync).toHaveBeenCalledTimes(3);
     expect(mockDb.execSync.mock.calls[0]?.[0]).toBe('PRAGMA foreign_keys = ON;');
-    const sql = mockDb.execSync.mock.calls[1]?.[0] as string;
-    expect(sql).toContain('PRAGMA journal_mode = WAL;');
-    expect(sql).toContain('CREATE INDEX IF NOT EXISTS idx_inspections_hive_performed');
-    expect(sql).toContain('PRAGMA user_version = 2;');
+    const v1Sql = mockDb.execSync.mock.calls[1]?.[0] as string;
+    const v2Sql = mockDb.execSync.mock.calls[2]?.[0] as string;
+    expect(v1Sql).toContain('PRAGMA journal_mode = WAL;');
+    expect(v1Sql).toContain('PRAGMA user_version = 1;');
+    expect(v2Sql).toContain('CREATE INDEX IF NOT EXISTS idx_inspections_hive_performed');
+    expect(v2Sql).toContain('PRAGMA user_version = 2;');
+  });
+
+  it('migrates directly from version 1 to version 2 without recreating v1 tables', () => {
+    mockDb.getFirstSync.mockReturnValueOnce({ user_version: 1 });
+    initDbSync();
+
+    expect(mockDb.execSync).toHaveBeenCalledTimes(1);
+    const v2Sql = mockDb.execSync.mock.calls[0]?.[0] as string;
+    expect(v2Sql).toContain('CREATE INDEX IF NOT EXISTS idx_inspections_hive_performed');
+    expect(v2Sql).toContain('PRAGMA user_version = 2;');
   });
 
   it('skips schema migration in initDbSync when user_version is already current', () => {

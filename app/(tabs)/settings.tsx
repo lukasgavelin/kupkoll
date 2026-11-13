@@ -227,7 +227,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               variant="secondary"
             />
             <View style={styles.exportMeta}>
-              <Text style={theme.textStyles.caption}>Säkerhetskopian sparas som en JSON-fil. Genom att exportera kan du spara filen direkt på Google Drive, iCloud Drive, Dropbox etc. via delningsmenyn.</Text>
+              <Text style={theme.textStyles.caption}>Säkerhetskopian sparas som en JSON-fil med all text- och strukturdata. Bifogade foton sparas lokalt på enheten och följer inte med i JSON-filen vid enhetsbyte.</Text>
               {exportStatus ? (
                 <Text style={[styles.statusText, exportStatus.isError && styles.statusErrorText]}>{exportStatus.message}</Text>
               ) : null}

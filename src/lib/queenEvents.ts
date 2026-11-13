@@ -21,6 +21,17 @@ function createQueenHistoryEntry(event: HiveEvent): QueenHistoryEntry | undefine
   };
 }
 
+function upsertQueenHistoryEntry(history: QueenHistoryEntry[], entry: QueenHistoryEntry): QueenHistoryEntry[] {
+  const existingIndex = history.findIndex((item) => item.id === entry.id);
+  if (existingIndex === -1) {
+    return [entry, ...history];
+  }
+
+  const updated = [...history];
+  updated[existingIndex] = entry;
+  return updated;
+}
+
 export function applyHiveEventToHive(hive: Hive, event: HiveEvent): Hive {
   if (hive.id !== event.hiveId) {
     return hive;
@@ -47,7 +58,7 @@ export function applyHiveEventToHive(hive: Hive, event: HiveEvent): Hive {
       queenIntroducedAt: isNewQueenYear
         ? (event.details.queenIntroducedAt ?? event.performedAt.slice(0, 10))
         : (event.details.queenIntroducedAt ?? hive.queenIntroducedAt),
-      queenHistory: nextHistoryEntry ? [nextHistoryEntry, ...hive.queenHistory] : hive.queenHistory,
+      queenHistory: nextHistoryEntry ? upsertQueenHistoryEntry(hive.queenHistory, nextHistoryEntry) : hive.queenHistory,
     };
   }
 

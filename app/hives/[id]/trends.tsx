@@ -1,5 +1,5 @@
-import { useFocusEffect, router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
@@ -7,19 +7,17 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
-import { loadEventsForHiveSync, loadInspectionsForHiveSync } from '@/lib/db';
 import { formatDateLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
-import { HiveEvent, Inspection } from '@/types/domain';
 
 export default function HiveTrendsScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
-  const { getHiveById } = useKupkoll();
+  const { getHiveById, getInspectionsForHive, getEventsForHive } = useKupkoll();
   const hive = getHiveById(params.id);
-  const [inspections, setInspections] = useState<Inspection[]>([]);
-  const [events, setEvents] = useState<HiveEvent[]>([]);
+  const inspections = useMemo(() => (hive ? [...getInspectionsForHive(hive.id)].reverse() : []), [getInspectionsForHive, hive]);
+  const events = hive ? getEventsForHive(hive.id) : [];
   const [chartWidth, setChartWidth] = useState(0);
 
   function handleBackNavigation() {
@@ -35,16 +33,6 @@ export default function HiveTrendsScreen() {
 
     router.replace('/apiaries');
   }
-
-  useFocusEffect(
-    useCallback(() => {
-      if (hive) {
-        // Load full history
-        setInspections(loadInspectionsForHiveSync(hive.id).reverse()); // Oldest first for charts
-        setEvents(loadEventsForHiveSync(hive.id));
-      }
-    }, [hive?.id])
-  );
 
   if (!hive) {
     return (
