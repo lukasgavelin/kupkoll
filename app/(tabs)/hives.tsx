@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { router } from 'expo-router';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveCard } from '@/components/feature/Cards';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
@@ -9,13 +10,14 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { getApiaryDisplayLocation } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
-import { theme } from '@/theme';
+import { Theme } from '@/theme';
 
 const hivePriorityOrder = { 'Behöver åtgärd': 0, 'Under uppbyggnad': 1, 'Stabilt': 2 } as const;
 
 export default function HivesScreen() {
   const { apiaries, hives, getApiaryById } = useKupkoll();
-  const themeValues = useTheme();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const hasApiaries = apiaries.length > 0;
 
   const now = new Date();
@@ -58,13 +60,13 @@ export default function HivesScreen() {
       />
       <PrimaryButton fullWidth label="Lägg till kupa" onPress={() => router.push(hasApiaries ? '/hives/new' : '/apiaries/new')} />
       {summaryParts.length > 0 ? (
-        <View style={{ backgroundColor: themeValues.colors.surfaceMuted, borderRadius: 12, padding: 12 }}>
-          <Text style={{ ...themeValues.textStyles.caption, color: themeValues.colors.textMuted }}>
+        <View style={styles.summaryBanner}>
+          <Text style={styles.summaryText}>
             {summaryParts.join(' · ')}
           </Text>
         </View>
       ) : null}
-      <View style={{ gap: theme.spacing.lg }}>
+      <View style={styles.list}>
         {sortedHives.length ? (
           sortedHives.map((hive) => {
             const apiary = getApiaryById(hive.apiaryId);
@@ -79,4 +81,21 @@ export default function HivesScreen() {
       </View>
     </Screen>
   );
+}
+
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    summaryBanner: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: 12,
+      padding: 12,
+    },
+    summaryText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.textMuted,
+    },
+    list: {
+      gap: theme.spacing.lg,
+    },
+  });
 }
