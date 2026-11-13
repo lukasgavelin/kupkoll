@@ -39,6 +39,7 @@
       "buildNumber": "3",
       "minimumOsVersion": "15.1",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Kupkoll använder din plats för att spara bigårdens position på kartan.",
         "NSPhotoLibraryUsageDescription": "Kupkoll behöver åtkomst till dina foton så att du kan lägga till bilder i dina genomgångar.",
         "NSCameraUsageDescription": "Kupkoll behöver åtkomst till kameran så att du kan fota ramar och kupor i fält."
@@ -48,8 +49,6 @@
       "package": "com.lukasgavelin.kupkoll",
       "versionCode": 3,
       "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],

@@ -1,6 +1,6 @@
 {
   "name": "kupkoll",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "private": true,
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "expo-router/entry",
