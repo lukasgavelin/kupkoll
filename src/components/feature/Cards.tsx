@@ -330,7 +330,7 @@ export function TaskCard({
               style={({ pressed }) => [styles.taskActionButton, pressed && styles.pressed]}
             >
               <Ionicons
-                color={task.completed ? theme.colors.primary : theme.colors.text}
+                color={task.completed ? theme.colors.success : theme.colors.text}
                 name={task.completed ? 'checkmark-circle' : 'ellipse-outline'}
                 size={18}
               />

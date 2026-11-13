@@ -420,8 +420,8 @@ function createStyles(theme: Theme) {
       backgroundColor: theme.colors.surface,
     },
     chipActive: {
-      borderColor: theme.colors.primary,
-      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.accent,
+      backgroundColor: theme.colors.accent,
     },
     chipLabel: {
       ...theme.textStyles.caption,
