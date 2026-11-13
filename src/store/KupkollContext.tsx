@@ -6,7 +6,10 @@ import { buildDerivedSignals } from '@/lib/rules';
 import {
   DEFAULT_USER_SETTINGS,
   deleteApiarySync,
+  deleteHiveEventSync,
   deleteHiveSync,
+  deleteInspectionSync,
+  deleteTaskSync,
   replaceAllDataLegacySync,
   saveApiarySync,
   saveHiveEventAndHiveSync,
@@ -14,11 +17,21 @@ import {
   saveHiveSync,
   saveInspectionAndHiveSync,
   saveInspectionSync,
+  saveTaskSync,
   saveUserSettingsSync,
 } from '@/lib/db';
 import { getDashboardStats, getEventsForHive, getInspectionsForHive, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { KupkollAppState, normalizeQueenHistory } from '@/lib/storage';
-import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, TaskPriority, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
+
+export type NewTaskInput = {
+  title: string;
+  description?: string;
+  dueDate?: string;
+  hiveId?: string;
+  apiaryId?: string;
+  priority?: TaskPriority;
+};
 
 type DashboardSnapshot = ReturnType<typeof getDashboardStats>;
 
@@ -40,7 +53,12 @@ type KupkollContextValue = {
   deleteApiary: (apiaryId: string) => void;
   deleteHive: (hiveId: string) => void;
   addInspection: (input: NewInspectionInput) => void;
+  deleteInspection: (inspectionId: string) => void;
   addEvent: (input: NewHiveEventInput) => void;
+  deleteEvent: (eventId: string) => void;
+  addTask: (input: NewTaskInput) => Task;
+  toggleTask: (taskId: string) => void;
+  deleteTask: (taskId: string) => void;
   updateUserSettings: (settings: UserSettings) => void;
   replaceAllData: (nextState: KupkollAppState & { userSettings?: UserSettings }) => void;
   getApiaryById: (id: string) => Apiary | undefined;
@@ -193,6 +211,11 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     }
   }
 
+  function deleteInspection(inspectionId: string) {
+    deleteInspectionSync(inspectionId);
+    setInspections((current) => current.filter((inspection) => inspection.id !== inspectionId));
+  }
+
   function addEvent(input: NewHiveEventInput) {
     const event: HiveEvent = {
       id: `event-${Crypto.randomUUID()}`,
@@ -210,6 +233,49 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       saveHiveEventSync(event);
       setEvents((current) => [event, ...current]);
     }
+  }
+
+  function deleteEvent(eventId: string) {
+    deleteHiveEventSync(eventId);
+    setEvents((current) => current.filter((event) => event.id !== eventId));
+  }
+
+  function addTask(input: NewTaskInput): Task {
+    const targetHive = input.hiveId ? hives.find((hive) => hive.id === input.hiveId) : undefined;
+    const task: Task = {
+      id: `task-${Crypto.randomUUID()}`,
+      title: input.title.trim(),
+      description: input.description?.trim() ?? '',
+      dueDate: input.dueDate?.trim() || new Date().toISOString(),
+      hiveId: targetHive?.id ?? input.hiveId,
+      apiaryId: input.apiaryId ?? targetHive?.apiaryId,
+      priority: input.priority ?? 'Medel',
+      source: 'Egen planering',
+      completed: false,
+    };
+
+    saveTaskSync(task);
+    setManualTasks((current) => [task, ...current]);
+    return task;
+  }
+
+  function toggleTask(taskId: string) {
+    const target = manualTasks.find((task) => task.id === taskId);
+    if (!target) {
+      return;
+    }
+
+    const updatedTask: Task = {
+      ...target,
+      completed: !target.completed,
+    };
+    saveTaskSync(updatedTask);
+    setManualTasks((current) => current.map((task) => (task.id === taskId ? updatedTask : task)));
+  }
+
+  function deleteTask(taskId: string) {
+    deleteTaskSync(taskId);
+    setManualTasks((current) => current.filter((task) => task.id !== taskId));
   }
 
   function updateUserSettings(settings: UserSettings) {
@@ -246,7 +312,12 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       deleteApiary,
       deleteHive,
       addInspection,
+      deleteInspection,
       addEvent,
+      deleteEvent,
+      addTask,
+      toggleTask,
+      deleteTask,
       updateUserSettings,
       replaceAllData,
       getApiaryById: (id) => apiaries.find((apiary) => apiary.id === id),

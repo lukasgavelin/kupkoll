@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HiveEventSnapshot, InspectionSnapshot } from '@/components/feature/Cards';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { loadEventsForHiveSync, loadInspectionsForHiveSync } from '@/lib/db';
 import { HiveEvent, Inspection } from '@/types/domain';
 import { AppCard } from '@/components/ui/AppCard';
@@ -18,7 +19,7 @@ export default function HiveInspectionHistoryScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const params = useLocalSearchParams<{ id: string }>();
-  const { getHiveById } = useKupkoll();
+  const { getHiveById, deleteInspection, deleteEvent } = useKupkoll();
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [events, setEvents] = useState<HiveEvent[]>([]);
   const hive = getHiveById(params.id);
@@ -31,6 +32,30 @@ export default function HiveInspectionHistoryScreen() {
       }
     }, [hive?.id])
   );
+
+  async function handleDeleteInspection(inspection: Inspection) {
+    const confirmed = await confirmDestructiveAction({
+      title: 'Ta bort genomgång',
+      message: 'Vill du ta bort den här genomgången från historiken?',
+    });
+
+    if (confirmed) {
+      deleteInspection(inspection.id);
+      setInspections((current) => current.filter((item) => item.id !== inspection.id));
+    }
+  }
+
+  async function handleDeleteEvent(event: HiveEvent) {
+    const confirmed = await confirmDestructiveAction({
+      title: 'Ta bort händelse',
+      message: `Vill du ta bort "${event.type}" från historiken?`,
+    });
+
+    if (confirmed) {
+      deleteEvent(event.id);
+      setEvents((current) => current.filter((item) => item.id !== event.id));
+    }
+  }
 
   if (!hive) {
     return (
@@ -63,7 +88,19 @@ export default function HiveInspectionHistoryScreen() {
       <View style={styles.list}>
         {timeline.length ? (
           timeline.map((item) =>
-            item.kind === 'inspection' ? <InspectionSnapshot key={item.id} inspection={item.inspection} /> : <HiveEventSnapshot key={item.id} event={item.event} />,
+            item.kind === 'inspection' ? (
+              <InspectionSnapshot
+                key={item.id}
+                inspection={item.inspection}
+                onDelete={() => void handleDeleteInspection(item.inspection)}
+              />
+            ) : (
+              <HiveEventSnapshot
+                key={item.id}
+                event={item.event}
+                onDelete={() => void handleDeleteEvent(item.event)}
+              />
+            ),
           )
         ) : (
           <EmptyStateCard

@@ -15,12 +15,16 @@ vi.mock('expo-sqlite', () => ({
 import {
   DEFAULT_USER_SETTINGS,
   deleteApiarySync,
+  deleteHiveEventSync,
   deleteHiveSync,
+  deleteInspectionSync,
+  deleteTaskSync,
   initDbSync,
   loadFullExportDataSync,
   replaceAllDataLegacySync,
   saveHiveEventAndHiveSync,
   saveInspectionAndHiveSync,
+  saveTaskSync,
 } from '@/lib/db';
 
 describe('db', () => {
@@ -202,5 +206,34 @@ describe('db', () => {
       'INSERT OR REPLACE INTO Settings (id, value) VALUES ("userSettings", ?)',
       [JSON.stringify(DEFAULT_USER_SETTINGS)],
     );
+  });
+
+  it('deletes inspections, events, and saves/deletes tasks', () => {
+    deleteInspectionSync('insp-1');
+    expect(mockDb.runSync).toHaveBeenCalledWith('DELETE FROM Inspections WHERE id = ?', ['insp-1']);
+
+    deleteHiveEventSync('event-1');
+    expect(mockDb.runSync).toHaveBeenCalledWith('DELETE FROM HiveEvents WHERE id = ?', ['event-1']);
+
+    const task = {
+      id: 'task-1',
+      title: 'Kolla foder',
+      description: '',
+      dueDate: '2026-05-01T12:00:00.000Z',
+      hiveId: 'h1',
+      apiaryId: 'a1',
+      priority: 'Medel' as const,
+      source: 'Egen planering' as const,
+      completed: false,
+    };
+
+    saveTaskSync(task);
+    expect(mockDb.runSync).toHaveBeenCalledWith(
+      'INSERT OR REPLACE INTO Tasks (id, hiveId, apiaryId, data) VALUES (?, ?, ?, ?)',
+      ['task-1', 'h1', 'a1', JSON.stringify(task)],
+    );
+
+    deleteTaskSync('task-1');
+    expect(mockDb.runSync).toHaveBeenCalledWith('DELETE FROM Tasks WHERE id = ?', ['task-1']);
   });
 });

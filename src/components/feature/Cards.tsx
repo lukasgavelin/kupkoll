@@ -1,4 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
@@ -267,9 +269,19 @@ export function HiveCard({ hive, apiaryLabel }: { hive: Hive; apiaryLabel: strin
   );
 }
 
-export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) {
+export function TaskCard({
+  task,
+  hiveName,
+  onToggleComplete,
+  onDelete,
+}: {
+  task: Task;
+  hiveName?: string;
+  onToggleComplete?: () => void;
+  onDelete?: () => void;
+}) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const tone = task.priority === 'Hög' ? 'critical' : task.priority === 'Medel' ? 'warning' : 'info';
 
   function handleLogNow() {
@@ -289,16 +301,16 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
   }
 
   return (
-    <AppCard>
+    <AppCard style={task.completed ? styles.completedTaskCard : undefined}>
       <View style={styles.rowBetween}>
         <View style={styles.textColumn}>
-          <Text style={theme.textStyles.heading}>{task.title}</Text>
+          <Text style={[theme.textStyles.heading, task.completed && styles.completedTitle]}>{task.title}</Text>
           <Text style={theme.textStyles.caption}>Planera senast {formatDateLabel(task.dueDate)}</Text>
         </View>
-        <StatusBadge label={task.priority} tone={tone} />
+        <StatusBadge label={task.completed ? 'Klar' : task.priority} tone={task.completed ? 'calm' : tone} />
       </View>
       {hiveName ? <Text style={theme.textStyles.caption}>{hiveName}</Text> : null}
-      <Text style={theme.textStyles.body}>{task.description}</Text>
+      {task.description.trim() ? <Text style={theme.textStyles.body}>{task.description}</Text> : null}
       <Text style={theme.textStyles.caption}>{getTaskSourceLabel(task.source)}</Text>
       {task.source === 'Beslutsstöd' ? (
         <Pressable
@@ -307,6 +319,36 @@ export function TaskCard({ task, hiveName }: { task: Task; hiveName?: string }) 
         >
           <Text style={styles.logNowLabel}>Logga nu →</Text>
         </Pressable>
+      ) : null}
+      {task.source === 'Egen planering' && (onToggleComplete || onDelete) ? (
+        <View style={styles.taskActionsRow}>
+          {onToggleComplete ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={task.completed ? `Återöppna uppgift ${task.title}` : `Markera ${task.title} som klar`}
+              onPress={onToggleComplete}
+              style={({ pressed }) => [styles.taskActionButton, pressed && styles.pressed]}
+            >
+              <Ionicons
+                color={task.completed ? theme.colors.primary : theme.colors.text}
+                name={task.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                size={18}
+              />
+              <Text style={styles.taskActionLabel}>{task.completed ? 'Återöppna' : 'Markera klar'}</Text>
+            </Pressable>
+          ) : null}
+          {onDelete ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Ta bort uppgift ${task.title}`}
+              onPress={onDelete}
+              style={({ pressed }) => [styles.taskActionButton, styles.deleteActionButton, pressed && styles.pressed]}
+            >
+              <Ionicons color={theme.colors.danger} name="trash-outline" size={16} />
+              <Text style={styles.deleteActionLabel}>Ta bort</Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </AppCard>
   );
@@ -336,9 +378,9 @@ export function RecommendationCard({ recommendation, hiveName, relatedTaskLabel 
   );
 }
 
-export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
+export function InspectionSnapshot({ inspection, onDelete }: { inspection: Inspection; onDelete?: () => void }) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const varroaTone = inspection.varroaLevel === 'Hög' ? 'critical' : inspection.varroaLevel === 'Förhöjd' ? 'warning' : 'info';
   const weatherSummary = formatInspectionWeather(inspection);
   const advancedLabels = getAdvancedInspectionLabels(inspection);
@@ -346,7 +388,19 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
 
   return (
     <AppCard>
-      <Text style={theme.textStyles.heading}>{formatDateTimeLabel(inspection.performedAt)}</Text>
+      <View style={styles.rowBetween}>
+        <Text style={[theme.textStyles.heading, styles.snapshotTitle]}>{formatDateTimeLabel(inspection.performedAt)}</Text>
+        {onDelete ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ta bort genomgång"
+            onPress={onDelete}
+            style={({ pressed }) => [styles.iconDeleteButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={theme.colors.danger} name="trash-outline" size={18} />
+          </Pressable>
+        ) : null}
+      </View>
       <View style={styles.inlineWrap}>
         <StatusBadge label={inspection.mode} tone={inspection.mode === 'Fördjupad genomgång' ? 'calm' : 'info'} />
         <StatusBadge label={inspection.queenSeen ? 'Drottning sedd' : 'Drottning ej sedd'} tone={inspection.queenSeen ? 'calm' : 'warning'} />
@@ -383,15 +437,27 @@ export function InspectionSnapshot({ inspection }: { inspection: Inspection }) {
   );
 }
 
-export function HiveEventSnapshot({ event }: { event: HiveEvent }) {
+export function HiveEventSnapshot({ event, onDelete }: { event: HiveEvent; onDelete?: () => void }) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const tone = getHiveEventTone(event);
   const labels = getHiveEventDetailLabels(event);
 
   return (
     <AppCard>
-      <Text style={theme.textStyles.heading}>{formatDateTimeLabel(event.performedAt)}</Text>
+      <View style={styles.rowBetween}>
+        <Text style={[theme.textStyles.heading, styles.snapshotTitle]}>{formatDateTimeLabel(event.performedAt)}</Text>
+        {onDelete ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ta bort händelse"
+            onPress={onDelete}
+            style={({ pressed }) => [styles.iconDeleteButton, pressed && styles.pressed]}
+          >
+            <Ionicons color={theme.colors.danger} name="trash-outline" size={18} />
+          </Pressable>
+        ) : null}
+      </View>
       <View style={styles.inlineWrap}>
         <StatusBadge label={event.type} tone={tone} />
       </View>
@@ -499,6 +565,51 @@ function createStyles(theme: Theme) {
     logNowLabel: {
       ...theme.textStyles.bodyStrong,
       color: theme.colors.text,
+    },
+    completedTaskCard: {
+      opacity: 0.78,
+    },
+    completedTitle: {
+      textDecorationLine: 'line-through',
+      color: theme.colors.textMuted,
+    },
+    taskActionsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
+    },
+    taskActionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      borderRadius: theme.radii.md,
+      backgroundColor: theme.colors.surfaceMuted,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    taskActionLabel: {
+      ...theme.textStyles.caption,
+      fontFamily: theme.fontFamilies.semibold,
+      color: theme.colors.text,
+    },
+    deleteActionButton: {
+      borderColor: theme.colors.danger,
+    },
+    deleteActionLabel: {
+      ...theme.textStyles.caption,
+      fontFamily: theme.fontFamilies.semibold,
+      color: theme.colors.danger,
+    },
+    snapshotTitle: {
+      flex: 1,
+    },
+    iconDeleteButton: {
+      padding: theme.spacing.xs,
+      borderRadius: theme.radii.md,
+      backgroundColor: theme.colors.surfaceMuted,
     },
   });
 }

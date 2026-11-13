@@ -183,6 +183,11 @@ export function saveInspectionSync(inspection: Inspection) {
   db.runSync('INSERT OR REPLACE INTO Inspections (id, hiveId, performedAt, data) VALUES (?, ?, ?, ?)', [inspection.id, inspection.hiveId, inspection.performedAt, JSON.stringify(inspection)]);
 }
 
+export function deleteInspectionSync(inspectionId: string) {
+  const db = getDbSync();
+  db.runSync('DELETE FROM Inspections WHERE id = ?', [inspectionId]);
+}
+
 export function saveInspectionAndHiveSync(inspection: Inspection, hive: Hive) {
   withTransactionSync(() => {
     saveInspectionSync(inspection);
@@ -193,6 +198,11 @@ export function saveInspectionAndHiveSync(inspection: Inspection, hive: Hive) {
 export function saveHiveEventSync(event: HiveEvent) {
   const db = getDbSync();
   db.runSync('INSERT OR REPLACE INTO HiveEvents (id, hiveId, performedAt, data) VALUES (?, ?, ?, ?)', [event.id, event.hiveId, event.performedAt, JSON.stringify(event)]);
+}
+
+export function deleteHiveEventSync(eventId: string) {
+  const db = getDbSync();
+  db.runSync('DELETE FROM HiveEvents WHERE id = ?', [eventId]);
 }
 
 export function saveHiveEventAndHiveSync(event: HiveEvent, hive: Hive) {
