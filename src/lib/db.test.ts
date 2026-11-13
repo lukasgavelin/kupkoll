@@ -12,20 +12,38 @@ vi.mock('expo-sqlite', () => ({
   openDatabaseSync: vi.fn(() => mockDb),
 }));
 
-import { initDbSync, loadFullExportDataSync } from '@/lib/db';
+import {
+  DEFAULT_USER_SETTINGS,
+  deleteApiarySync,
+  deleteHiveSync,
+  initDbSync,
+  loadFullExportDataSync,
+  replaceAllDataLegacySync,
+  saveHiveEventAndHiveSync,
+  saveInspectionAndHiveSync,
+} from '@/lib/db';
 
 describe('db', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('enables SQLite foreign key enforcement in initDbSync', () => {
+  it('enables SQLite foreign key enforcement in getDbSync and migrates schema in initDbSync', () => {
+    mockDb.getFirstSync.mockReturnValueOnce({ user_version: 0 });
     initDbSync();
 
-    expect(mockDb.execSync).toHaveBeenCalledTimes(1);
-    const sql = mockDb.execSync.mock.calls[0]?.[0] as string;
+    expect(mockDb.execSync).toHaveBeenCalledTimes(2);
+    expect(mockDb.execSync.mock.calls[0]?.[0]).toBe('PRAGMA foreign_keys = ON;');
+    const sql = mockDb.execSync.mock.calls[1]?.[0] as string;
     expect(sql).toContain('PRAGMA journal_mode = WAL;');
-    expect(sql).toContain('PRAGMA foreign_keys = ON;');
+    expect(sql).toContain('PRAGMA user_version = 1;');
+  });
+
+  it('skips schema migration in initDbSync when user_version is already current', () => {
+    mockDb.getFirstSync.mockReturnValueOnce({ user_version: 1 });
+    initDbSync();
+
+    expect(mockDb.execSync).not.toHaveBeenCalled();
   });
 
   it('loads full untruncated history and userSettings in loadFullExportDataSync', () => {
@@ -100,5 +118,89 @@ describe('db', () => {
     const result = loadFullExportDataSync();
 
     expect(result.userSettings).toEqual({ experienceLevel: 'experienced' });
+  });
+
+  it('deletes matching Tasks when deleting a hive or apiary', () => {
+    deleteHiveSync('h1');
+    expect(mockDb.withTransactionSync).toHaveBeenCalledTimes(1);
+    expect(mockDb.runSync).toHaveBeenNthCalledWith(1, 'DELETE FROM Tasks WHERE hiveId = ?', ['h1']);
+    expect(mockDb.runSync).toHaveBeenNthCalledWith(2, 'DELETE FROM Hives WHERE id = ?', ['h1']);
+
+    vi.clearAllMocks();
+
+    deleteApiarySync('a1');
+    expect(mockDb.withTransactionSync).toHaveBeenCalledTimes(1);
+    expect(mockDb.runSync).toHaveBeenNthCalledWith(
+      1,
+      'DELETE FROM Tasks WHERE apiaryId = ? OR hiveId IN (SELECT id FROM Hives WHERE apiaryId = ?)',
+      ['a1', 'a1'],
+    );
+    expect(mockDb.runSync).toHaveBeenNthCalledWith(2, 'DELETE FROM Apiaries WHERE id = ?', ['a1']);
+  });
+
+  it('wraps inspection+hive and event+hive writes in transactions', () => {
+    const mockHive = {
+      id: 'h1',
+      apiaryId: 'a1',
+      name: 'Kupa 1',
+      status: 'Stabilt' as const,
+      queenStatus: 'Bekräftad' as const,
+      strength: 'Medel' as const,
+      temperament: 'Lugnt' as const,
+      boxSystem: 'Svea' as const,
+      queenHistory: [],
+      notes: '',
+    };
+    const mockInspection = {
+      id: 'i1',
+      hiveId: 'h1',
+      performedAt: '2026-04-01T10:00:00.000Z',
+      mode: 'Snabb genomgång' as const,
+      queenSeen: true,
+      eggsSeen: true,
+      openBrood: true,
+      cappedBrood: true,
+      honey: true,
+      pollen: true,
+      queenCells: false,
+      swarmSigns: false,
+      varroaLevel: 'Låg' as const,
+      temperament: 'Lugnt' as const,
+      actionNeeded: false,
+      notes: '',
+    };
+    const mockEvent = {
+      id: 'e1',
+      hiveId: 'h1',
+      type: 'Stödfodring' as const,
+      performedAt: '2026-04-01T12:00:00.000Z',
+      notes: '',
+    };
+
+    saveInspectionAndHiveSync(mockInspection, mockHive);
+    expect(mockDb.withTransactionSync).toHaveBeenCalledTimes(1);
+    expect(mockDb.runSync).toHaveBeenCalledTimes(2);
+
+    vi.clearAllMocks();
+
+    saveHiveEventAndHiveSync(mockEvent, mockHive);
+    expect(mockDb.withTransactionSync).toHaveBeenCalledTimes(1);
+    expect(mockDb.runSync).toHaveBeenCalledTimes(2);
+  });
+
+  it('resets Settings to DEFAULT_USER_SETTINGS when replaceAllDataLegacySync omits userSettings', () => {
+    replaceAllDataLegacySync({
+      apiaries: [],
+      hives: [],
+      inspections: [],
+      events: [],
+      manualTasks: [],
+    });
+
+    expect(mockDb.withTransactionSync).toHaveBeenCalledTimes(1);
+    expect(mockDb.runSync).toHaveBeenCalledWith(
+      'INSERT OR REPLACE INTO Settings (id, value) VALUES ("userSettings", ?)',
+      [JSON.stringify(DEFAULT_USER_SETTINGS)],
+    );
   });
 });

@@ -427,13 +427,18 @@ describe('parsePersistedKupkollState', () => {
     ).toBeNull();
   });
 
-  it('preserves event imageUris and normalizes userSettings', () => {
+  it('preserves inspection and event imageUris and normalizes userSettings', () => {
     expect(
       parsePersistedKupkollState({
         version: 7,
         apiaries,
         hives,
-        inspections,
+        inspections: [
+          {
+            ...inspections[0],
+            imageUris: [' file:///insp-1.jpg ', '', 99, 'file:///insp-2.jpg'],
+          },
+        ],
         events: [
           {
             ...events[0],
@@ -448,7 +453,12 @@ describe('parsePersistedKupkollState', () => {
     ).toEqual({
       apiaries,
       hives,
-      inspections,
+      inspections: [
+        {
+          ...inspections[0],
+          imageUris: ['file:///insp-1.jpg', 'file:///insp-2.jpg'],
+        },
+      ],
       events: [
         {
           ...events[0],
@@ -466,7 +476,12 @@ describe('parsePersistedKupkollState', () => {
         version: 7,
         apiaries,
         hives,
-        inspections,
+        inspections: [
+          {
+            ...inspections[0],
+            imageUris: ['', 42],
+          },
+        ],
         events,
         manualTasks: tasks,
         userSettings: {

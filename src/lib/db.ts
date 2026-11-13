@@ -4,63 +4,79 @@ import { KupkollAppState } from '@/lib/storage';
 import { Apiary, Hive, HiveEvent, Inspection, Task, UserSettings } from '@/types/domain';
 
 const DB_NAME = 'kupkoll.db';
+const DB_SCHEMA_VERSION = 1;
+
+export const DEFAULT_USER_SETTINGS: UserSettings = {
+  experienceLevel: 'experienced',
+};
 
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 
 export function getDbSync() {
   if (!dbInstance) {
     dbInstance = SQLite.openDatabaseSync(DB_NAME);
+    dbInstance.execSync('PRAGMA foreign_keys = ON;');
   }
   return dbInstance;
 }
 
+export function withTransactionSync(fn: () => void) {
+  const db = getDbSync();
+  db.withTransactionSync(fn);
+}
+
 export function initDbSync() {
   const db = getDbSync();
-  
-  db.execSync(`
-    PRAGMA journal_mode = WAL;
-    PRAGMA foreign_keys = ON;
-    
-    CREATE TABLE IF NOT EXISTS Settings (
-      id TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    );
+  const versionRow = db.getFirstSync<{ user_version: number }>('PRAGMA user_version');
+  const currentVersion = versionRow?.user_version ?? 0;
 
-    CREATE TABLE IF NOT EXISTS Apiaries (
-      id TEXT PRIMARY KEY,
-      data TEXT NOT NULL
-    );
+  if (currentVersion < DB_SCHEMA_VERSION) {
+    db.execSync(`
+      PRAGMA journal_mode = WAL;
+      
+      CREATE TABLE IF NOT EXISTS Settings (
+        id TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
 
-    CREATE TABLE IF NOT EXISTS Hives (
-      id TEXT PRIMARY KEY,
-      apiaryId TEXT NOT NULL,
-      data TEXT NOT NULL,
-      FOREIGN KEY (apiaryId) REFERENCES Apiaries(id) ON DELETE CASCADE
-    );
+      CREATE TABLE IF NOT EXISTS Apiaries (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL
+      );
 
-    CREATE TABLE IF NOT EXISTS Inspections (
-      id TEXT PRIMARY KEY,
-      hiveId TEXT NOT NULL,
-      performedAt TEXT NOT NULL,
-      data TEXT NOT NULL,
-      FOREIGN KEY (hiveId) REFERENCES Hives(id) ON DELETE CASCADE
-    );
+      CREATE TABLE IF NOT EXISTS Hives (
+        id TEXT PRIMARY KEY,
+        apiaryId TEXT NOT NULL,
+        data TEXT NOT NULL,
+        FOREIGN KEY (apiaryId) REFERENCES Apiaries(id) ON DELETE CASCADE
+      );
 
-    CREATE TABLE IF NOT EXISTS HiveEvents (
-      id TEXT PRIMARY KEY,
-      hiveId TEXT NOT NULL,
-      performedAt TEXT NOT NULL,
-      data TEXT NOT NULL,
-      FOREIGN KEY (hiveId) REFERENCES Hives(id) ON DELETE CASCADE
-    );
+      CREATE TABLE IF NOT EXISTS Inspections (
+        id TEXT PRIMARY KEY,
+        hiveId TEXT NOT NULL,
+        performedAt TEXT NOT NULL,
+        data TEXT NOT NULL,
+        FOREIGN KEY (hiveId) REFERENCES Hives(id) ON DELETE CASCADE
+      );
 
-    CREATE TABLE IF NOT EXISTS Tasks (
-      id TEXT PRIMARY KEY,
-      hiveId TEXT,
-      apiaryId TEXT,
-      data TEXT NOT NULL
-    );
-  `);
+      CREATE TABLE IF NOT EXISTS HiveEvents (
+        id TEXT PRIMARY KEY,
+        hiveId TEXT NOT NULL,
+        performedAt TEXT NOT NULL,
+        data TEXT NOT NULL,
+        FOREIGN KEY (hiveId) REFERENCES Hives(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS Tasks (
+        id TEXT PRIMARY KEY,
+        hiveId TEXT,
+        apiaryId TEXT,
+        data TEXT NOT NULL
+      );
+
+      PRAGMA user_version = ${DB_SCHEMA_VERSION};
+    `);
+  }
 }
 
 export function loadAllDataSync() {
@@ -90,7 +106,7 @@ export function loadAllDataSync() {
   const tasks = tasksRows.map((r) => JSON.parse(r.data) as Task);
 
   const settingsRow = db.getFirstSync<{ value: string }>('SELECT value FROM Settings WHERE id = "userSettings"');
-  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { experienceLevel: 'experienced' as const };
+  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { ...DEFAULT_USER_SETTINGS };
 
   return {
     apiaries,
@@ -121,7 +137,7 @@ export function loadFullExportDataSync(): KupkollAppState & { userSettings: User
   const tasks = tasksRows.map((r) => JSON.parse(r.data) as Task);
 
   const settingsRow = db.getFirstSync<{ value: string }>('SELECT value FROM Settings WHERE id = "userSettings"');
-  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { experienceLevel: 'experienced' as const };
+  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { ...DEFAULT_USER_SETTINGS };
 
   return {
     apiaries,
@@ -140,7 +156,13 @@ export function saveApiarySync(apiary: Apiary) {
 
 export function deleteApiarySync(apiaryId: string) {
   const db = getDbSync();
-  db.runSync('DELETE FROM Apiaries WHERE id = ?', [apiaryId]);
+  withTransactionSync(() => {
+    db.runSync(
+      'DELETE FROM Tasks WHERE apiaryId = ? OR hiveId IN (SELECT id FROM Hives WHERE apiaryId = ?)',
+      [apiaryId, apiaryId],
+    );
+    db.runSync('DELETE FROM Apiaries WHERE id = ?', [apiaryId]);
+  });
 }
 
 export function saveHiveSync(hive: Hive) {
@@ -150,7 +172,10 @@ export function saveHiveSync(hive: Hive) {
 
 export function deleteHiveSync(hiveId: string) {
   const db = getDbSync();
-  db.runSync('DELETE FROM Hives WHERE id = ?', [hiveId]);
+  withTransactionSync(() => {
+    db.runSync('DELETE FROM Tasks WHERE hiveId = ?', [hiveId]);
+    db.runSync('DELETE FROM Hives WHERE id = ?', [hiveId]);
+  });
 }
 
 export function saveInspectionSync(inspection: Inspection) {
@@ -158,9 +183,23 @@ export function saveInspectionSync(inspection: Inspection) {
   db.runSync('INSERT OR REPLACE INTO Inspections (id, hiveId, performedAt, data) VALUES (?, ?, ?, ?)', [inspection.id, inspection.hiveId, inspection.performedAt, JSON.stringify(inspection)]);
 }
 
+export function saveInspectionAndHiveSync(inspection: Inspection, hive: Hive) {
+  withTransactionSync(() => {
+    saveInspectionSync(inspection);
+    saveHiveSync(hive);
+  });
+}
+
 export function saveHiveEventSync(event: HiveEvent) {
   const db = getDbSync();
   db.runSync('INSERT OR REPLACE INTO HiveEvents (id, hiveId, performedAt, data) VALUES (?, ?, ?, ?)', [event.id, event.hiveId, event.performedAt, JSON.stringify(event)]);
+}
+
+export function saveHiveEventAndHiveSync(event: HiveEvent, hive: Hive) {
+  withTransactionSync(() => {
+    saveHiveEventSync(event);
+    saveHiveSync(hive);
+  });
 }
 
 export function saveTaskSync(task: Task) {
@@ -180,8 +219,8 @@ export function saveUserSettingsSync(settings: UserSettings) {
 
 export function replaceAllDataLegacySync(data: { apiaries: Apiary[]; hives: Hive[]; inspections: Inspection[]; events: HiveEvent[]; manualTasks: Task[]; userSettings?: UserSettings }) {
   const db = getDbSync();
-  
-  db.withTransactionSync(() => {
+
+  withTransactionSync(() => {
     db.execSync('DELETE FROM Apiaries; DELETE FROM Hives; DELETE FROM Inspections; DELETE FROM HiveEvents; DELETE FROM Tasks;');
 
     for (const apiary of data.apiaries) {
@@ -199,9 +238,7 @@ export function replaceAllDataLegacySync(data: { apiaries: Apiary[]; hives: Hive
     for (const task of data.manualTasks) {
       saveTaskSync(task);
     }
-    if (data.userSettings) {
-      saveUserSettingsSync(data.userSettings);
-    }
+    saveUserSettingsSync(data.userSettings ?? DEFAULT_USER_SETTINGS);
   });
 }
 
