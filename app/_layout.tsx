@@ -31,8 +31,10 @@ function AppNavigator({ initialData }: { initialData: ReturnType<typeof loadAllD
         <Stack.Screen name="hives/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="hives/[id]/edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="hives/[id]/inspections" />
+        <Stack.Screen name="hives/[id]/trends" />
         <Stack.Screen name="hives/[id]" />
         <Stack.Screen name="inspections/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="events/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="privacy-policy" />
       </Stack>
     </KupkollProvider>

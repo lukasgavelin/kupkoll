@@ -17,14 +17,19 @@ import { useTheme, useThemeMode } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
 import { UserSettings } from '@/types/domain';
 
+type StatusMessage = {
+  message: string;
+  isError: boolean;
+} | null;
+
 export default function SettingsScreen() {
   const theme = useTheme();
   const { isDarkMode, toggleThemeMode } = useThemeMode();
   const { apiaries, events, hives, inspections, manualTasks, replaceAllData, userSettings, updateUserSettings } = useKupkoll();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [exportStatus, setExportStatus] = useState<string | null>(null);
-  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<StatusMessage>(null);
+  const [importStatus, setImportStatus] = useState<StatusMessage>(null);
   const styles = useMemo(() => createStyles(theme), [theme]);
   const exportFacts = [
     { label: 'Bigårdar', value: apiaries.length, fullWidth: false },
@@ -46,7 +51,7 @@ export default function SettingsScreen() {
       const fullData = loadFullExportDataSync();
       const result = await exportKupkollData(fullData);
 
-      setExportStatus(`${result.fileName} skapad.`);
+      setExportStatus({ message: `${result.fileName} skapad.`, isError: false });
 
       if (result.method === 'download') {
         Alert.alert('Export klar', 'JSON-filen har laddats ned till din enhet. Spara den som backup.');
@@ -62,7 +67,7 @@ export default function SettingsScreen() {
 
 ${result.fileUri ?? 'Sökväg saknas.'}`);
     } catch {
-      setExportStatus('Kunde inte skapa exportfilen.');
+      setExportStatus({ message: 'Kunde inte skapa exportfilen.', isError: true });
       Alert.alert('Export misslyckades', 'JSON-filen kunde inte skapas just nu. Försök igen om en stund.');
     } finally {
       setIsExporting(false);
@@ -126,7 +131,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
       const parsed = parseKupkollImportJson(fileContents);
 
       if (!parsed.ok) {
-        setImportStatus('Importfilen kunde inte tolkas.');
+        setImportStatus({ message: 'Importfilen kunde inte tolkas.', isError: true });
         Alert.alert('Import misslyckades', parsed.message);
         return;
       }
@@ -138,7 +143,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
       }
 
       replaceAllData(parsed.state);
-      setImportStatus(`${asset.name ?? 'importfil'} importerad.`);
+      setImportStatus({ message: `${asset.name ?? 'importfil'} importerad.`, isError: false });
 
       if (parsed.warnings.length > 0) {
         Alert.alert('Import klar med varningar', parsed.warnings.join('\n'));
@@ -148,7 +153,10 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
       Alert.alert('Import klar', 'Backupfilen lästes in och appens data har uppdaterats.');
     } catch (error) {
       const detail = error instanceof Error && error.message ? error.message : null;
-      setImportStatus(detail ? `Kunde inte läsa importfilen (${detail}).` : 'Kunde inte läsa importfilen.');
+      setImportStatus({
+        message: detail ? `Kunde inte läsa importfilen (${detail}).` : 'Kunde inte läsa importfilen.',
+        isError: true,
+      });
       Alert.alert('Import misslyckades', detail ? `JSON-filen kunde inte läsas in: ${detail}` : 'JSON-filen kunde inte läsas in just nu. Försök igen.');
     } finally {
       setIsImporting(false);
@@ -174,6 +182,8 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               <Text style={styles.infoItem}>Använd mörkt läge för en mörkare vy.</Text>
             </View>
             <Switch
+              accessibilityLabel="Mörkt läge"
+              accessibilityRole="switch"
               onValueChange={() => {
                 void toggleThemeMode();
               }}
@@ -198,6 +208,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
           </View>
           <View style={styles.exportAction}>
             <PrimaryButton
+              disabled={isExporting}
               fullWidth
               iconName="cloud-upload-outline"
               label={isExporting ? 'Skapar export...' : 'Spara/Exportera säkerhetskopia'}
@@ -206,6 +217,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               }}
             />
             <PrimaryButton
+              disabled={isImporting}
               fullWidth
               iconName="cloud-download-outline"
               label={isImporting ? 'Importerar...' : 'Importera JSON-backup'}
@@ -216,9 +228,13 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
             />
             <View style={styles.exportMeta}>
               <Text style={theme.textStyles.caption}>Säkerhetskopian sparas som en JSON-fil. Genom att exportera kan du spara filen direkt på Google Drive, iCloud Drive, Dropbox etc. via delningsmenyn.</Text>
-              {exportStatus ? <Text style={theme.textStyles.caption}>{exportStatus}</Text> : null}
+              {exportStatus ? (
+                <Text style={[styles.statusText, exportStatus.isError && styles.statusErrorText]}>{exportStatus.message}</Text>
+              ) : null}
               <Text style={theme.textStyles.caption}>Import ersätter befintlig data i appen med innehållet i JSON-filen.</Text>
-              {importStatus ? <Text style={theme.textStyles.caption}>{importStatus}</Text> : null}
+              {importStatus ? (
+                <Text style={[styles.statusText, importStatus.isError && styles.statusErrorText]}>{importStatus.message}</Text>
+              ) : null}
             </View>
           </View>
         </AppCard>
@@ -231,6 +247,8 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
               <Text style={styles.infoItem}>Ger ett rent gränssnitt. Inaktivera för att visa pedagogiska hjälptexter under genomgångar och få tätare tillsynspåminnelser.</Text>
             </View>
             <Switch
+              accessibilityLabel="Erfaren biodlare"
+              accessibilityRole="switch"
               onValueChange={(val) => {
                 updateUserSettings({ experienceLevel: val ? 'experienced' : 'beginner' });
               }}
@@ -315,6 +333,13 @@ function createStyles(theme: Theme) {
     infoItem: {
       ...theme.textStyles.body,
       color: theme.colors.textMuted,
+    },
+    statusText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.textMuted,
+    },
+    statusErrorText: {
+      color: theme.colors.danger,
     },
   });
 }

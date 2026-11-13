@@ -12,9 +12,18 @@ type PrimaryButtonProps = {
   size?: 'default' | 'compact';
   iconName?: keyof typeof Ionicons.glyphMap;
   fullWidth?: boolean;
+  disabled?: boolean;
 };
 
-export function PrimaryButton({ label, onPress, variant = 'primary', size = 'default', iconName, fullWidth = false }: PrimaryButtonProps) {
+export function PrimaryButton({
+  label,
+  onPress,
+  variant = 'primary',
+  size = 'default',
+  iconName,
+  fullWidth = false,
+  disabled = false,
+}: PrimaryButtonProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -22,6 +31,8 @@ export function PrimaryButton({ label, onPress, variant = 'primary', size = 'def
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
@@ -29,7 +40,8 @@ export function PrimaryButton({ label, onPress, variant = 'primary', size = 'def
         size === 'compact' && styles.buttonCompact,
         variant === 'secondary' && styles.secondary,
         variant === 'ghost' && styles.ghost,
-        pressed && styles.pressed,
+        disabled && styles.disabled,
+        pressed && !disabled && styles.pressed,
       ]}
     >
       <View style={styles.content}>
@@ -70,6 +82,9 @@ function createStyles(theme: Theme) {
     },
     pressed: {
       opacity: 0.88,
+    },
+    disabled: {
+      opacity: 0.5,
     },
     content: {
       flexDirection: 'row',
