@@ -85,6 +85,11 @@ export default function NewHiveScreen() {
     );
   }
 
+  const stepPrefix = hives.length === 0 ? 'Steg 2 av 3. ' : '';
+  const description = selectedApiaryId
+    ? `${stepPrefix}Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Fyll i aktuell drottning.`
+    : 'Välj bigård och fyll i det viktigaste om kupan.';
+
   return (
     <Screen>
       <PageHeader
@@ -93,7 +98,7 @@ export default function NewHiveScreen() {
         onActionPress={() => router.back()}
         eyebrow="Ny kupa"
         title="Lägg till kupa"
-        description={selectedApiaryId ? `Steg 2 av 3. Kupan läggs i ${getApiaryById(selectedApiaryId)?.name ?? 'vald bigård'}. Fyll i aktuell drottning.` : 'Välj bigård och fyll i det viktigaste om kupan.'}
+        description={description}
       />
 
       <AppCard>
@@ -104,7 +109,13 @@ export default function NewHiveScreen() {
               const selected = apiary.id === selectedApiaryId;
 
               return (
-                <Pressable key={apiary.id} onPress={() => setSelectedApiaryId(apiary.id)} style={[styles.option, styles.largeOption, selected && styles.optionSelected]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  key={apiary.id}
+                  onPress={() => setSelectedApiaryId(apiary.id)}
+                  style={[styles.option, styles.largeOption, selected && styles.optionSelected]}
+                >
                   <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{apiary.name}</Text>
                 </Pressable>
               );
@@ -124,7 +135,13 @@ export default function NewHiveScreen() {
               const selected = value === strength;
 
               return (
-                <Pressable key={value} onPress={() => setStrength(value)} style={[styles.option, selected && styles.optionSelected]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  key={value}
+                  onPress={() => setStrength(value)}
+                  style={[styles.option, selected && styles.optionSelected]}
+                >
                   <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
                 </Pressable>
               );
@@ -139,7 +156,13 @@ export default function NewHiveScreen() {
               const selected = value === temperament;
 
               return (
-                <Pressable key={value} onPress={() => setTemperament(value)} style={[styles.option, selected && styles.optionSelected]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  key={value}
+                  onPress={() => setTemperament(value)}
+                  style={[styles.option, selected && styles.optionSelected]}
+                >
                   <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
                 </Pressable>
               );
@@ -157,7 +180,13 @@ export default function NewHiveScreen() {
               const selected = value === boxSystem;
 
               return (
-                <Pressable key={value} onPress={() => setBoxSystem(value)} style={[styles.option, selected && styles.optionSelected]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  key={value}
+                  onPress={() => setBoxSystem(value)}
+                  style={[styles.option, selected && styles.optionSelected]}
+                >
                   <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{value}</Text>
                 </Pressable>
               );

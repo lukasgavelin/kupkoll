@@ -61,7 +61,13 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
             const selected = status === value.queenStatus;
 
             return (
-              <Pressable key={status} onPress={() => onChange({ ...value, queenStatus: status })} style={[styles.option, selected && styles.optionSelected]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                key={status}
+                onPress={() => onChange({ ...value, queenStatus: status })}
+                style={[styles.option, selected && styles.optionSelected]}
+              >
                 <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{status}</Text>
               </Pressable>
             );
@@ -100,7 +106,13 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
             const showDot = color !== 'Omärkt';
 
             return (
-              <Pressable key={color} onPress={() => onChange({ ...value, queenMarkingColor: color })} style={[styles.option, selected && styles.optionSelected]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                key={color}
+                onPress={() => onChange({ ...value, queenMarkingColor: color })}
+                style={[styles.option, selected && styles.optionSelected]}
+              >
                 <View style={styles.colorOptionRow}>
                   {showDot ? (
                     <View style={[styles.colorDot, { backgroundColor: hex, borderColor: selected ? theme.colors.surface : theme.colors.border }]} />

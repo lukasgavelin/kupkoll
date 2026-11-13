@@ -1,6 +1,6 @@
 import { useFocusEffect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
 import { AppCard } from '@/components/ui/AppCard';
@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { loadEventsForHiveSync, loadInspectionsForHiveSync } from '@/lib/db';
+import { formatDateLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { HiveEvent, Inspection } from '@/types/domain';
@@ -19,6 +20,21 @@ export default function HiveTrendsScreen() {
   const hive = getHiveById(params.id);
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [events, setEvents] = useState<HiveEvent[]>([]);
+  const [chartWidth, setChartWidth] = useState(0);
+
+  function handleBackNavigation() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    if (hive) {
+      router.replace(`/hives/${hive.id}`);
+      return;
+    }
+
+    router.replace('/apiaries');
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -35,7 +51,7 @@ export default function HiveTrendsScreen() {
       <Screen>
         <AppCard>
           <Text style={theme.textStyles.heading}>Kupan hittades inte</Text>
-          <PrimaryButton label="Tillbaka" onPress={() => router.back()} />
+          <PrimaryButton label="Tillbaka" onPress={handleBackNavigation} />
         </AppCard>
       </Screen>
     );
@@ -61,15 +77,13 @@ export default function HiveTrendsScreen() {
 
   // Process Harvest Data (Skörd)
   const harvestEvents = events.filter(e => e.type === 'Skattning/slungning');
-  
-  const screenWidth = Dimensions.get('window').width - theme.spacing.lg * 2;
 
   return (
     <Screen>
       <PageHeader
         actionLabel="Tillbaka"
         actionIconName="chevron-back"
-        onActionPress={() => router.back()}
+        onActionPress={handleBackNavigation}
         eyebrow="Analys"
         title={`Trender för ${hive.name}`}
         description="Följ upp varroatryck och skörd över tid."
@@ -80,43 +94,48 @@ export default function HiveTrendsScreen() {
         <Text style={theme.textStyles.caption}>Visar de senaste mätningarna. 1 = Låg, 2 = Förhöjd, 3 = Hög.</Text>
         
         {varroaValues.length > 0 ? (
-          <View style={styles.chartWrapper}>
-            <LineChart
-              data={{
-                labels: varroaLabels,
-                datasets: [
-                  {
-                    data: varroaValues,
+          <View
+            onLayout={(event) => setChartWidth(event.nativeEvent.layout.width)}
+            style={styles.chartWrapper}
+          >
+            {chartWidth > 0 ? (
+              <LineChart
+                data={{
+                  labels: varroaLabels,
+                  datasets: [
+                    {
+                      data: varroaValues,
+                    },
+                    { data: [0], withDots: false }, // Force yAxis min to 0
+                    { data: [3], withDots: false }  // Force yAxis max to 3
+                  ],
+                }}
+                width={chartWidth}
+                height={220}
+                yAxisInterval={1}
+                chartConfig={{
+                  backgroundColor: theme.colors.surface,
+                  backgroundGradientFrom: theme.colors.surface,
+                  backgroundGradientTo: theme.colors.surface,
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => theme.colors.accent,
+                  labelColor: (opacity = 1) => theme.colors.textMuted,
+                  style: {
+                    borderRadius: 16,
                   },
-                  { data: [0], withDots: false }, // Force yAxis min to 0
-                  { data: [3], withDots: false }  // Force yAxis max to 3
-                ],
-              }}
-              width={screenWidth - theme.spacing.lg * 2} // Padding compensation
-              height={220}
-              yAxisInterval={1}
-              chartConfig={{
-                backgroundColor: theme.colors.surface,
-                backgroundGradientFrom: theme.colors.surface,
-                backgroundGradientTo: theme.colors.surface,
-                decimalPlaces: 0,
-                color: (opacity = 1) => theme.colors.accent,
-                labelColor: (opacity = 1) => theme.colors.textMuted,
-                style: {
+                  propsForDots: {
+                    r: '4',
+                    strokeWidth: '2',
+                    stroke: theme.colors.accent,
+                  },
+                }}
+                bezier
+                style={{
+                  marginVertical: 8,
                   borderRadius: 16,
-                },
-                propsForDots: {
-                  r: '4',
-                  strokeWidth: '2',
-                  stroke: theme.colors.accent,
-                },
-              }}
-              bezier
-              style={{
-                marginVertical: 8,
-                borderRadius: 16,
-              }}
-            />
+                }}
+              />
+            ) : null}
           </View>
         ) : (
           <Text style={[theme.textStyles.body, { marginTop: 16 }]}>
@@ -133,7 +152,7 @@ export default function HiveTrendsScreen() {
           <View style={{ marginTop: 16, gap: 16 }}>
             {harvestEvents.map(e => (
               <View key={e.id} style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, paddingBottom: 8 }}>
-                <Text style={theme.textStyles.bodyStrong}>{new Date(e.performedAt).toLocaleDateString()}</Text>
+                <Text style={theme.textStyles.bodyStrong}>{formatDateLabel(e.performedAt)}</Text>
                 <Text style={theme.textStyles.body}>{e.details?.harvestSummary || e.notes || 'Ingen detaljerad info.'}</Text>
               </View>
             ))}
