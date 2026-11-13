@@ -133,6 +133,23 @@ describe('getApiaryDisplayLocation', () => {
     ).toBe('Dag H');
   });
 
+  it('ignores stale county, locality, and municipality when source is manual without coordinates', () => {
+    expect(
+      getApiaryDisplayLocation({
+        id: 'apiary-2b',
+        name: 'Dag H',
+        location: 'Min nya plats',
+        notes: '',
+        locationDetails: {
+          source: 'manual',
+          locality: 'Gammal ort',
+          municipality: 'Uppsala',
+          county: 'Uppsala län',
+        },
+      }),
+    ).toBe('Min nya plats');
+  });
+
   it('uses municipality from geodata when coordinates exist even if source is manual', () => {
     expect(
       getApiaryDisplayLocation({
@@ -183,5 +200,23 @@ describe('getApiaryMunicipalityLabel', () => {
     ]);
 
     expect(seasonStatus.locationLabel).toBe('Uppsala kommun');
+  });
+
+  it('returns undefined for manual location without coordinates even if stale fields exist', () => {
+    const manualApiary = {
+      id: 'apiary-6',
+      name: 'Dag H',
+      location: 'Min nya plats',
+      notes: '',
+      locationDetails: {
+        source: 'manual' as const,
+        locality: 'Gammal ort',
+        municipality: 'Uppsala',
+        county: 'Uppsala län',
+      },
+    };
+
+    expect(getApiaryMunicipalityLabel(manualApiary)).toBeUndefined();
+    expect(getSeasonStatus(new Date('2026-04-05T12:00:00.000Z'), [manualApiary]).locationLabel).toBe('Min nya plats');
   });
 });

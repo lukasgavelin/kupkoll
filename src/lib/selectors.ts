@@ -146,11 +146,7 @@ function formatCountyLabel(value?: string) {
 }
 
 function hasTrustedMunicipality(apiary: Apiary): boolean {
-  return (
-    apiary.locationDetails?.source === 'auto' ||
-    Boolean(apiary.locationDetails?.county?.trim()) ||
-    Boolean(apiary.coordinates)
-  );
+  return apiary.locationDetails?.source === 'auto' || Boolean(apiary.coordinates);
 }
 
 export function getApiaryDisplayLocation(apiary?: Apiary) {
@@ -158,9 +154,10 @@ export function getApiaryDisplayLocation(apiary?: Apiary) {
     return undefined;
   }
 
-  const municipality = hasTrustedMunicipality(apiary) ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
-  const county = formatCountyLabel(apiary.locationDetails?.county);
-  const locality = apiary.locationDetails?.locality?.trim();
+  const hasTrustedDetails = hasTrustedMunicipality(apiary);
+  const municipality = hasTrustedDetails ? formatMunicipalityLabel(apiary.locationDetails?.municipality) : undefined;
+  const county = hasTrustedDetails ? formatCountyLabel(apiary.locationDetails?.county) : undefined;
+  const locality = hasTrustedDetails ? apiary.locationDetails?.locality?.trim() : undefined;
   const fallbackLocation = apiary.location.trim();
 
   if (municipality && county) {

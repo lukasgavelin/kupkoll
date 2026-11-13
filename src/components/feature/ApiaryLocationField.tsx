@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { formatLocationFromReverseGeocode, inferZone, toLocationDetails } from '@/lib/locationGeocode';
 import { formatCoordinates } from '@/lib/mapLinks';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -17,68 +18,6 @@ type ApiaryLocationFieldProps = {
   onLocationDetailsChange: (value?: ApiaryLocationDetails) => void;
 };
 
-function cleanSegment(value?: string | null) {
-  return value?.trim() || undefined;
-}
-
-function looksLikeStreetOrAddress(value: string) {
-  const normalized = value.toLowerCase();
-
-  return /\d/.test(normalized) || normalized.includes('väg') || normalized.includes('gatan') || normalized.includes('gata') || normalized.includes('street') || normalized.includes('road');
-}
-
-function extractMunicipality(result: Location.LocationGeocodedAddress) {
-  const city = cleanSegment(result.city);
-  const subregion = cleanSegment(result.subregion);
-  const district = cleanSegment(result.district);
-  const region = cleanSegment(result.region);
-
-  if (city) {
-    return city;
-  }
-
-  if (subregion && subregion.toLowerCase() !== region?.toLowerCase()) {
-    return subregion;
-  }
-
-  if (district && !looksLikeStreetOrAddress(district)) {
-    return district;
-  }
-
-  return undefined;
-}
-
-function formatLocationFromReverseGeocode(result: Location.LocationGeocodedAddress) {
-  const municipality = extractMunicipality(result);
-  const county = cleanSegment(result.region);
-  const locality = cleanSegment(result.name);
-  const segments = [municipality, locality, county].filter((segment, index, arr) => Boolean(segment) && arr.indexOf(segment) === index);
-  return segments.join(', ');
-}
-
-function inferZone(latitude: number): ApiaryLocationDetails['zone'] {
-  if (latitude >= 62) {
-    return 'nord';
-  }
-
-  if (latitude < 57.5) {
-    return 'syd';
-  }
-
-  return 'mellan';
-}
-
-function toLocationDetails(result: Location.LocationGeocodedAddress, latitude?: number): ApiaryLocationDetails {
-  return {
-    source: 'auto',
-    locality: cleanSegment(result.city) || cleanSegment(result.name),
-    municipality: extractMunicipality(result),
-    county: cleanSegment(result.region),
-    countryCode: cleanSegment(result.isoCountryCode),
-    zone: latitude === undefined ? undefined : inferZone(latitude),
-  };
-}
-
 export function ApiaryLocationField({
   location,
   onLocationChange,
@@ -90,7 +29,7 @@ export function ApiaryLocationField({
   const theme = useTheme();
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const hasTrustedMunicipality = locationDetails?.source === 'auto' || Boolean(locationDetails?.county?.trim()) || Boolean(coordinates);
+  const hasTrustedMunicipality = locationDetails?.source === 'auto' || Boolean(coordinates);
   const detectedPlace = hasTrustedMunicipality ? [locationDetails?.municipality, locationDetails?.county].filter(Boolean).join(', ') : '';
   const locationModeLabel = locationDetails?.source === 'manual' ? 'Manuellt justerad plats' : 'Automatisk platsupplösning';
   const utilityMessage = coordinates
@@ -128,7 +67,7 @@ export function ApiaryLocationField({
           const formatted = formatLocationFromReverseGeocode(reverseResult);
           nextDetails = toLocationDetails(reverseResult, nextCoordinates.latitude);
 
-          if (!location.trim() && formatted) {
+          if ((locationDetails?.source === 'auto' || !location.trim()) && formatted) {
             onLocationChange(formatted);
           }
 
@@ -164,9 +103,7 @@ export function ApiaryLocationField({
 
           onLocationChange(value);
           onLocationDetailsChange({
-            ...locationDetails,
             source: 'manual',
-            zone: undefined,
           });
         }}
         placeholder="Ort, område eller gårdsnamn"
@@ -198,9 +135,7 @@ export function ApiaryLocationField({
             onPress={() => {
               onCoordinatesChange(undefined);
               onLocationDetailsChange({
-                ...locationDetails,
                 source: 'manual',
-                zone: undefined,
               });
             }}
             variant="ghost"
