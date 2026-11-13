@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
+import { KupkollAppState } from '@/lib/storage';
 import { Apiary, Hive, HiveEvent, Inspection, Task, UserSettings } from '@/types/domain';
 
 const DB_NAME = 'kupkoll.db';
@@ -18,6 +19,7 @@ export function initDbSync() {
   
   db.execSync(`
     PRAGMA journal_mode = WAL;
+    PRAGMA foreign_keys = ON;
     
     CREATE TABLE IF NOT EXISTS Settings (
       id TEXT PRIMARY KEY,
@@ -82,6 +84,37 @@ export function loadAllDataSync() {
       SELECT data, ROW_NUMBER() OVER (PARTITION BY hiveId ORDER BY performedAt DESC) as rn FROM HiveEvents
     ) WHERE rn <= 3
   `);
+  const events = eventsRows.map((r) => JSON.parse(r.data) as HiveEvent);
+
+  const tasksRows = db.getAllSync<{ data: string }>('SELECT data FROM Tasks');
+  const tasks = tasksRows.map((r) => JSON.parse(r.data) as Task);
+
+  const settingsRow = db.getFirstSync<{ value: string }>('SELECT value FROM Settings WHERE id = "userSettings"');
+  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { experienceLevel: 'experienced' as const };
+
+  return {
+    apiaries,
+    hives,
+    inspections,
+    events,
+    manualTasks: tasks,
+    userSettings,
+  };
+}
+
+export function loadFullExportDataSync(): KupkollAppState & { userSettings: UserSettings } {
+  const db = getDbSync();
+
+  const apiariesRows = db.getAllSync<{ data: string }>('SELECT data FROM Apiaries');
+  const apiaries = apiariesRows.map((r) => JSON.parse(r.data) as Apiary);
+
+  const hivesRows = db.getAllSync<{ data: string }>('SELECT data FROM Hives');
+  const hives = hivesRows.map((r) => JSON.parse(r.data) as Hive);
+
+  const inspectionsRows = db.getAllSync<{ data: string }>('SELECT data FROM Inspections ORDER BY performedAt DESC');
+  const inspections = inspectionsRows.map((r) => JSON.parse(r.data) as Inspection);
+
+  const eventsRows = db.getAllSync<{ data: string }>('SELECT data FROM HiveEvents ORDER BY performedAt DESC');
   const events = eventsRows.map((r) => JSON.parse(r.data) as HiveEvent);
 
   const tasksRows = db.getAllSync<{ data: string }>('SELECT data FROM Tasks');

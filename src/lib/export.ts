@@ -27,7 +27,7 @@ export type KupkollExportResult = {
 };
 
 function cloneState(state: KupkollAppState): KupkollAppState {
-  return {
+  const cloned: KupkollAppState = {
     apiaries: state.apiaries.map((apiary) => ({
       ...apiary,
       coordinates: apiary.coordinates ? { ...apiary.coordinates } : undefined,
@@ -39,16 +39,24 @@ function cloneState(state: KupkollAppState): KupkollAppState {
     })),
     inspections: state.inspections.map((inspection) => ({
       ...inspection,
+      ...(inspection.imageUris ? { imageUris: [...inspection.imageUris] } : {}),
       varroaDetails: inspection.varroaDetails ? { ...inspection.varroaDetails } : undefined,
       weather: inspection.weather ? { ...inspection.weather } : undefined,
       advancedDetails: inspection.advancedDetails ? { ...inspection.advancedDetails } : undefined,
     })),
     events: state.events.map((event) => ({
       ...event,
+      ...(event.imageUris ? { imageUris: [...event.imageUris] } : {}),
       details: event.details ? { ...event.details } : undefined,
     })),
     manualTasks: state.manualTasks.map((task) => ({ ...task })),
   };
+
+  if (state.userSettings) {
+    cloned.userSettings = { ...state.userSettings };
+  }
+
+  return cloned;
 }
 
 export function buildKupkollExport(state: KupkollAppState, exportedAt = new Date().toISOString()): KupkollExportBundle {

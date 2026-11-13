@@ -109,6 +109,43 @@ describe('parseKupkollImportJson', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it('preserves userSettings and event imageUris from export bundles', () => {
+    const result = parseKupkollImportJson(
+      JSON.stringify({
+        app: 'Kupkoll',
+        exportedAt: '2026-04-01T08:00:00.000Z',
+        schemaVersion: 7,
+        counts: {
+          apiaries: 1,
+          hives: 1,
+          inspections: 1,
+          events: 1,
+          manualTasks: 1,
+        },
+        data: {
+          ...state,
+          events: [
+            {
+              ...state.events[0],
+              imageUris: ['file:///event-photo.jpg'],
+            },
+          ],
+          userSettings: {
+            experienceLevel: 'beginner',
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.state.userSettings).toEqual({ experienceLevel: 'beginner' });
+    expect(result.state.events[0].imageUris).toEqual(['file:///event-photo.jpg']);
+  });
+
   it('returns warnings when metadata counts are out of sync', () => {
     const result = parseKupkollImportJson(
       JSON.stringify({

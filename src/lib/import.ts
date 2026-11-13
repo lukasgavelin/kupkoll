@@ -39,6 +39,7 @@ function buildStateFromExportData(schemaVersion: number, data: unknown): Kupkoll
     inspections: data.inspections,
     events: data.events,
     manualTasks: data.manualTasks,
+    userSettings: data.userSettings,
   });
 }
 
