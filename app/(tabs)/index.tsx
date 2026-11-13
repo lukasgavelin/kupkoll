@@ -1,4 +1,4 @@
-import { useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
@@ -20,6 +20,7 @@ import { Theme } from '@/theme';
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const navigation = useNavigation();
   const { dashboard, hives, apiaries } = useKupkoll();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const quickHive = hives[0];
@@ -29,25 +30,30 @@ export default function HomeScreen() {
   const inspectionTarget = latestInspection?.hiveId ?? quickHive?.id;
 
   // Compute season status for SeasonStatusCard
-  const isFocused = useIsFocused();
   const [seasonDate, setSeasonDate] = useState(() => new Date());
 
   useEffect(() => {
-    if (!isFocused) {
-      return;
-    }
+    return navigation.addListener('focus', () => {
+      const now = new Date();
+      setSeasonDate((current) => {
+        if (
+          now.getFullYear() !== current.getFullYear() ||
+          now.getMonth() !== current.getMonth() ||
+          now.getDate() !== current.getDate()
+        ) {
+          return now;
+        }
+        return current;
+      });
+    });
+  }, [navigation]);
 
-    const now = new Date();
-    if (
-      now.getFullYear() !== seasonDate.getFullYear() ||
-      now.getMonth() !== seasonDate.getMonth() ||
-      now.getDate() !== seasonDate.getDate()
-    ) {
-      setSeasonDate(now);
-    }
-  }, [isFocused, seasonDate]);
   const baseSeasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
-  const [seasonStatus, setSeasonStatus] = useState(baseSeasonStatus);
+  const [tipSelection, setTipSelection] = useState<Awaited<ReturnType<typeof getSeasonTipSelection>> | null>(null);
+  const seasonStatus = useMemo(
+    () => (tipSelection ? applySeasonTipSelection(baseSeasonStatus, tipSelection) : baseSeasonStatus),
+    [baseSeasonStatus, tipSelection],
+  );
   const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
   const [bloomWeather, setBloomWeather] = useState<InspectionWeatherSnapshot | undefined>(undefined);
   const [dragEfficiency, setDragEfficiency] = useState<number | undefined>(undefined);
@@ -59,8 +65,6 @@ export default function HomeScreen() {
   useEffect(() => {
     let isMounted = true;
 
-    setSeasonStatus(baseSeasonStatus);
-
     async function loadSeasonTipSelection() {
       const selection = await getSeasonTipSelection(baseSeasonStatus, seasonDate);
 
@@ -68,7 +72,7 @@ export default function HomeScreen() {
         return;
       }
 
-      setSeasonStatus(applySeasonTipSelection(baseSeasonStatus, selection));
+      setTipSelection(selection);
     }
 
     void loadSeasonTipSelection();

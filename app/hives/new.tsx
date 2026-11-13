@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { QueenProfileFields } from '@/components/feature/QueenProfileFields';
 import { AppCard } from '@/components/ui/AppCard';
@@ -31,12 +31,6 @@ export default function NewHiveScreen() {
   const [boxSystem, setBoxSystem] = useState<HiveBoxSystem>('Lågnormal');
   const [queen, setQueen] = useState(() => createQueenProfileDraft());
   const [notes, setNotes] = useState('');
-
-  useEffect(() => {
-    if (!selectedApiaryId && apiaries[0]?.id) {
-      setSelectedApiaryId(apiaries[0].id);
-    }
-  }, [apiaries, selectedApiaryId]);
 
   function saveHive() {
     const trimmedName = name.trim();

@@ -15,9 +15,10 @@ import { formatDateLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-import type { Task, TaskPriority } from '@/types/domain';
+import type { Task, TaskPriority, TaskSource } from '@/types/domain';
 
 const PRIORITY_OPTIONS: TaskPriority[] = ['Låg', 'Medel', 'Hög'];
+const SOURCE_FILTERS: ('Alla' | TaskSource)[] = ['Alla', 'Beslutsstöd', 'Egen planering'];
 
 function showTaskAlert(title: string, message: string) {
   if (Platform.OS === 'web') {
@@ -75,6 +76,8 @@ export default function TasksScreen() {
   const [dueDateInput, setDueDateInput] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('Medel');
   const [selectedHiveId, setSelectedHiveId] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<'Alla' | TaskSource>('Alla');
 
   const hasApiaries = apiaries.length > 0;
   const hasHives = hives.length > 0;
@@ -134,7 +137,25 @@ export default function TasksScreen() {
     }
   }
 
-  const groupedTasks = tasks.reduce(
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredTasks = tasks.filter((task) => {
+    if (sourceFilter !== 'Alla' && task.source !== sourceFilter) {
+      return false;
+    }
+    if (!normalizedQuery) {
+      return true;
+    }
+    const hiveName = task.hiveId ? (getHiveById(task.hiveId)?.name.toLowerCase() ?? '') : '';
+    const apiaryName = task.apiaryId ? (getApiaryById(task.apiaryId)?.name.toLowerCase() ?? '') : '';
+    return (
+      task.title.toLowerCase().includes(normalizedQuery) ||
+      task.description.toLowerCase().includes(normalizedQuery) ||
+      hiveName.includes(normalizedQuery) ||
+      apiaryName.includes(normalizedQuery)
+    );
+  });
+
+  const groupedTasks = filteredTasks.reduce(
     (groups, task) => {
       const dueDate = new Date(task.dueDate);
       dueDate.setHours(0, 0, 0, 0);
@@ -338,7 +359,36 @@ export default function TasksScreen() {
         />
       )}
 
-      {tasks.length ? (
+      {tasks.length > 0 ? (
+        <View style={styles.filterSection}>
+          <TextInput
+            clearButtonMode="while-editing"
+            onChangeText={setSearchQuery}
+            placeholder="Sök uppgift, kupa eller bigård..."
+            placeholderTextColor={theme.colors.textMuted}
+            style={styles.input}
+            value={searchQuery}
+          />
+          <View style={styles.chipRow}>
+            {SOURCE_FILTERS.map((filter) => {
+              const selected = sourceFilter === filter;
+              return (
+                <Pressable
+                  key={filter}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setSourceFilter(filter)}
+                  style={[styles.chip, selected && styles.chipActive]}
+                >
+                  <Text style={[styles.chipLabel, selected && styles.chipLabelActive]}>{filter}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {filteredTasks.length ? (
         taskSections.map((section) => (
           <View key={section.key} style={styles.sectionList}>
             <SectionHeader title={section.title} description={section.description} />
@@ -353,6 +403,18 @@ export default function TasksScreen() {
             ))}
           </View>
         ))
+      ) : tasks.length > 0 ? (
+        <View style={styles.sectionList}>
+          <EmptyStateCard
+            title="Inga uppgifter matchar filtret"
+            description="Prova att rensa söktexten eller byt källfilter."
+            actionLabel="Visa alla uppgifter"
+            onActionPress={() => {
+              setSearchQuery('');
+              setSourceFilter('Alla');
+            }}
+          />
+        </View>
       ) : !completedManualTasks.length ? (
         <View style={styles.sectionList}>
           <EmptyStateCard
@@ -402,6 +464,9 @@ function createStyles(theme: Theme) {
     },
     sectionList: {
       gap: theme.spacing.lg,
+    },
+    filterSection: {
+      gap: theme.spacing.sm,
     },
     createActionRow: {
       flexDirection: 'row',

@@ -128,6 +128,9 @@ export default function ApiaryDetailScreen() {
 
   const apiaryId = apiary.id;
   const apiaryHives = getHivesByApiary(apiary.id);
+  const stableCount = apiaryHives.filter((h) => h.status === 'Stabilt').length;
+  const needsActionCount = apiaryHives.filter((h) => h.status === 'Behöver åtgärd').length;
+  const buildingCount = apiaryHives.filter((h) => h.status === 'Under uppbyggnad').length;
 
   async function confirmDelete() {
     const hiveList = apiaryHives.map((hive) => `• ${hive.name}`).join('\n');
@@ -157,6 +160,14 @@ export default function ApiaryDetailScreen() {
         <Text style={theme.textStyles.caption}>{apiaryDisplayLocation ?? apiary.location}</Text>
         {apiary.coordinates ? <Text style={theme.textStyles.caption}>GPS-position: {formatCoordinates(apiary.coordinates)}</Text> : null}
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
+        {apiaryHives.length > 0 ? (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryPill}>{apiaryHives.length} kupor</Text>
+            {stableCount > 0 ? <Text style={styles.summaryPill}>{stableCount} stabila</Text> : null}
+            {needsActionCount > 0 ? <Text style={styles.summaryPill}>{needsActionCount} behöver åtgärd</Text> : null}
+            {buildingCount > 0 ? <Text style={styles.summaryPill}>{buildingCount} under uppbyggnad</Text> : null}
+          </View>
+        ) : null}
         <PrimaryButton fullWidth label="Lägg till kupa" onPress={() => router.push(`/hives/new?apiaryId=${apiaryId}`)} />
       </AppCard>
 
@@ -199,6 +210,19 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
   return StyleSheet.create({
     sectionList: {
       gap: theme.spacing.lg,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    summaryPill: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.surfaceMuted,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.radii.pill,
     },
   });
 }

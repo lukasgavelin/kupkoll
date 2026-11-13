@@ -109,7 +109,19 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { addEvent, apiaries, hives } = useKupkoll();
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
-  const [selectedType, setSelectedType] = useState<HiveEventType>('Drottning bytt');
+  const [selectedType, setSelectedType] = useState<HiveEventType>(
+    initialType && hiveEventTypes.includes(initialType as HiveEventType)
+      ? (initialType as HiveEventType)
+      : 'Drottning bytt',
+  );
+  const [prevInitialType, setPrevInitialType] = useState(initialType);
+
+  if (initialType !== prevInitialType) {
+    setPrevInitialType(initialType);
+    if (initialType && hiveEventTypes.includes(initialType as HiveEventType)) {
+      setSelectedType(initialType as HiveEventType);
+    }
+  }
   const [eventDateText, setEventDateText] = useState(() => getLocalIsoDate(0));
   const [notes, setNotes] = useState('');
   const [mergedWithHiveName, setMergedWithHiveName] = useState('');
@@ -136,12 +148,6 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
   const isQueenMarking = selectedType === 'Drottning märkt/årgång';
   const isVarroaTreatment = selectedType === 'Varroabehandling';
   const isVarroaFollowUp = selectedType === 'Uppföljande varroamätning';
-
-  useEffect(() => {
-    if (initialType && hiveEventTypes.includes(initialType as HiveEventType)) {
-      setSelectedType(initialType as HiveEventType);
-    }
-  }, [initialType]);
 
   function buildDetails(): HiveEventDetails | null | undefined {
     const parsedHoneySuperCount = honeySuperCount.trim() ? Number(honeySuperCount.trim()) : undefined;

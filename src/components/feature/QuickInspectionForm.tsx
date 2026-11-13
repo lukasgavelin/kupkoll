@@ -266,22 +266,25 @@ export function QuickInspectionForm({ initialHiveId, onUnsavedPhotosChange }: Qu
     }
   }
 
-  useEffect(() => {
-    let cancelled = false;
+  const apiaryWeatherKey = `${selectedApiary?.id ?? ''}:${selectedApiary?.coordinates?.latitude ?? ''}:${selectedApiary?.coordinates?.longitude ?? ''}`;
+  const [prevApiaryWeatherKey, setPrevApiaryWeatherKey] = useState(apiaryWeatherKey);
 
+  if (apiaryWeatherKey !== prevApiaryWeatherKey) {
+    setPrevApiaryWeatherKey(apiaryWeatherKey);
     setWeatherCondition(undefined);
     setWeatherWind(undefined);
     setTemperatureText('');
-
     if (!selectedApiary) {
       setAutoWeatherStatus('idle');
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (!selectedApiary.coordinates) {
+    } else if (!selectedApiary.coordinates) {
       setAutoWeatherStatus('unavailable');
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!selectedApiary || !selectedApiary.coordinates) {
       return () => {
         cancelled = true;
       };
@@ -302,7 +305,7 @@ export function QuickInspectionForm({ initialHiveId, onUnsavedPhotosChange }: Qu
     return () => {
       cancelled = true;
     };
-  }, [selectedApiary?.coordinates?.latitude, selectedApiary?.coordinates?.longitude, selectedApiary?.id]);
+  }, [selectedApiary]);
 
   function applyPreset(preset: InspectionPreset) {
     setTemperament(preset.temperament);
