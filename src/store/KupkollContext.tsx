@@ -3,7 +3,19 @@ import * as Crypto from 'expo-crypto';
 
 import { applyHiveEventToHive } from '@/lib/queenEvents';
 import { buildDerivedSignals } from '@/lib/rules';
-import { deleteApiarySync, deleteHiveSync, replaceAllDataLegacySync, saveApiarySync, saveHiveEventSync, saveHiveSync, saveInspectionSync, saveUserSettingsSync } from '@/lib/db';
+import {
+  DEFAULT_USER_SETTINGS,
+  deleteApiarySync,
+  deleteHiveSync,
+  replaceAllDataLegacySync,
+  saveApiarySync,
+  saveHiveEventAndHiveSync,
+  saveHiveEventSync,
+  saveHiveSync,
+  saveInspectionAndHiveSync,
+  saveInspectionSync,
+  saveUserSettingsSync,
+} from '@/lib/db';
 import { getDashboardStats, getEventsForHive, getInspectionsForHive, getLatestInspectionMap, getUpcomingTasks } from '@/lib/selectors';
 import { KupkollAppState, normalizeQueenHistory } from '@/lib/storage';
 import { Apiary, Hive, HiveEvent, Inspection, NewApiaryInput, NewHiveInput, NewHiveEventInput, NewInspectionInput, Recommendation, Task, UpdateApiaryInput, UpdateHiveInput, UserSettings } from '@/types/domain';
@@ -165,23 +177,20 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       ...input,
     };
 
-    saveInspectionSync(inspection);
-    setInspections((current) => [inspection, ...current]); // We still append it for the UI/Context
-    
-    setHives((current) =>
-      current.map((hive) => {
-        if (hive.id === input.hiveId) {
-          const updatedHive = {
-            ...hive,
-            ...deriveHiveStatus(input),
-            lastInspectionAt: now,
-          };
-          saveHiveSync(updatedHive);
-          return updatedHive;
-        }
-        return hive;
-      }),
-    );
+    const targetHive = hives.find((hive) => hive.id === input.hiveId);
+    if (targetHive) {
+      const updatedHive: Hive = {
+        ...targetHive,
+        ...deriveHiveStatus(input),
+        lastInspectionAt: now,
+      };
+      saveInspectionAndHiveSync(inspection, updatedHive);
+      setInspections((current) => [inspection, ...current]);
+      setHives((current) => current.map((hive) => (hive.id === input.hiveId ? updatedHive : hive)));
+    } else {
+      saveInspectionSync(inspection);
+      setInspections((current) => [inspection, ...current]);
+    }
   }
 
   function addEvent(input: NewHiveEventInput) {
@@ -191,16 +200,16 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
       ...input,
     };
 
-    saveHiveEventSync(event);
-    setEvents((current) => [event, ...current]);
-    setHives((current) => current.map((hive) => {
-      if (hive.id === event.hiveId) {
-        const updatedHive = applyHiveEventToHive(hive, event);
-        saveHiveSync(updatedHive);
-        return updatedHive;
-      }
-      return hive;
-    }));
+    const targetHive = hives.find((hive) => hive.id === event.hiveId);
+    if (targetHive) {
+      const updatedHive = applyHiveEventToHive(targetHive, event);
+      saveHiveEventAndHiveSync(event, updatedHive);
+      setEvents((current) => [event, ...current]);
+      setHives((current) => current.map((hive) => (hive.id === event.hiveId ? updatedHive : hive)));
+    } else {
+      saveHiveEventSync(event);
+      setEvents((current) => [event, ...current]);
+    }
   }
 
   function updateUserSettings(settings: UserSettings) {
@@ -215,9 +224,7 @@ export function KupkollProvider({ children, initialData }: { children: ReactNode
     setInspections(nextState.inspections);
     setEvents(nextState.events);
     setManualTasks(nextState.manualTasks);
-    if (nextState.userSettings) {
-      setUserSettings(nextState.userSettings);
-    }
+    setUserSettings(nextState.userSettings ?? DEFAULT_USER_SETTINGS);
   }
 
   const value = useMemo<KupkollContextValue>(

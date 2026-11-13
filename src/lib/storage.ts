@@ -266,14 +266,17 @@ function normalizeHive(item: Record<string, unknown>): Hive {
 
 function normalizeInspection(item: Record<string, unknown>): Inspection {
   const varroaLevel = normalizeVarroaLevel(item.varroaLevel);
+  const { imageUris: rawImageUris, ...rest } = item;
+  const imageUris = normalizeImageUris(rawImageUris);
 
   return {
-    ...(item as Inspection),
+    ...(rest as Inspection),
     mode: normalizeInspectionMode(item.mode),
     varroaLevel,
     varroaDetails: normalizeInspectionVarroaDetails(item.varroaDetails, varroaLevel),
     weather: normalizeInspectionWeather(item.weather),
     advancedDetails: normalizeInspectionAdvancedDetails(item.advancedDetails),
+    ...(imageUris ? { imageUris } : {}),
   };
 }
 
