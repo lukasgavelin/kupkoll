@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -11,7 +12,8 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { confirmDestructiveAction } from '@/lib/confirm';
 import { formatDateLabel, getApiaryDisplayLocation, getApiarySeasonLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 function getQueenMarkingHex(color: string | undefined): string | undefined {
   switch (color) {
@@ -25,6 +27,8 @@ function getQueenMarkingHex(color: string | undefined): string | undefined {
 }
 
 export default function HiveDetailScreen() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const params = useLocalSearchParams<{ id: string }>();
   const { deleteHive, getHiveById, getApiaryById, getEventsForHive, getTasksForHive, latestInspectionMap } = useKupkoll();
   const hive = getHiveById(params.id);
@@ -93,10 +97,10 @@ export default function HiveDetailScreen() {
 
       <AppCard>
         <View style={styles.metaGrid}>
-          <MetaItem label="Status" value={hive.status} />
-          <MetaItem label="Samhällsstyrka" value={hive.strength} />
-          <MetaItem label="Temperament" value={hive.temperament} />
-          <MetaItem label="Kupsystem" value={hive.boxSystem} />
+          <MetaItem label="Status" styles={styles} theme={theme} value={hive.status} />
+          <MetaItem label="Samhällsstyrka" styles={styles} theme={theme} value={hive.strength} />
+          <MetaItem label="Temperament" styles={styles} theme={theme} value={hive.temperament} />
+          <MetaItem label="Kupsystem" styles={styles} theme={theme} value={hive.boxSystem} />
         </View>
         <Text style={theme.textStyles.body}>{hive.notes}</Text>
         <PrimaryButton label="Ny genomgång" onPress={() => router.push(`/inspections/new?hiveId=${hiveId}`)} />
@@ -106,11 +110,11 @@ export default function HiveDetailScreen() {
       <SectionHeader eyebrow="Drottning" title="Nuvarande drottning och historik" />
       <AppCard>
         <View style={styles.metaGrid}>
-          <MetaItem label="Drottningstatus" value={hive.queenStatus} />
-          <MetaItem label="Drottningens år" value={hive.queenYear ?? 'Inte angivet'} />
-          <MetaItem colorHex={queenColorHex} label="Märkningsfärg" value={hive.queenMarkingColor ?? 'Inte angivet'} />
-          <MetaItem label="Ursprung" value={hive.queenOrigin ?? 'Inte angivet'} />
-          <MetaItem label="Införd" value={hive.queenIntroducedAt ? formatDateLabel(hive.queenIntroducedAt) : 'Inte angivet'} />
+          <MetaItem label="Drottningstatus" styles={styles} theme={theme} value={hive.queenStatus} />
+          <MetaItem label="Drottningens år" styles={styles} theme={theme} value={hive.queenYear ?? 'Inte angivet'} />
+          <MetaItem colorHex={queenColorHex} label="Märkningsfärg" styles={styles} theme={theme} value={hive.queenMarkingColor ?? 'Inte angivet'} />
+          <MetaItem label="Ursprung" styles={styles} theme={theme} value={hive.queenOrigin ?? 'Inte angivet'} />
+          <MetaItem label="Införd" styles={styles} theme={theme} value={hive.queenIntroducedAt ? formatDateLabel(hive.queenIntroducedAt) : 'Inte angivet'} />
         </View>
         {queenWarnings.length > 0 ? (
           <View style={styles.warningsContainer}>
@@ -162,7 +166,19 @@ export default function HiveDetailScreen() {
   );
 }
 
-function MetaItem({ label, value, colorHex }: { label: string; value: string; colorHex?: string }) {
+function MetaItem({
+  label,
+  value,
+  colorHex,
+  styles,
+  theme,
+}: {
+  label: string;
+  value: string;
+  colorHex?: string;
+  styles: ReturnType<typeof createStyles>;
+  theme: Theme;
+}) {
   return (
     <View style={styles.metaItem}>
       <Text style={theme.textStyles.caption}>{label}</Text>
@@ -176,53 +192,55 @@ function MetaItem({ label, value, colorHex }: { label: string; value: string; co
   );
 }
 
-const styles = StyleSheet.create({
-  metaGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.lg,
-  },
-  metaItem: {
-    width: '47%',
-    gap: theme.spacing.xs,
-  },
-  metaValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  warningsContainer: {
-    marginTop: theme.spacing.md,
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
-  },
-  warningItem: {
-    backgroundColor: theme.colors.surfaceMuted,
-    borderRadius: theme.radii.md,
-    padding: theme.spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: theme.colors.accent,
-  },
-  warningText: {
-    ...theme.textStyles.caption,
-    color: theme.colors.text,
-  },
-  sectionList: {
-    gap: theme.spacing.lg,
-  },
-  queenHistoryList: {
-    gap: theme.spacing.md,
-  },
-  queenHistoryItem: {
-    gap: theme.spacing.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: theme.colors.border,
-    paddingTop: theme.spacing.md,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    metaGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.lg,
+    },
+    metaItem: {
+      width: '47%',
+      gap: theme.spacing.xs,
+    },
+    metaValueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    colorDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    warningsContainer: {
+      marginTop: theme.spacing.md,
+      gap: theme.spacing.sm,
+      marginBottom: theme.spacing.md,
+    },
+    warningItem: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: theme.radii.md,
+      padding: theme.spacing.md,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.accent,
+    },
+    warningText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+    },
+    sectionList: {
+      gap: theme.spacing.lg,
+    },
+    queenHistoryList: {
+      gap: theme.spacing.md,
+    },
+    queenHistoryItem: {
+      gap: theme.spacing.xs,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.colors.border,
+      paddingTop: theme.spacing.md,
+    },
+  });
+}

@@ -28,6 +28,9 @@ export default function ApiaryDetailScreen() {
   const [bloomWeather, setBloomWeather] = useState<InspectionWeatherSnapshot | undefined>(undefined);
   const [dragEfficiency, setDragEfficiency] = useState<number | undefined>(undefined);
   const [dragEfficiencyLabel, setDragEfficiencyLabel] = useState<string | undefined>(undefined);
+  const [isLoadingBloom, setIsLoadingBloom] = useState(Boolean(apiary));
+  const [bloomError, setBloomError] = useState<string | null>(null);
+  const [bloomRetryKey, setBloomRetryKey] = useState(0);
   const apiaryDisplayLocation = getApiaryDisplayLocation(apiary);
 
   function handleBackNavigation() {
@@ -66,11 +69,16 @@ export default function ApiaryDetailScreen() {
         setBloomWeather(undefined);
         setDragEfficiency(undefined);
         setDragEfficiencyLabel(undefined);
+        setBloomError(null);
+        setIsLoadingBloom(false);
         return;
       }
 
       const fallbackLatitude = bloomZoneLabel === 'norra' ? 63 : bloomZoneLabel === 'södra' ? 56 : 59.5;
       const userLatitude = apiary.coordinates?.latitude ?? fallbackLatitude;
+
+      setIsLoadingBloom(true);
+      setBloomError(null);
 
       try {
         const result = await getLikelyBloomingPlantsNow({
@@ -83,6 +91,7 @@ export default function ApiaryDetailScreen() {
           setBloomWeather(result.currentWeather);
           setDragEfficiency(result.dragEfficiency);
           setDragEfficiencyLabel(result.dragEfficiencyLabel);
+          setBloomError(null);
         }
       } catch {
         if (isMounted) {
@@ -90,6 +99,11 @@ export default function ApiaryDetailScreen() {
           setBloomWeather(undefined);
           setDragEfficiency(undefined);
           setDragEfficiencyLabel(undefined);
+          setBloomError('Kunde inte ladda blomningsdata just nu. Kontrollera anslutningen och försök igen.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingBloom(false);
         }
       }
     }
@@ -99,7 +113,7 @@ export default function ApiaryDetailScreen() {
     return () => {
       isMounted = false;
     };
-  }, [apiary, bloomZoneLabel]);
+  }, [apiary, bloomZoneLabel, bloomRetryKey]);
 
   if (!apiary) {
     return (
@@ -174,6 +188,9 @@ export default function ApiaryDetailScreen() {
         currentWeather={bloomWeather}
         dragEfficiency={dragEfficiency}
         dragEfficiencyLabel={dragEfficiencyLabel}
+        isLoading={isLoadingBloom}
+        error={bloomError}
+        onRetry={() => setBloomRetryKey((current) => current + 1)}
       />
 
       <SectionHeader eyebrow="Hantera" title="Administrera bigården" />

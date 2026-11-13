@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -17,6 +17,9 @@ type Props = {
   currentWeather?: InspectionWeatherSnapshot;
   dragEfficiency?: number;
   dragEfficiencyLabel?: string;
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 };
 
 function getWeatherIcon(condition: string): keyof typeof Ionicons.glyphMap {
@@ -89,6 +92,9 @@ export function BloomInsightsCard({
   currentWeather,
   dragEfficiency,
   dragEfficiencyLabel,
+  isLoading = false,
+  error,
+  onRetry,
 }: Props) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -148,7 +154,22 @@ export function BloomInsightsCard({
 
       </View>
 
-      {topPredictions.length ? (
+      {isLoading ? (
+        <View style={styles.loadingBlock}>
+          <ActivityIndicator color={theme.colors.accent} size="small" />
+          <Text style={styles.emptyText}>Hämtar blomningsprognos...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.emptyBlock}>
+          <Text style={styles.emptyTitle}>Kunde inte hämta blomningsprognos</Text>
+          <Text style={styles.emptyText}>{error}</Text>
+          {onRetry ? (
+            <Pressable accessibilityRole="button" onPress={onRetry} style={styles.retryButton}>
+              <Text style={styles.retryText}>Försök igen</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : topPredictions.length ? (
         <View style={styles.list}>
           {topPredictions.map((plant) => (
             <View
@@ -260,6 +281,27 @@ function createStyles(theme: Theme) {
     emptyBlock: {
       gap: theme.spacing.xs,
       paddingTop: theme.spacing.xs,
+    },
+    loadingBlock: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.xs,
+    },
+    retryButton: {
+      alignSelf: 'flex-start',
+      marginTop: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      borderRadius: theme.radii.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.borderStrong,
+      backgroundColor: theme.colors.surface,
+    },
+    retryText: {
+      ...theme.textStyles.caption,
+      color: theme.colors.text,
+      fontWeight: '600',
     },
     emptyTitle: {
       ...theme.textStyles.label,
