@@ -5,6 +5,7 @@ import {
   buildBloomWindows,
   extractBloomObservations,
   getLikelyBloomingPlants,
+  getZoneFromLatitude,
   parseCsv,
   getWindowForLatitude,
   getBloomStatus,
@@ -155,5 +156,12 @@ describe('dragCalendar', () => {
     // Winter day (DOY 15) should be classified as 'snart' (soon) and not 'nu' (now)
     const status = getBloomStatus(15, mockWindow);
     expect(status).toBe('snart');
+  });
+
+  it('classifies Swedish latitude zones with unified thresholds (<57.5, [57.5, 62), >=62)', () => {
+    expect(getZoneFromLatitude(57.49)).toBe('south');
+    expect(getZoneFromLatitude(57.5)).toBe('middle');
+    expect(getZoneFromLatitude(61.99)).toBe('middle');
+    expect(getZoneFromLatitude(62.0)).toBe('north');
   });
 });

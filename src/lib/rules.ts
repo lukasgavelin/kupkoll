@@ -226,6 +226,18 @@ function needsVarroaFollowUp(hiveEvents: HiveEvent[], inspectionHistory: Inspect
   return !hasInspectionFollowUp && !hasEventFollowUp;
 }
 
+function isWinterSeason(season: SeasonLabel): boolean {
+  return season === 'Vinterro' || season === 'Vintertillsyn';
+}
+
+function hasVarroaTreatmentAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection): boolean {
+  const inspectionTime = new Date(inspection.performedAt).getTime();
+
+  return hiveEvents.some(
+    (event) => event.type === 'Varroabehandling' && new Date(event.performedAt).getTime() > inspectionTime,
+  );
+}
+
 function hasPoorInspectionWeather(inspection: Inspection) {
   const temperature = inspection.weather?.temperatureC;
 
@@ -239,11 +251,15 @@ function hasPoorInspectionWeather(inspection: Inspection) {
 function hasGoodInspectionWeather(inspection: Inspection) {
   const temperature = inspection.weather?.temperatureC;
 
+  if (inspection.weather?.wind === 'Blåsigt' || inspection.weather?.condition === 'Regn') {
+    return false;
+  }
+
   if (temperature === undefined) {
     return true;
   }
 
-  return temperature >= 14 && inspection.weather?.wind !== 'Blåsigt' && inspection.weather?.condition !== 'Regn';
+  return temperature >= 14;
 }
 
 const decisionRules: DecisionRule[] = [
@@ -265,7 +281,11 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'queen-missing-trend',
-    shouldApply: ({ inspectionHistory }) => {
+    shouldApply: ({ inspectionHistory, season }) => {
+      if (isWinterSeason(season)) {
+        return false;
+      }
+
       const recent = getRecentInspections(inspectionHistory, 3);
 
       return recent.length === 3 && recent.every((item) => !item.queenSeen);
@@ -289,7 +309,9 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'varroa-pressure',
-    shouldApply: ({ inspection }) => inspection.varroaLevel === 'Förhöjd' || inspection.varroaLevel === 'Hög',
+    shouldApply: ({ inspection, hiveEvents }) =>
+      (inspection.varroaLevel === 'Förhöjd' || inspection.varroaLevel === 'Hög') &&
+      !hasVarroaTreatmentAfterInspection(hiveEvents, inspection),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'varroa',
@@ -315,7 +337,11 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'varroa-trend',
-    shouldApply: ({ inspectionHistory, inspection }) => {
+    shouldApply: ({ inspectionHistory, inspection, hiveEvents }) => {
+      if (hasVarroaTreatmentAfterInspection(hiveEvents, inspection)) {
+        return false;
+      }
+
       const recent = getRecentInspections(inspectionHistory, 3);
 
       if (recent.length < 3 || inspection.varroaLevel === 'Hög') {
@@ -442,7 +468,9 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'weak-colony',
-    shouldApply: ({ hive, inspection }) => hive.strength === 'Svagt' || (!inspection.openBrood && !inspection.cappedBrood) || (!inspection.honey && !inspection.pollen),
+    shouldApply: ({ hive, inspection, season }) =>
+      !isWinterSeason(season) &&
+      (hive.strength === 'Svagt' || (!inspection.openBrood && !inspection.cappedBrood) || (!inspection.honey && !inspection.pollen)),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'weak',
@@ -488,7 +516,9 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'queen-check',
-    shouldApply: ({ inspection, hive }) => (!inspection.queenSeen && !inspection.eggsSeen) || (inspection.actionNeeded && hive.queenStatus !== 'Bekräftad'),
+    shouldApply: ({ inspection, hive, season }) =>
+      !isWinterSeason(season) &&
+      ((!inspection.queenSeen && !inspection.eggsSeen) || (inspection.actionNeeded && hive.queenStatus !== 'Bekräftad')),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'queen',
@@ -752,9 +782,9 @@ export function buildDerivedSignals(
       userSettings,
     };
 
-    // L3: Inactive-hive med erfarenhetsanpassad kadence
+    // L3: Inactive-hive med erfarenhetsanpassad kadence (ej under vintervila/vintertillsyn)
     const inactiveThreshold = getInactiveHiveThreshold(inspectionCadenceDays, season, userSettings);
-    if (daysSinceLastInspection >= inactiveThreshold) {
+    if (!isWinterSeason(season) && daysSinceLastInspection >= inactiveThreshold) {
       const isExperienced = userSettings?.experienceLevel === 'experienced';
       recommendations.push(
         createRecommendation(context, {

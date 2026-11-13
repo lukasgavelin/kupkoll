@@ -15,15 +15,26 @@ import { Coordinates } from '@/types/domain';
 import { fetchInspectionWeather, InspectionWeatherSnapshot } from '@/lib/weather';
 
 const KUPKOLL_BLOOM_WEATHER_CACHE_KEY = 'KUPKOLL_BLOOM_WEATHER_CACHE';
+const GDD_SHIFT_TTL_MS = 24 * 60 * 60 * 1000;
+const CURRENT_WEATHER_TTL_MS = 2 * 60 * 60 * 1000;
 
 type CachedWeatherData = {
   latitude: number;
   longitude: number;
   dateStr: string;
-  shiftDays: number;
-  weatherSnapshot: InspectionWeatherSnapshot | null;
+  shiftDays?: number;
+  shiftTimestamp?: number;
+  weatherSnapshot?: InspectionWeatherSnapshot | null;
+  weatherTimestamp?: number;
   timestamp: number;
 };
+
+function createLocalDateStamp(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export type BloomPredictionResponse = {
   predictions: BloomPrediction[];
@@ -85,12 +96,12 @@ async function getCachedWeatherData(coordinates: Coordinates, date: Date): Promi
     if (!raw) return null;
 
     const cache: Record<string, CachedWeatherData> = JSON.parse(raw);
-    const dateStr = date.toISOString().slice(0, 10);
+    const dateStr = createLocalDateStamp(date);
     const now = Date.now();
 
     for (const entry of Object.values(cache)) {
       const isSameDay = entry.dateStr === dateStr;
-      const isRecent = now - entry.timestamp < 24 * 60 * 60 * 1000;
+      const isRecent = now - entry.timestamp < GDD_SHIFT_TTL_MS;
       const latDiff = Math.abs(entry.latitude - coordinates.latitude);
       const lonDiff = Math.abs(entry.longitude - coordinates.longitude);
       const isClose = latDiff < 0.01 && lonDiff < 0.01;
@@ -105,12 +116,21 @@ async function getCachedWeatherData(coordinates: Coordinates, date: Date): Promi
   return null;
 }
 
-async function saveCachedWeatherData(coordinates: Coordinates, date: Date, shiftDays: number, weatherSnapshot: InspectionWeatherSnapshot | null) {
+async function saveCachedWeatherData(
+  coordinates: Coordinates,
+  date: Date,
+  data: {
+    shiftDays?: number;
+    shiftTimestamp?: number;
+    weatherSnapshot?: InspectionWeatherSnapshot | null;
+    weatherTimestamp?: number;
+  },
+) {
   try {
     const raw = await AsyncStorage.getItem(KUPKOLL_BLOOM_WEATHER_CACHE_KEY);
     const cache: Record<string, CachedWeatherData> = raw ? JSON.parse(raw) : {};
 
-    const dateStr = date.toISOString().slice(0, 10);
+    const dateStr = createLocalDateStamp(date);
     const now = Date.now();
     const cacheKey = `${coordinates.latitude.toFixed(4)}:${coordinates.longitude.toFixed(4)}:${dateStr}`;
 
@@ -118,8 +138,10 @@ async function saveCachedWeatherData(coordinates: Coordinates, date: Date, shift
       latitude: coordinates.latitude,
       longitude: coordinates.longitude,
       dateStr,
-      shiftDays,
-      weatherSnapshot,
+      shiftDays: data.shiftDays,
+      shiftTimestamp: data.shiftTimestamp,
+      weatherSnapshot: data.weatherSnapshot,
+      weatherTimestamp: data.weatherTimestamp,
       timestamp: now,
     };
 
@@ -165,39 +187,52 @@ export async function getLikelyBloomingPlantsNow(params: {
   const shouldApplyWeather = (params.enableWeatherAdjustment ?? true) && params.coordinates;
 
   if (shouldApplyWeather && params.coordinates) {
-    // Try to load from persistent cache first
+    const now = Date.now();
     const cached = await getCachedWeatherData(params.coordinates, date);
 
-    if (cached) {
-      shiftDays = cached.shiftDays;
-      if (cached.weatherSnapshot) {
-        currentWeather = cached.weatherSnapshot;
-        const effResult = calculateDragEfficiency(currentWeather);
-        dragEff = effResult.efficiency;
-        dragLabel = effResult.label;
-      }
-    } else {
-      // Fetch GDD temperature shift
-      const shiftPromise = calculateTemperatureShiftDays(params.coordinates, date, params.fetchImplementation)
-        .then((s) => s)
-        .catch(() => 0);
+    const hasValidShift =
+      cached?.shiftDays !== undefined &&
+      cached?.shiftTimestamp !== undefined &&
+      now - cached.shiftTimestamp < GDD_SHIFT_TTL_MS;
 
-      // Fetch current weather
-      const weatherPromise = fetchInspectionWeather(params.coordinates, params.fetchImplementation)
-        .then((w) => w)
-        .catch(() => null);
+    const hasValidWeather =
+      cached?.weatherSnapshot != null &&
+      cached?.weatherTimestamp !== undefined &&
+      now - cached.weatherTimestamp < CURRENT_WEATHER_TTL_MS;
 
-      const [fetchedShift, fetchedWeather] = await Promise.all([shiftPromise, weatherPromise]);
-      shiftDays = fetchedShift;
-      if (fetchedWeather) {
-        currentWeather = fetchedWeather;
-        const effResult = calculateDragEfficiency(currentWeather);
-        dragEff = effResult.efficiency;
-        dragLabel = effResult.label;
-      }
+    const shiftPromise = hasValidShift
+      ? Promise.resolve({ ok: true as const, value: cached!.shiftDays! })
+      : calculateTemperatureShiftDays(params.coordinates, date, params.fetchImplementation)
+          .then((value) => ({ ok: true as const, value }))
+          .catch(() => ({ ok: false as const, value: 0 }));
 
-      // Save to cache
-      await saveCachedWeatherData(params.coordinates, date, shiftDays, fetchedWeather);
+    const weatherPromise = hasValidWeather
+      ? Promise.resolve({ ok: true as const, value: cached!.weatherSnapshot! })
+      : fetchInspectionWeather(params.coordinates, params.fetchImplementation)
+          .then((value) => ({ ok: value !== null, value }))
+          .catch(() => ({ ok: false as const, value: null }));
+
+    const [shiftResult, weatherResult] = await Promise.all([shiftPromise, weatherPromise]);
+
+    shiftDays = shiftResult.value;
+    if (weatherResult.value) {
+      currentWeather = weatherResult.value;
+      const effResult = calculateDragEfficiency(currentWeather);
+      dragEff = effResult.efficiency;
+      dragLabel = effResult.label;
+    }
+
+    const shouldSaveShift = !hasValidShift && shiftResult.ok;
+    const shouldSaveWeather = !hasValidWeather && weatherResult.ok;
+
+    if (shouldSaveShift || shouldSaveWeather) {
+      const saveNow = Date.now();
+      await saveCachedWeatherData(params.coordinates, date, {
+        shiftDays: shiftResult.ok ? shiftResult.value : cached?.shiftDays,
+        shiftTimestamp: shouldSaveShift ? saveNow : hasValidShift ? cached?.shiftTimestamp : undefined,
+        weatherSnapshot: weatherResult.ok ? weatherResult.value : hasValidWeather ? cached?.weatherSnapshot : undefined,
+        weatherTimestamp: shouldSaveWeather ? saveNow : hasValidWeather ? cached?.weatherTimestamp : undefined,
+      });
     }
   }
 

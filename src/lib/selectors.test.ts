@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getApiaryDisplayLocation, getApiaryMunicipalityLabel, getApiarySeasonLabel, getRecommendedInspectionCadenceDays, getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
+import { getApiaryDisplayLocation, getApiaryMunicipalityLabel, getApiaryRegion, getApiarySeasonLabel, getRecommendedInspectionCadenceDays, getSeasonLabel, getSeasonStatus } from '@/lib/selectors';
 
 describe('getSeasonLabel', () => {
   it('maps months to biodling seasons', () => {
@@ -218,5 +218,20 @@ describe('getApiaryMunicipalityLabel', () => {
 
     expect(getApiaryMunicipalityLabel(manualApiary)).toBeUndefined();
     expect(getSeasonStatus(new Date('2026-04-05T12:00:00.000Z'), [manualApiary]).locationLabel).toBe('Min nya plats');
+  });
+
+  it('maps Swedish region keywords and unified latitude thresholds in getApiaryRegion', () => {
+    expect(getApiaryRegion({ id: 'a1', name: 'A1', location: 'Gotland', notes: '' })).toBe('Södra Sverige');
+    expect(getApiaryRegion({ id: 'a2', name: 'A2', location: 'Småland', notes: '' })).toBe('Södra Sverige');
+    expect(getApiaryRegion({ id: 'a3', name: 'A3', location: 'Värmland', notes: '' })).toBe('Mellansverige');
+    expect(getApiaryRegion({ id: 'a4', name: 'A4', location: 'Dalarna', notes: '' })).toBe('Mellansverige');
+    expect(getApiaryRegion({ id: 'a5', name: 'A5', location: 'Lappland', notes: '' })).toBe('Norra Sverige');
+    expect(getApiaryRegion({ id: 'a6', name: 'A6', location: 'Härjedalen', notes: '' })).toBe('Norra Sverige');
+    expect(getApiaryRegion({ id: 'a7', name: 'A7', location: 'Ångermanland', notes: '' })).toBe('Norra Sverige');
+
+    expect(getApiaryRegion({ id: 'c1', name: 'C1', location: 'Gräns', notes: '', coordinates: { latitude: 57.49, longitude: 15 } })).toBe('Södra Sverige');
+    expect(getApiaryRegion({ id: 'c2', name: 'C2', location: 'Gräns', notes: '', coordinates: { latitude: 57.5, longitude: 15 } })).toBe('Mellansverige');
+    expect(getApiaryRegion({ id: 'c3', name: 'C3', location: 'Gräns', notes: '', coordinates: { latitude: 61.99, longitude: 15 } })).toBe('Mellansverige');
+    expect(getApiaryRegion({ id: 'c4', name: 'C4', location: 'Gräns', notes: '', coordinates: { latitude: 62.0, longitude: 15 } })).toBe('Norra Sverige');
   });
 });

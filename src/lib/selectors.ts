@@ -16,8 +16,73 @@ export type SeasonStatus = {
   zoneLabel: ApiaryZone;
 };
 
-const northKeywords = ['norrbotten', 'västerbotten', 'jämtland', 'västernorrland', 'gävleborg', 'kiruna', 'umeå', 'luleå', 'skellefteå', 'sundsvall', 'östersund'];
-const southKeywords = ['skåne', 'blekinge', 'halland', 'kalmar', 'öland', 'malmö', 'lund', 'helsingborg', 'ystad', 'trelleborg', 'växjö'];
+const northKeywords = [
+  'norrbotten',
+  'västerbotten',
+  'jämtland',
+  'västernorrland',
+  'gävleborg',
+  'lappland',
+  'härjedalen',
+  'ångermanland',
+  'medelpad',
+  'hälsingland',
+  'kiruna',
+  'umeå',
+  'luleå',
+  'skellefteå',
+  'sundsvall',
+  'östersund',
+  'piteå',
+  'örnsköldsvik',
+  'gävle',
+  'hudiksvall',
+  'härnösand',
+];
+const middleKeywords = [
+  'stockholm',
+  'uppsala',
+  'södermanland',
+  'sörmland',
+  'östergötland',
+  'västergötland',
+  'dalsland',
+  'bohuslän',
+  'närke',
+  'västmanland',
+  'värmland',
+  'dalarna',
+  'uppland',
+  'göteborg',
+  'linköping',
+  'norrköping',
+  'örebro',
+  'västerås',
+  'karlstad',
+  'falun',
+  'borlänge',
+  'eskilstuna',
+];
+const southKeywords = [
+  'skåne',
+  'blekinge',
+  'halland',
+  'kalmar',
+  'öland',
+  'gotland',
+  'småland',
+  'kronoberg',
+  'malmö',
+  'lund',
+  'helsingborg',
+  'ystad',
+  'trelleborg',
+  'växjö',
+  'karlskrona',
+  'halmstad',
+  'visby',
+  'kristianstad',
+];
 
 function getSeasonProfileIndex(region: SwedishRegion, monthIndex: number) {
   const resolvedRegion = region === 'Sverige' ? 'Mellansverige' : region;
@@ -100,6 +165,10 @@ export function getApiaryRegion(apiary?: Apiary): SwedishRegion {
 
   if (southKeywords.some((keyword) => location.includes(keyword))) {
     return 'Södra Sverige';
+  }
+
+  if (middleKeywords.some((keyword) => location.includes(keyword))) {
+    return 'Mellansverige';
   }
 
   return location.trim() ? 'Mellansverige' : 'Sverige';
