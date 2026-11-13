@@ -341,4 +341,108 @@ describe('buildDerivedSignals', () => {
     expect(result.recommendations.map((item) => item.title)).not.toContain('Uppföljande varroamätning rekommenderas');
     expect(result.tasks.map((item) => item.title)).not.toContain('Gör uppföljande varroamätning');
   });
+
+  it('does not treat undefined temperature with windy or rainy weather as good inspection weather', () => {
+    vi.setSystemTime(new Date('2026-06-15T12:00:00.000Z'));
+
+    const hive = createHive({ strength: 'Starkt' });
+    const windyInspection = createInspection({
+      weather: {
+        condition: 'Soligt',
+        wind: 'Blåsigt',
+        temperatureC: undefined,
+      },
+    });
+    const rainyInspection = createInspection({
+      weather: {
+        condition: 'Regn',
+        wind: 'Lugnt',
+        temperatureC: undefined,
+      },
+    });
+
+    const windyResult = buildDerivedSignals([createApiary()], [hive], [windyInspection]);
+    const rainyResult = buildDerivedSignals([createApiary()], [hive], [rainyInspection]);
+
+    expect(windyResult.recommendations.map((item) => item.title)).not.toContain('Överväg skattlåda');
+    expect(rainyResult.recommendations.map((item) => item.title)).not.toContain('Överväg skattlåda');
+  });
+
+  it('suppresses weak-colony, queen-check, queen-missing-trend, and inactive-hive during winter seasons', () => {
+    vi.setSystemTime(new Date('2026-01-15T12:00:00.000Z'));
+
+    const hive = createHive({
+      strength: 'Svagt',
+      queenStatus: 'Osäker',
+      lastInspectionAt: '2025-10-01T10:00:00.000Z',
+    });
+    const inspections = [
+      createInspection({
+        id: 'insp-w1',
+        performedAt: '2025-09-01T10:00:00.000Z',
+        queenSeen: false,
+        eggsSeen: false,
+        openBrood: false,
+        cappedBrood: false,
+        honey: true,
+        pollen: false,
+      }),
+      createInspection({
+        id: 'insp-w2',
+        performedAt: '2025-09-15T10:00:00.000Z',
+        queenSeen: false,
+        eggsSeen: false,
+        openBrood: false,
+        cappedBrood: false,
+        honey: true,
+        pollen: false,
+      }),
+      createInspection({
+        id: 'insp-w3',
+        performedAt: '2025-10-01T10:00:00.000Z',
+        queenSeen: false,
+        eggsSeen: false,
+        openBrood: false,
+        cappedBrood: false,
+        honey: true,
+        pollen: false,
+        actionNeeded: true,
+      }),
+    ];
+
+    const result = buildDerivedSignals([createApiary()], [hive], inspections);
+    const titles = result.recommendations.map((item) => item.title);
+
+    expect(titles).not.toContain('Samhället verkar svagt');
+    expect(titles).not.toContain('Följ upp drottningstatus');
+    expect(titles).not.toContain('Möjligt drottningproblem');
+    expect(titles).not.toContain('Kan vara dags för ny genomgång');
+  });
+
+  it('suppresses varroa-pressure and varroa-trend when Varroabehandling occurred after the inspection', () => {
+    vi.setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+
+    const hive = createHive({ strength: 'Medel' });
+    const inspections = [
+      createInspection({ id: 'insp-v1', performedAt: '2026-08-01T10:00:00.000Z', varroaLevel: 'Låg' }),
+      createInspection({ id: 'insp-v2', performedAt: '2026-08-10T10:00:00.000Z', varroaLevel: 'Förhöjd' }),
+      createInspection({ id: 'insp-v3', performedAt: '2026-08-15T10:00:00.000Z', varroaLevel: 'Förhöjd' }),
+    ];
+    const events: HiveEvent[] = [
+      {
+        id: 'event-varroa-after',
+        hiveId: 'hive-1',
+        type: 'Varroabehandling',
+        performedAt: '2026-08-16T10:00:00.000Z',
+        notes: 'Behandlad efter genomgång.',
+      },
+    ];
+
+    const result = buildDerivedSignals([createApiary()], [hive], inspections, undefined, events);
+    const titles = result.recommendations.map((item) => item.title);
+
+    expect(titles).not.toContain('Möjligen förhöjt varroatryck');
+    expect(titles).not.toContain('Möjligen hög varroabelastning');
+    expect(titles).not.toContain('Möjlig varroa-trend uppåt');
+  });
 });

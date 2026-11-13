@@ -151,4 +151,28 @@ describe('calculateTemperatureShiftDays', () => {
 
     expect(shift).toBe(0);
   });
+
+  it('uses fetchWithTimeout by default so requests carry an AbortSignal', async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchSpy = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        daily: {
+          time: ['2026-01-01'],
+          temperature_2m_mean: [5],
+        },
+      }),
+    })) as unknown as typeof fetch;
+    globalThis.fetch = fetchSpy;
+
+    try {
+      await calculateTemperatureShiftDays({ latitude: 59.3, longitude: 18.1 }, new Date('2026-03-15T12:00:00Z'));
+
+      expect(fetchSpy).toHaveBeenCalled();
+      const firstCallOptions = (fetchSpy as unknown as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as RequestInit | undefined;
+      expect(firstCallOptions?.signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });

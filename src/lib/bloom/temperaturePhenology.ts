@@ -1,4 +1,5 @@
 import { BloomWindow } from '@/lib/bloom/dragCalendar';
+import { fetchWithTimeout } from '@/lib/weather';
 import { Coordinates } from '@/types/domain';
 
 type OpenMeteoArchiveDailyResponse = {
@@ -146,7 +147,7 @@ export function applyTemperatureShiftToWindows(windows: BloomWindow[], shiftDays
 export async function calculateTemperatureShiftDays(
   coordinates: Coordinates,
   targetDate: Date,
-  fetchImplementation: typeof fetch = fetch,
+  fetchImplementation: typeof fetch = fetchWithTimeout,
   options: TemperatureShiftOptions = DEFAULT_OPTIONS,
 ): Promise<number> {
   const targetYear = targetDate.getUTCFullYear();

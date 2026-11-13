@@ -150,7 +150,7 @@ export type DragCalendarOptions = {
 };
 
 export const DEFAULT_OPTIONS: DragCalendarOptions = {
-  southMaxLat: 58.5,
+  southMaxLat: 57.5,
   middleMaxLat: 62.0,
   minSamplesPerPlantZone: 5,
   preStartBufferDays: 10,
@@ -444,11 +444,11 @@ export function getZoneFromLatitude(
   latitude: number,
   options: DragCalendarOptions = DEFAULT_OPTIONS,
 ): SwedenZone {
-  if (latitude <= options.southMaxLat) {
+  if (latitude < options.southMaxLat) {
     return 'south';
   }
 
-  if (latitude <= options.middleMaxLat) {
+  if (latitude < options.middleMaxLat) {
     return 'middle';
   }
 
