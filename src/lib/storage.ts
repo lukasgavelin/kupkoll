@@ -1,4 +1,4 @@
-import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, QueenHistoryEntry, QueenMarkingColor, QueenStatus, Task, VarroaControlMethod, VarroaLevel } from '@/types/domain';
+import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, QueenHistoryEntry, QueenMarkingColor, QueenStatus, Task, UserSettings, VarroaControlMethod, VarroaLevel } from '@/types/domain';
 
 const KUPKOLL_APP_STATE_VERSION = 7;
 
@@ -8,6 +8,7 @@ export type KupkollAppState = {
   inspections: Inspection[];
   events: HiveEvent[];
   manualTasks: Task[];
+  userSettings?: UserSettings;
 };
 
 type PersistedKupkollAppState = KupkollAppState & {
@@ -21,6 +22,7 @@ type LegacyPersistedKupkollAppState = {
   events?: unknown;
   tasks?: unknown;
   manualTasks?: unknown;
+  userSettings?: unknown;
   version?: unknown;
 };
 
@@ -275,6 +277,34 @@ function normalizeInspection(item: Record<string, unknown>): Inspection {
   };
 }
 
+function normalizeImageUris(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const uris = value
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  return uris.length > 0 ? uris : undefined;
+}
+
+function normalizeUserSettings(value: unknown): UserSettings | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  if (candidate.experienceLevel === 'beginner' || candidate.experienceLevel === 'experienced') {
+    return {
+      experienceLevel: candidate.experienceLevel,
+    };
+  }
+
+  return undefined;
+}
+
 function normalizeHiveEvent(item: Record<string, unknown>): HiveEvent | null {
   const type = normalizeHiveEventType(item.type);
 
@@ -282,12 +312,15 @@ function normalizeHiveEvent(item: Record<string, unknown>): HiveEvent | null {
     return null;
   }
 
+  const imageUris = normalizeImageUris(item.imageUris);
+
   return {
     id: item.id,
     hiveId: item.hiveId,
     type,
     performedAt: item.performedAt,
     notes: typeof item.notes === 'string' ? item.notes.trim() : '',
+    ...(imageUris ? { imageUris } : {}),
     details: normalizeHiveEventDetails(item.details),
   };
 }
@@ -298,6 +331,7 @@ function createParsedState(candidate: {
   inspections: unknown;
   events?: unknown;
   manualTasks: unknown;
+  userSettings?: unknown;
 }): KupkollAppState | null {
   if (
     !isObjectArray(candidate.apiaries) ||
@@ -309,12 +343,15 @@ function createParsedState(candidate: {
     return null;
   }
 
+  const userSettings = normalizeUserSettings(candidate.userSettings);
+
   return {
     apiaries: candidate.apiaries as Apiary[],
     hives: candidate.hives.map(normalizeHive),
     inspections: candidate.inspections.map(normalizeInspection),
     events: (candidate.events ?? []).map((item) => normalizeHiveEvent(item)).filter((item): item is HiveEvent => Boolean(item)),
     manualTasks: candidate.manualTasks as Task[],
+    ...(userSettings ? { userSettings } : {}),
   };
 }
 
@@ -325,6 +362,7 @@ function migrateLegacyState(candidate: LegacyPersistedKupkollAppState): KupkollA
     inspections: candidate.inspections,
     events: candidate.events ?? [],
     manualTasks: candidate.manualTasks ?? candidate.tasks ?? [],
+    userSettings: candidate.userSettings,
   });
 }
 
@@ -360,5 +398,6 @@ export function parsePersistedKupkollState(input: unknown): KupkollAppState | nu
     inspections: candidate.inspections,
     events: candidate.events ?? [],
     manualTasks: candidate.manualTasks,
+    userSettings: candidate.userSettings,
   });
 }

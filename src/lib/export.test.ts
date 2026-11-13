@@ -142,6 +142,27 @@ describe('buildKupkollExport', () => {
       data: state,
     });
   });
+
+  it('preserves userSettings and clones imageUris when present', () => {
+    const stateWithSettings = {
+      ...state,
+      events: [
+        {
+          ...state.events[0],
+          imageUris: ['file:///event-1.jpg'],
+        },
+      ],
+      userSettings: {
+        experienceLevel: 'beginner' as const,
+      },
+    };
+
+    const bundle = buildKupkollExport(stateWithSettings, '2026-03-26T10:30:00.000Z');
+
+    expect(bundle.data.userSettings).toEqual({ experienceLevel: 'beginner' });
+    expect(bundle.data.events[0].imageUris).toEqual(['file:///event-1.jpg']);
+    expect(bundle.data.events[0].imageUris).not.toBe(stateWithSettings.events[0].imageUris);
+  });
 });
 
 describe('formatKupkollExportFileName', () => {

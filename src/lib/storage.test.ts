@@ -426,4 +426,59 @@ describe('parsePersistedKupkollState', () => {
       }),
     ).toBeNull();
   });
+
+  it('preserves event imageUris and normalizes userSettings', () => {
+    expect(
+      parsePersistedKupkollState({
+        version: 7,
+        apiaries,
+        hives,
+        inspections,
+        events: [
+          {
+            ...events[0],
+            imageUris: [' file:///photo-1.jpg ', '', 42, 'file:///photo-2.jpg'],
+          },
+        ],
+        manualTasks: tasks,
+        userSettings: {
+          experienceLevel: 'beginner',
+        },
+      }),
+    ).toEqual({
+      apiaries,
+      hives,
+      inspections,
+      events: [
+        {
+          ...events[0],
+          imageUris: ['file:///photo-1.jpg', 'file:///photo-2.jpg'],
+        },
+      ],
+      manualTasks: tasks,
+      userSettings: {
+        experienceLevel: 'beginner',
+      },
+    });
+
+    expect(
+      parsePersistedKupkollState({
+        version: 7,
+        apiaries,
+        hives,
+        inspections,
+        events,
+        manualTasks: tasks,
+        userSettings: {
+          experienceLevel: 'invalid',
+        },
+      }),
+    ).toEqual({
+      apiaries,
+      hives,
+      inspections,
+      events,
+      manualTasks: tasks,
+    });
+  });
 });

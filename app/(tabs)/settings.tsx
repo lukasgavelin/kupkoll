@@ -9,6 +9,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { confirmDestructiveAction } from '@/lib/confirm';
+import { loadFullExportDataSync } from '@/lib/db';
 import { exportKupkollData } from '@/lib/export';
 import { parseKupkollImportJson } from '@/lib/import';
 import { useKupkoll } from '@/store/KupkollContext';
@@ -42,13 +43,8 @@ export default function SettingsScreen() {
     setExportStatus(null);
 
     try {
-      const result = await exportKupkollData({
-        apiaries,
-        hives,
-        inspections,
-        events,
-        manualTasks,
-      });
+      const fullData = loadFullExportDataSync();
+      const result = await exportKupkollData(fullData);
 
       setExportStatus(`${result.fileName} skapad.`);
 
