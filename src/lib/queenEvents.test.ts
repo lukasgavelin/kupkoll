@@ -86,4 +86,55 @@ describe('applyHiveEventToHive', () => {
       queenMarkingColor: 'Vit',
     });
   });
+
+  it.each(['Vinterförlust', 'Samhälle dött/avvecklat', 'Samhälle förenat'] as const)(
+    'clears action status to Stabilt when terminal event %s is logged without details',
+    (terminalType) => {
+      const hive = createHive({ status: 'Behöver åtgärd' });
+      const event: HiveEvent = {
+        id: 'event-terminal',
+        hiveId: 'hive-1',
+        type: terminalType,
+        performedAt: '2026-09-20T10:00:00.000Z',
+        notes: 'Avslutad.',
+      };
+
+      expect(applyHiveEventToHive(hive, event)).toEqual({
+        ...hive,
+        status: 'Stabilt',
+      });
+    },
+  );
+
+  it('clears Under uppbyggnad status when Samhälle förenat is logged with details', () => {
+    const hive = createHive({ status: 'Under uppbyggnad' });
+    const event: HiveEvent = {
+      id: 'event-merge',
+      hiveId: 'hive-1',
+      type: 'Samhälle förenat',
+      performedAt: '2026-09-20T10:00:00.000Z',
+      notes: 'Förenat.',
+      details: {
+        mergedWithHiveName: 'Kupa 2',
+      },
+    };
+
+    expect(applyHiveEventToHive(hive, event)).toEqual({
+      ...hive,
+      status: 'Stabilt',
+    });
+  });
+
+  it('ignores terminal events for other hives', () => {
+    const hive = createHive({ status: 'Behöver åtgärd' });
+    const event: HiveEvent = {
+      id: 'event-other',
+      hiveId: 'hive-2',
+      type: 'Vinterförlust',
+      performedAt: '2026-09-20T10:00:00.000Z',
+      notes: 'Annan kupa.',
+    };
+
+    expect(applyHiveEventToHive(hive, event)).toBe(hive);
+  });
 });

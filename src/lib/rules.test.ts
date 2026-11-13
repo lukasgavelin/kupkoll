@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildDerivedSignals } from '@/lib/rules';
-import { Apiary, Hive, Inspection } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, Inspection } from '@/types/domain';
 
 function createApiary(overrides: Partial<Apiary> = {}): Apiary {
   return {
@@ -196,5 +196,149 @@ describe('buildDerivedSignals', () => {
 
     expect(result.recommendations.map((item) => item.title)).toContain('Kan vara dags för ny genomgång');
     expect(result.tasks.map((item) => item.title)).toContain('Överväg ny genomgång');
+  });
+
+  it.each(['Vinterförlust', 'Samhälle dött/avvecklat', 'Samhälle förenat'] as const)(
+    'suppresses all recommendations and tasks for hives with terminal event %s',
+    (terminalType) => {
+      vi.setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+
+      const deadHive = createHive({ id: 'hive-dead', status: 'Behöver åtgärd', strength: 'Svagt' });
+      const uninspectedDeadHive = createHive({ id: 'hive-dead-no-insp', lastInspectionAt: undefined });
+      const activeHive = createHive({ id: 'hive-active', name: 'Aktiv kupa' });
+
+      const deadInspection = createInspection({
+        id: 'insp-dead',
+        hiveId: 'hive-dead',
+        performedAt: '2026-07-01T10:00:00.000Z',
+        varroaLevel: 'Hög',
+        swarmSigns: true,
+        actionNeeded: true,
+      });
+      const activeInspection = createInspection({
+        id: 'insp-active',
+        hiveId: 'hive-active',
+        performedAt: '2026-08-20T10:00:00.000Z',
+        varroaLevel: 'Hög',
+      });
+
+      const events: HiveEvent[] = [
+        {
+          id: 'event-terminal-1',
+          hiveId: 'hive-dead',
+          type: terminalType,
+          performedAt: '2026-08-01T10:00:00.000Z',
+          notes: 'Avslutad.',
+        },
+        {
+          id: 'event-terminal-2',
+          hiveId: 'hive-dead-no-insp',
+          type: terminalType,
+          performedAt: '2026-08-01T10:00:00.000Z',
+          notes: 'Avslutad.',
+        },
+      ];
+
+      const result = buildDerivedSignals(
+        [createApiary()],
+        [deadHive, uninspectedDeadHive, activeHive],
+        [deadInspection, activeInspection],
+        undefined,
+        events,
+      );
+
+      expect(result.recommendations.filter((item) => item.hiveId === 'hive-dead')).toHaveLength(0);
+      expect(result.tasks.filter((item) => item.hiveId === 'hive-dead')).toHaveLength(0);
+      expect(result.recommendations.filter((item) => item.hiveId === 'hive-dead-no-insp')).toHaveLength(0);
+      expect(result.tasks.filter((item) => item.hiveId === 'hive-dead-no-insp')).toHaveLength(0);
+      expect(result.recommendations.some((item) => item.hiveId === 'hive-active')).toBe(true);
+    },
+  );
+
+  it('keeps varroa follow-up reminder active when another event like Skattning is logged after treatment', () => {
+    vi.setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+
+    const hive = createHive();
+    const inspection = createInspection({ performedAt: '2026-08-19T10:00:00.000Z' });
+    const events: HiveEvent[] = [
+      {
+        id: 'event-varroa',
+        hiveId: 'hive-1',
+        type: 'Varroabehandling',
+        performedAt: '2026-08-12T10:00:00.000Z',
+        notes: 'Myrsyra.',
+      },
+      {
+        id: 'event-harvest',
+        hiveId: 'hive-1',
+        type: 'Skattning/slungning',
+        performedAt: '2026-08-15T10:00:00.000Z',
+        notes: 'Skattning.',
+      },
+    ];
+
+    const result = buildDerivedSignals([createApiary()], [hive], [inspection], undefined, events);
+
+    expect(result.recommendations.map((item) => item.title)).toContain('Uppföljande varroamätning rekommenderas');
+    expect(result.tasks.map((item) => item.title)).toContain('Gör uppföljande varroamätning');
+  });
+
+  it('clears varroa follow-up reminder when Uppföljande varroamätning event is logged after treatment', () => {
+    vi.setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+
+    const hive = createHive();
+    const inspection = createInspection({ performedAt: '2026-08-19T10:00:00.000Z' });
+    const events: HiveEvent[] = [
+      {
+        id: 'event-varroa',
+        hiveId: 'hive-1',
+        type: 'Varroabehandling',
+        performedAt: '2026-08-12T10:00:00.000Z',
+        notes: 'Myrsyra.',
+      },
+      {
+        id: 'event-follow-up',
+        hiveId: 'hive-1',
+        type: 'Uppföljande varroamätning',
+        performedAt: '2026-08-18T10:00:00.000Z',
+        notes: 'Mätt nedfall.',
+      },
+      {
+        id: 'event-harvest',
+        hiveId: 'hive-1',
+        type: 'Skattning/slungning',
+        performedAt: '2026-08-19T12:00:00.000Z',
+        notes: 'Skattning.',
+      },
+    ];
+
+    const result = buildDerivedSignals([createApiary()], [hive], [inspection], undefined, events);
+
+    expect(result.recommendations.map((item) => item.title)).not.toContain('Uppföljande varroamätning rekommenderas');
+    expect(result.tasks.map((item) => item.title)).not.toContain('Gör uppföljande varroamätning');
+  });
+
+  it('clears varroa follow-up reminder when an inspection with varroaDetails.checked is logged after treatment', () => {
+    vi.setSystemTime(new Date('2026-08-20T12:00:00.000Z'));
+
+    const hive = createHive();
+    const inspection = createInspection({
+      performedAt: '2026-08-18T10:00:00.000Z',
+      varroaDetails: { checked: true, controlMethod: 'Nedfall' },
+    });
+    const events: HiveEvent[] = [
+      {
+        id: 'event-varroa',
+        hiveId: 'hive-1',
+        type: 'Varroabehandling',
+        performedAt: '2026-08-12T10:00:00.000Z',
+        notes: 'Myrsyra.',
+      },
+    ];
+
+    const result = buildDerivedSignals([createApiary()], [hive], [inspection], undefined, events);
+
+    expect(result.recommendations.map((item) => item.title)).not.toContain('Uppföljande varroamätning rekommenderas');
+    expect(result.tasks.map((item) => item.title)).not.toContain('Gör uppföljande varroamätning');
   });
 });

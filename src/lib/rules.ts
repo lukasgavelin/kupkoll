@@ -1,5 +1,11 @@
-import { Apiary, Hive, HiveEvent, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task, UserSettings } from '@/types/domain';
+import { Apiary, Hive, HiveEvent, HiveEventType, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task, UserSettings } from '@/types/domain';
 import { getApiaryRegion, getApiarySeasonLabel, getLatestInspectionMap, getRecommendedInspectionCadenceDays } from '@/lib/selectors';
+
+const TERMINAL_HIVE_EVENT_TYPES = new Set<HiveEventType>([
+  'Vinterförlust',
+  'Samhälle dött/avvecklat',
+  'Samhälle förenat',
+]);
 
 type DerivedResult = {
   recommendations: Recommendation[];
@@ -11,7 +17,7 @@ type RuleContext = {
   hive: Hive;
   inspection: Inspection;
   inspectionHistory: Inspection[];
-  latestEvent?: HiveEvent;
+  hiveEvents: HiveEvent[];
   now: Date;
   season: SeasonLabel;
   daysSinceLastInspection: number;
@@ -182,27 +188,42 @@ function getQueenAgeYears(hive: Hive, now: Date): number | undefined {
 }
 
 /**
- * Returnerar true om senaste händelse är en Varroabehandling utförd de senaste 5–14 dagarna
- * och ingen uppföljande varroamätning har skett sedan dess.
+ * Returnerar true om det finns en Varroabehandling utförd de senaste 5–14 dagarna
+ * och ingen uppföljande varroamätning (genomgång eller händelse) har skett sedan dess.
  */
-function needsVarroaFollowUp(latestEvent: HiveEvent | undefined, inspectionHistory: Inspection[], now: Date): boolean {
-  if (!latestEvent || latestEvent.type !== 'Varroabehandling') {
+function needsVarroaFollowUp(hiveEvents: HiveEvent[], inspectionHistory: Inspection[], now: Date): boolean {
+  let latestTreatment: HiveEvent | undefined;
+
+  for (const event of hiveEvents) {
+    if (event.type !== 'Varroabehandling') {
+      continue;
+    }
+
+    if (!latestTreatment || new Date(event.performedAt) > new Date(latestTreatment.performedAt)) {
+      latestTreatment = event;
+    }
+  }
+
+  if (!latestTreatment) {
     return false;
   }
 
-  const treatmentDate = new Date(latestEvent.performedAt);
+  const treatmentDate = new Date(latestTreatment.performedAt);
   const daysSinceTreatment = differenceInDays(now, treatmentDate);
 
   if (daysSinceTreatment < VARROA_FOLLOW_UP_MIN_DAYS || daysSinceTreatment > VARROA_FOLLOW_UP_MAX_DAYS) {
     return false;
   }
 
-  // Kontrollera om det finns en genomgång med varroakontroll EFTER behandlingen
-  const hasFollowUp = inspectionHistory.some(
+  // Kontrollera om det finns en genomgång med varroakontroll eller händelsen "Uppföljande varroamätning" EFTER behandlingen
+  const hasInspectionFollowUp = inspectionHistory.some(
     (insp) => insp.varroaDetails?.checked && new Date(insp.performedAt) > treatmentDate,
   );
+  const hasEventFollowUp = hiveEvents.some(
+    (event) => event.type === 'Uppföljande varroamätning' && new Date(event.performedAt) > treatmentDate,
+  );
 
-  return !hasFollowUp;
+  return !hasInspectionFollowUp && !hasEventFollowUp;
 }
 
 function hasPoorInspectionWeather(inspection: Inspection) {
@@ -590,8 +611,8 @@ const decisionRules: DecisionRule[] = [
   // L8: Uppföljande varroamätning efter behandling
   {
     id: 'varroa-follow-up',
-    shouldApply: ({ latestEvent, inspectionHistory, now }) =>
-      needsVarroaFollowUp(latestEvent, inspectionHistory, now),
+    shouldApply: ({ hiveEvents, inspectionHistory, now }) =>
+      needsVarroaFollowUp(hiveEvents, inspectionHistory, now),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'varroa-follow-up',
@@ -667,14 +688,13 @@ export function buildDerivedSignals(
     return map;
   }, {});
 
-  // Bygg upp en map med senaste händelsen per kupa
-  const latestEventMap = (events ?? []).reduce<Record<string, HiveEvent>>((map, event) => {
-    const current = map[event.hiveId];
-
-    if (!current || new Date(event.performedAt) > new Date(current.performedAt)) {
-      map[event.hiveId] = event;
+  // Gruppera händelser per kupa
+  const hiveEventsMap = (events ?? []).reduce<Record<string, HiveEvent[]>>((map, event) => {
+    if (!map[event.hiveId]) {
+      map[event.hiveId] = [];
     }
 
+    map[event.hiveId].push(event);
     return map;
   }, {});
 
@@ -683,6 +703,13 @@ export function buildDerivedSignals(
   const tasks: Task[] = [];
 
   for (const hive of hives) {
+    const hiveEvents = hiveEventsMap[hive.id] ?? [];
+
+    // Avslutade samhällen (vinterförlust, dött/avvecklat, förenat) ska inte generera aktiva signaler eller uppgifter
+    if (hiveEvents.some((event) => TERMINAL_HIVE_EVENT_TYPES.has(event.type))) {
+      continue;
+    }
+
     const inspection = latestInspections[hive.id];
     const apiary = apiaryMap[hive.apiaryId];
     const season = getApiarySeasonLabel(apiary, now);
@@ -710,14 +737,13 @@ export function buildDerivedSignals(
     const inspectionHistory = inspectionHistoryMap[hive.id] ?? [inspection];
     const daysSinceLastInspection = differenceInDays(now, new Date(inspection.performedAt));
     const inspectionCadenceDays = getRecommendedInspectionCadenceDays(season, regionLabel);
-    const latestEvent = latestEventMap[hive.id];
 
     const context: RuleContext = {
       apiary,
       hive,
       inspection,
       inspectionHistory,
-      latestEvent,
+      hiveEvents,
       now,
       season,
       daysSinceLastInspection,

@@ -1,4 +1,10 @@
-import { Hive, HiveEvent, QueenHistoryEntry } from '@/types/domain';
+import { Hive, HiveEvent, HiveEventType, QueenHistoryEntry } from '@/types/domain';
+
+const TERMINAL_HIVE_EVENT_TYPES = new Set<HiveEventType>([
+  'Vinterförlust',
+  'Samhälle dött/avvecklat',
+  'Samhälle förenat',
+]);
 
 function createQueenHistoryEntry(event: HiveEvent): QueenHistoryEntry | undefined {
   const year = event.details?.queenYear?.trim();
@@ -16,7 +22,15 @@ function createQueenHistoryEntry(event: HiveEvent): QueenHistoryEntry | undefine
 }
 
 export function applyHiveEventToHive(hive: Hive, event: HiveEvent): Hive {
-  if (hive.id !== event.hiveId || !event.details) {
+  if (hive.id !== event.hiveId) {
+    return hive;
+  }
+
+  if (TERMINAL_HIVE_EVENT_TYPES.has(event.type)) {
+    return hive.status === 'Stabilt' ? hive : { ...hive, status: 'Stabilt' };
+  }
+
+  if (!event.details) {
     return hive;
   }
 
