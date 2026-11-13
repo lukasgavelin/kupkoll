@@ -144,6 +144,8 @@ export function applyTemperatureShiftToWindows(windows: BloomWindow[], shiftDays
 }
 
 
+const referenceYearGddCache = new Map<string, number>();
+
 export async function calculateTemperatureShiftDays(
   coordinates: Coordinates,
   targetDate: Date,
@@ -164,16 +166,31 @@ export async function calculateTemperatureShiftDays(
   }
   const currentGdd = sumGrowingDegreeDays(currentTemperatures, options.baseTemperatureC);
 
+  const useStaticReferenceCache = fetchImplementation === fetchWithTimeout;
+  const monthDayKey = `${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
   const referencePromises: Promise<number>[] = [];
 
   for (let offset = 1; offset <= options.referenceYears; offset += 1) {
     const year = targetYear - offset;
+    const cacheKey = `${coordinates.latitude.toFixed(2)}:${coordinates.longitude.toFixed(2)}:${year}-${monthDayKey}:${options.baseTemperatureC}`;
+
+    if (useStaticReferenceCache && referenceYearGddCache.has(cacheKey)) {
+      referencePromises.push(Promise.resolve(referenceYearGddCache.get(cacheKey)!));
+      continue;
+    }
+
     const referenceStart = new Date(Date.UTC(year, 0, 1));
     const referenceEnd = withYear(targetEnd, year);
 
     referencePromises.push(
       fetchDailyMeanTemperatures(coordinates, referenceStart, referenceEnd, fetchImplementation)
-        .then((temperatures) => sumGrowingDegreeDays(temperatures, options.baseTemperatureC))
+        .then((temperatures) => {
+          const gdd = sumGrowingDegreeDays(temperatures, options.baseTemperatureC);
+          if (useStaticReferenceCache && Number.isFinite(gdd)) {
+            referenceYearGddCache.set(cacheKey, gdd);
+          }
+          return gdd;
+        })
         .catch(() => Number.NaN),
     );
   }

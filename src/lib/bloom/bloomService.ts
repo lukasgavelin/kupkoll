@@ -98,7 +98,14 @@ async function getCachedWeatherData(coordinates: Coordinates, date: Date): Promi
     const cache: Record<string, CachedWeatherData> = JSON.parse(raw);
     const dateStr = createLocalDateStamp(date);
     const now = Date.now();
+    const exactKey = `${coordinates.latitude.toFixed(4)}:${coordinates.longitude.toFixed(4)}:${dateStr}`;
+    const exactMatch = cache[exactKey];
 
+    if (exactMatch && exactMatch.dateStr === dateStr && now - exactMatch.timestamp < GDD_SHIFT_TTL_MS) {
+      return exactMatch;
+    }
+
+    let bestMatch: CachedWeatherData | null = null;
     for (const entry of Object.values(cache)) {
       const isSameDay = entry.dateStr === dateStr;
       const isRecent = now - entry.timestamp < GDD_SHIFT_TTL_MS;
@@ -106,10 +113,12 @@ async function getCachedWeatherData(coordinates: Coordinates, date: Date): Promi
       const lonDiff = Math.abs(entry.longitude - coordinates.longitude);
       const isClose = latDiff < 0.01 && lonDiff < 0.01;
 
-      if (isSameDay && isRecent && isClose) {
-        return entry;
+      if (isSameDay && isRecent && isClose && (!bestMatch || entry.timestamp > bestMatch.timestamp)) {
+        bestMatch = entry;
       }
     }
+
+    return bestMatch;
   } catch {
     // Ignore cache read errors
   }
@@ -253,8 +262,10 @@ export async function getLikelyBloomingPlantsNow(params: {
   const minimumBloomProbability = params.minimumBloomProbability ?? 0.15;
   let predictions = rawPredictions.filter((prediction) => prediction.bloomProbability >= minimumBloomProbability);
 
-  // 4. Adjust priority score based on weather flight efficiency
-  if (currentWeather && dragEff !== 1.0) {
+  // 4. Adjust priority score based on weather flight efficiency when flight is possible
+  // When dragEff === 0 (rain or <12°C), keep botanical priorityScore intact since the UI
+  // already shows the weather alert banner and dims the plant rows.
+  if (currentWeather && dragEff > 0 && dragEff !== 1.0) {
     predictions = predictions.map((prediction) => ({
       ...prediction,
       priorityScore: prediction.priorityScore * dragEff,

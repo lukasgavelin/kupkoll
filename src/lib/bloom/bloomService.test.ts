@@ -188,4 +188,50 @@ describe('bloomService caching resilience', () => {
     expect(laterArchiveCalls).toBe(0);
     expect(laterSmhiCalls).toBe(1);
   });
+
+  it('preserves botanical priorityScore when dragEfficiency is 0 (too cold or raining)', async () => {
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
+      const target = String(url);
+      if (target.includes('archive-api.open-meteo.com')) {
+        return {
+          ok: true,
+          json: async () => ({
+            daily: {
+              time: ['2026-06-01'],
+              temperature_2m_mean: [10],
+            },
+          }),
+        };
+      }
+      if (target.includes('smhi.se')) {
+        return {
+          ok: true,
+          json: async () => ({
+            timeSeries: [
+              {
+                validTime: '2026-06-15T10:00:00Z',
+                parameters: [
+                  { name: 't', values: [8] },
+                  { name: 'ws', values: [2] },
+                  { name: 'Wsymb2', values: [1] },
+                ],
+              },
+            ],
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    }) as unknown as typeof fetch;
+
+    const result = await getLikelyBloomingPlantsNow({
+      userLatitude: 59.3,
+      coordinates: { latitude: 59.3, longitude: 18.1 },
+      date: new Date(2026, 5, 15, 10, 0, 0),
+      fetchImplementation: fetchMock,
+    });
+
+    expect(result.dragEfficiency).toBe(0);
+    expect(result.predictions.length).toBeGreaterThan(0);
+    expect(result.predictions[0]?.priorityScore).toBeGreaterThan(0);
+  });
 });
