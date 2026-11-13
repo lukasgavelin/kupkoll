@@ -1,8 +1,14 @@
 # Kupkoll
 
-Kupkoll är en svensk Expo-app (React Native) för biodlare som vill hålla ordning på bigårdar, kupor, genomgångar, händelser och uppgifter direkt i mobilen ute i fält.
+Kupkoll är en svensk Expo-app (React Native) för biodlare som vill hålla ordning på bigårdar, kupor, genomgångar, händelser och uppgifter direkt i mobilen ute i fält – byggd **Local-first / Offline-first** utan konto eller extern backend.
 
-Appen är byggd med filosofin **Local-first / Offline-first**: den fungerar helt utan konto eller extern backend, och all data sparas lokalt i en inbäddad SQLite-databas.
+## Nyckelfunktioner
+
+- **Bigårdar, kupor & drottninghistorik**: Hantera bigårdar med GPS-plats, svenska kupsystem (*Lågnormal*, *Svea*, *Langstroth*, *Dadant*), drottningmärkning och händelselogg.
+- **Snabba & fördjupade genomgångar**: Logga yngel, drottning, svärmrisk, varroa, foton och automatiskt SMHI/Open-Meteo-väder i fält.
+- **Dragkalender & fenologi (GDD)**: Latitudanpassad blomningsprognos med temperaturdriven förskjutning och flygeffektivitetsindex.
+- **Regelmotor & smarta uppgifter**: Automatiska rekommendationer, varroapåminnelser, trender och filtrerbar uppgiftslista.
+- **Lokal persistens & backup**: Synkron SQLite (`expo-sqlite` med WAL) på mobil, `localStorage` på webb, samt JSON-export/import.
 
 ---
 
@@ -21,7 +27,7 @@ Appen är byggd med React Native och Expo SDK 55 och hanteras från en gemensam 
 | :--- | :--- | :--- | :--- |
 | **Android** | Klar för release | `com.lukasgavelin.kupkoll` | Byggbar som installerbar APK eller `.aab` för Google Play via EAS Build. |
 | **iOS** | Klar för release | `com.lukasgavelin.kupkoll` | Stödjer iPhone & iPad, redo för TestFlight/App Store via EAS Build. |
-| **Webb** | Dev/test | Metro bundler (`npm run web`) | Fungerar för utveckling och UI-förhandsgranskning. Ej produktionsklar PWA (kräver anpassat webblagringslager för SQLite). |
+| **Webb** | Dev/test | Metro bundler (`npm run web`) | Fungerar för utveckling och UI-förhandsgranskning med `localStorage`-lagring via `src/lib/db.web.ts`. Ej produktionsklar PWA (saknar bl.a. native kamera). |
 
 ---
 
@@ -30,8 +36,9 @@ Appen är byggd med React Native och Expo SDK 55 och hanteras från en gemensam 
 ### 1. Bigårdar och kupor
 - Registrera bigårdar med namn, beskrivning och automatisk GPS-position via enhetens platsfunktion (`expo-location`).
 - Automatisk koppling till svensk kommun och geografisk zon för säsongsanpassning.
+- Snabb överblick av kupstatus per bigård (*stabila*, *behöver åtgärd*, *under uppbyggnad*) samt sök- och statusfiltrering i listorna.
 - Stöd för svenska kupsystem: **Lågnormal**, **Svea**, **Langstroth** och **Dadant**.
-- Kupstatus: *Stabilt*, *Under uppbyggnad* eller *Behöver åtgärd*.
+- Kupstatus: *Stabilt*, *Under uppbyggnad*, *Behöver åtgärd* eller *Avslutad*.
 
 ### 2. Drottningprofil och historik
 - Status per kupa: *Bekräftad*, *Osäker* eller *Behöver följas upp*.
@@ -79,8 +86,8 @@ Appen är byggd med React Native och Expo SDK 55 och hanteras från en gemensam 
 - **Nybörjarläge**: Pedagogiska förklaringskort under genomgångar (yngelcykel, foderbehov, svärmceller), hjälptexter vid kupskapande och tätare kontrollintervall.
 
 ### 9. Lagring, Backup och Mörkt läge
-- Lokal SQLite-databas (`expo-sqlite` med Write-Ahead Logging / WAL för hög driftsäkerhet).
-- **JSON-export**: Säkerhetskopiering via telefonens delningsmeny till t.ex. Google Drive, iCloud Drive, Dropbox, e-post eller lokal fil.
+- Lokal SQLite-databas (`expo-sqlite` med Write-Ahead Logging / WAL och stegvisa migrationer) på mobil samt `localStorage` på webb.
+- **JSON-export**: Säkerhetskopiering av all text- och strukturdata via telefonens delningsmeny till t.ex. Google Drive, iCloud Drive, Dropbox, e-post eller lokal fil (bifogade foton sparas lokalt på enheten och bäddas inte in i JSON-filen).
 - **JSON-import**: Full återställning från tidigare exporterad säkerhetskopia.
 - Fullt stöd för mörkt och ljust tema.
 
@@ -96,7 +103,7 @@ För att vara tydlig med appens nuvarande arkitektur och begränsningar:
 | **Molnsynkning i realtid** | Finns inte. Det finns ingen central backend (Firebase/Supabase). Backup sker manuellt via JSON-export. |
 | **OS-pushnotiser** | Finns inte. Påminnelser och uppgifter räknas fram av regelmotorn när appen öppnas, men skickar inte bakgrundsnotiser via operativsystemet. |
 | **Fleranvändarläge / Delning** | Finns inte. Flera personer kan inte redigera samma bigård i realtid från olika enheter. |
-| **Produktionsklar webbversion** | Finns inte. Webbversionen är en dev/test-vy via Metro. SQLite-lagringen är inte anpassad för webbläsares IndexedDB. |
+| **Produktionsklar webbversion** | Delvis (Dev/test). Webbversionen har ett fungerande `localStorage`-lager (`db.web.ts`), men är främst för dev/test och saknar t.ex. native kamera. |
 
 ---
 
@@ -123,8 +130,9 @@ För att vara tydlig med appens nuvarande arkitektur och begränsningar:
 
 - **Ramverk**: Expo ~55.0.9, React 19.2.0, React Native 0.83.4
 - **Navigation**: Expo Router (filbaserad navigation med modaler och tabbar)
-- **Databas**: SQLite via `expo-sqlite` (tabeller för Apiaries, Hives, Inspections, HiveEvents, Tasks, Settings)
-- **Logik & Tester**: Plattformsoberoende TypeScript testat med Vitest
+- **Tillstånd**: Uppdelad `KupkollDataContext` och `KupkollActionsContext` (med `useKupkoll()`-fasad) för att minimera onödiga omrenderingar
+- **Databas**: SQLite via `expo-sqlite` med stegvisa schema-migrationer (tabeller för `Apiaries`, `Hives`, `Inspections`, `HiveEvents`, `Tasks`, `Settings`) samt `db.web.ts` för webb
+- **Logik & Tester**: Plattformsoberoende TypeScript testat med Vitest + ESLint (`eslint-config-expo`)
 
 ---
 
@@ -132,27 +140,29 @@ För att vara tydlig med appens nuvarande arkitektur och begränsningar:
 
 ```
 kupkoll/
-├── app/                        # Skärmar och navigation (Expo Router)
-│   ├── (tabs)/                 # Huvudflikar (Hem, Bigårdar, Kupor, Uppgifter, Inställningar)
-│   ├── apiaries/               # Skapa, redigera och visa bigård
-│   ├── hives/                  # Skapa, redigera, historik och trender för kupa
-│   ├── inspections/            # Ny genomgång (kamera, snabb- och fördjupningsformulär)
-│   └── events/                 # Nya händelser (drottningbyte, skattning, avläggare etc.)
+├── app/                          # Skärmar och navigation (Expo Router)
+│   ├── (tabs)/                   # Huvudflikar (Hem, Bigårdar, Kupor, Uppgifter, Admin)
+│   ├── apiaries/                 # Skapa, redigera och visa bigård
+│   ├── hives/                    # Skapa, redigera, historik och trender för kupa
+│   ├── inspections/              # Ny genomgång (kamera, snabb- och fördjupningsformulär)
+│   └── events/                   # Nya händelser (drottningbyte, skattning, avläggare etc.)
 ├── src/
-│   ├── components/             # UI-komponenter (AppCard, PageHeader, formulär och kort)
-│   ├── data/                   # Statiska modeller (säsonger, integritetspolicy)
+│   ├── components/               # UI-komponenter (AppCard, PageHeader, formulär och kort)
+│   ├── data/                     # Statiska modeller (säsonger, integritetspolicy)
 │   ├── lib/
-│   │   ├── bloom/              # Dragkalender, fenologi, väderjustering
-│   │   ├── db.ts               # SQLite-initiering, queries och schemadefinition
-│   │   ├── rules.ts            # Regelmotor för uppgifter och varningar
-│   │   ├── selectors.ts        # Härledda sammanställningar och statistik
-│   │   ├── storage.ts          # Normalisering och migrationslogik
+│   │   ├── bloom/                # Dragkalender, fenologi (GDD), väderjustering
+│   │   ├── db.ts / db.web.ts     # SQLite-initiering, migrationer och webblagring
+│   │   ├── hiveReconcile.ts      # Omräkning av kupstatus vid ändrad/raderad genomgång
+│   │   ├── rules.ts              # Regelmotor för uppgifter och varningar
+│   │   ├── selectors.ts          # Härledda sammanställningar och statistik
+│   │   ├── storage.ts            # Normalisering och migrationslogik
 │   │   ├── export.ts / import.ts # JSON backup/återställning
-│   │   └── weather.ts          # SMHI & Open-Meteo integrationer
-│   ├── store/                  # KupkollContext och ThemeContext
-│   ├── theme/                  # Färger, typografi och avstånd
-│   └── types/                  # Domäntyper (Apiary, Hive, Inspection, Event, Task)
-└── assets/                     # Ikoner, splash screen och regressionsdata
+│   │   └── weather.ts            # SMHI & Open-Meteo integrationer
+│   ├── store/                    # KupkollContext, ThemeContext och FloatingTabBarContext
+│   ├── theme/                    # Färger, typografi och avstånd
+│   └── types/                    # Domäntyper (Apiary, Hive, Inspection, Event, Task)
+├── assets/                       # Ikoner, splash screen och regressionsdata
+└── eslint.config.js              # ESLint-konfiguration (eslint-config-expo/flat)
 ```
 
 ---
@@ -174,6 +184,9 @@ npm run ios
 
 # Starta i webbläsare (Dev/test)
 npm run web
+
+# Kör lintkontroll
+npm run lint
 
 # Kör typtestning
 npm run typecheck
