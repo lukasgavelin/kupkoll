@@ -1,12 +1,16 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { groupRecommendations } from '@/lib/recommendations';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 import { Recommendation } from '@/types/domain';
 import { RecommendationCard } from './Cards';
 import { SectionHeader } from '../ui/SectionHeader';
 
 export function RecommendationSections({ recommendations, getHiveName, getRelatedTaskLabel }: { recommendations: Recommendation[]; getHiveName: (hiveId: string) => string; getRelatedTaskLabel?: (recommendation: Recommendation) => string | undefined }) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const groups = groupRecommendations(recommendations);
 
   return (
@@ -25,14 +29,16 @@ export function RecommendationSections({ recommendations, getHiveName, getRelate
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: theme.spacing.xl,
-  },
-  group: {
-    gap: theme.spacing.md,
-  },
-  list: {
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrapper: {
+      gap: theme.spacing.xl,
+    },
+    group: {
+      gap: theme.spacing.md,
+    },
+    list: {
+      gap: theme.spacing.lg,
+    },
+  });
+}

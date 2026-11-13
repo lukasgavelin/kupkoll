@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { queenMarkingColors, queenStatuses } from '@/lib/queen';
+import { isValidIsoDate, isValidYear, queenMarkingColors, queenStatuses } from '@/lib/queen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
@@ -87,13 +87,13 @@ function getHeaderCopy(type: HiveEventType) {
 const varroaTreatmentMethods: VarroaTreatmentMethod[] = ['Oxalsyra droppning', 'Oxalsyra förångning', 'Bandbehandling', 'Myrsyra', 'Annan metod'];
 const varroaControlMethods: VarroaControlMethod[] = ['Nedfall', 'Skakprov', 'Sockerprov', 'Alkoholprov', 'Annan metod'];
 
-function isValidIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
+function showFormAlert(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    globalThis.alert(`${title}\n\n${message}`);
+    return;
   }
 
-  const parsed = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(parsed.getTime());
+  Alert.alert(title, message);
 }
 
 export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps) {
@@ -142,32 +142,42 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
     const trimmedQueenHistoryNote = queenHistoryNote.trim();
 
     if (honeySuperCount.trim() && (parsedHoneySuperCount === undefined || Number.isNaN(parsedHoneySuperCount) || parsedHoneySuperCount < 1)) {
-      Alert.alert('Ogiltigt antal', 'Antal skattlådor behöver vara ett positivt heltal.');
+      showFormAlert('Ogiltigt antal', 'Antal skattlådor behöver vara ett positivt heltal.');
       return null;
     }
 
-    if ((isQueenChange || isQueenMarking) && trimmedQueenYear && !/^\d{4}$/.test(trimmedQueenYear)) {
-      Alert.alert('Ogiltigt år', 'Ange drottningens år med fyra siffror, till exempel 2025.');
+    if ((isQueenChange || isQueenMarking) && trimmedQueenYear && !isValidYear(trimmedQueenYear)) {
+      showFormAlert('Ogiltigt år', 'Ange drottningens år med fyra siffror, till exempel 2025.');
       return null;
     }
 
     if (isQueenChange && !trimmedQueenYear) {
-      Alert.alert('Drottningens år saknas', 'Ange årgång för den nya drottningen så att kupans drottningkort blir tydligt direkt.');
+      showFormAlert('Drottningens år saknas', 'Ange årgång för den nya drottningen så att kupans drottningkort blir tydligt direkt.');
       return null;
     }
 
     if (isQueenChange && trimmedQueenIntroducedAt && !isValidIsoDate(trimmedQueenIntroducedAt)) {
-      Alert.alert('Ogiltigt datum', 'Datum för införande behöver skrivas som ÅÅÅÅ-MM-DD.');
+      showFormAlert('Ogiltigt datum', 'Datum för införande behöver skrivas som ÅÅÅÅ-MM-DD.');
       return null;
     }
 
     if (isQueenChange && !trimmedQueenHistoryNote) {
-      Alert.alert('Historikraden saknas', 'Lägg till en kort historikrad, till exempel ersatt eller ny inköpt drottning.');
+      showFormAlert('Historikraden saknas', 'Lägg till en kort historikrad, till exempel ersatt eller ny inköpt drottning.');
       return null;
     }
 
     if (isQueenMarking && !trimmedQueenYear && !queenMarkingColor && !markingNote.trim()) {
-      Alert.alert('Lägg till märkning eller årgång', 'Ange minst årgång eller märkningsfärg för att spara uppdateringen.');
+      showFormAlert('Lägg till märkning eller årgång', 'Ange minst årgång eller märkningsfärg för att spara uppdateringen.');
+      return null;
+    }
+
+    if (isVarroaTreatment && !varroaTreatmentMethod && !varroaTreatmentNote.trim()) {
+      showFormAlert('Behandling saknas', 'Välj en behandlingsmetod eller ange en notering om behandlingen.');
+      return null;
+    }
+
+    if (isVarroaFollowUp && !varroaControlMethod && !varroaMeasurementValue.trim()) {
+      showFormAlert('Mätning saknas', 'Välj en mätmetod eller ange ett mätvärde.');
       return null;
     }
 
@@ -194,7 +204,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
 
   function saveEvent() {
     if (!selectedHiveId) {
-      Alert.alert('Välj kupa', 'Du behöver välja vilken kupa händelsen gäller.');
+      showFormAlert('Välj kupa', 'Du behöver välja vilken kupa händelsen gäller.');
       return;
     }
 

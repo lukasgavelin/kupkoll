@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { ApiaryCard } from '@/components/feature/Cards';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
@@ -7,10 +8,13 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useKupkoll } from '@/store/KupkollContext';
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 export default function ApiariesScreen() {
   const { apiaries, getHivesByApiary } = useKupkoll();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <Screen>
@@ -20,7 +24,7 @@ export default function ApiariesScreen() {
         description="Börja med platsen. Lägg sedan till kupor och logga händelser från rätt kupa."
       />
       <PrimaryButton fullWidth label="Lägg till bigård" onPress={() => router.push('/apiaries/new')} />
-      <View style={{ gap: theme.spacing.lg }}>
+      <View style={styles.list}>
         {apiaries.length ? (
           apiaries.map((apiary) => <ApiaryCard key={apiary.id} apiary={apiary} hiveCount={getHivesByApiary(apiary.id).length} />)
         ) : (
@@ -29,4 +33,12 @@ export default function ApiariesScreen() {
       </View>
     </Screen>
   );
+}
+
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    list: {
+      gap: theme.spacing.lg,
+    },
+  });
 }

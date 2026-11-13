@@ -81,17 +81,30 @@ export function createQueenProfileDraft(hive?: Partial<Hive>): QueenProfileDraft
   };
 }
 
-function isValidYear(value: string) {
-  return /^\d{4}$/.test(value);
+export function isValidYear(value: string) {
+  if (!/^\d{4}$/.test(value)) {
+    return false;
+  }
+
+  const year = Number(value);
+  const currentYear = new Date().getFullYear();
+  return year >= 1990 && year <= currentYear + 1;
 }
 
-function isValidIsoDate(value: string) {
+export function isValidIsoDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
 
-  const parsed = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(parsed.getTime());
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
 }
 
 export function buildQueenInput(draft: QueenProfileDraft): { value?: Pick<NewHiveInput, 'queenStatus' | 'queenYear' | 'queenMarkingColor' | 'queenOrigin' | 'queenIntroducedAt' | 'queenHistory'>; error?: string } {
