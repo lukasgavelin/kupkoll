@@ -5,6 +5,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { getQueenMarkingHex } from '@/lib/queen';
 import { getRecommendationKindLabel } from '@/lib/recommendations';
 import { formatDateLabel, formatDateTimeLabel, getApiaryDisplayLocation } from '@/lib/selectors';
 import { useTheme } from '@/store/ThemeContext';
@@ -199,22 +200,10 @@ export function ApiaryCard({ apiary, hiveCount }: { apiary: Apiary; hiveCount: n
   );
 }
 
-/** Konverterar märkningsfärg till hex-färg för visuell representation. */
-function getQueenMarkingHex(color: string | undefined): string | undefined {
-  switch (color) {
-    case 'Vit': return '#FFFFFF';
-    case 'Gul': return '#F5C518';
-    case 'Röd': return '#E8312A';
-    case 'Grön': return '#2DB84B';
-    case 'Blå': return '#3B82F6';
-    default: return undefined;
-  }
-}
-
 export function HiveCard({ hive, apiaryLabel }: { hive: Hive; apiaryLabel: string }) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : 'calm';
+  const statusTone = hive.status === 'Behöver åtgärd' ? 'critical' : hive.status === 'Under uppbyggnad' ? 'warning' : hive.status === 'Avslutad' ? 'info' : 'calm';
   const queenColorHex = getQueenMarkingHex(hive.queenMarkingColor);
 
   const now = new Date();
@@ -394,6 +383,7 @@ export function InspectionSnapshot({ inspection, onDelete }: { inspection: Inspe
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Ta bort genomgång"
+            hitSlop={10}
             onPress={onDelete}
             style={({ pressed }) => [styles.iconDeleteButton, pressed && styles.pressed]}
           >
@@ -451,6 +441,7 @@ export function HiveEventSnapshot({ event, onDelete }: { event: HiveEvent; onDel
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Ta bort händelse"
+            hitSlop={10}
             onPress={onDelete}
             style={({ pressed }) => [styles.iconDeleteButton, pressed && styles.pressed]}
           >

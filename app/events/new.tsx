@@ -1,8 +1,9 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 
 import { HiveEventForm } from '@/components/feature/HiveEventForm';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Screen } from '@/components/ui/Screen';
+import { safeGoBack } from '@/lib/navigation';
 import { useKupkoll } from '@/store/KupkollContext';
 
 export default function NewHiveEventScreen() {
@@ -16,7 +17,7 @@ export default function NewHiveEventScreen() {
 
   return (
     <Screen>
-      <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => router.back()} eyebrow="Ny händelse" title="Logga händelse" description={description} />
+      <PageHeader actionLabel="Stäng" actionIconName="close" onActionPress={() => safeGoBack(params.hiveId ? `/hives/${params.hiveId}` : '/hives')} eyebrow="Ny händelse" title="Logga händelse" description={description} />
       <HiveEventForm initialHiveId={params.hiveId} initialType={params.type} />
     </Screen>
   );

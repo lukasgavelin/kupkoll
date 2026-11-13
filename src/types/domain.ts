@@ -1,4 +1,4 @@
-export type HiveStatus = 'Stabilt' | 'Behöver åtgärd' | 'Under uppbyggnad';
+export type HiveStatus = 'Stabilt' | 'Behöver åtgärd' | 'Under uppbyggnad' | 'Avslutad';
 export type QueenStatus = 'Bekräftad' | 'Osäker' | 'Behöver följas upp';
 export type QueenMarkingColor = 'Vit' | 'Gul' | 'Röd' | 'Grön' | 'Blå' | 'Omärkt';
 export type HiveStrength = 'Starkt' | 'Medel' | 'Svagt';
@@ -186,8 +186,10 @@ export type Recommendation = {
   createdAt: string;
 };
 
-export type NewInspectionInput = Omit<Inspection, 'id' | 'performedAt'>;
-export type NewHiveEventInput = Omit<HiveEvent, 'id' | 'performedAt'>;
+export type NewInspectionInput = Omit<Inspection, 'id' | 'performedAt'> & { performedAt?: string };
+export type UpdateInspectionInput = Partial<Omit<Inspection, 'id' | 'hiveId'>>;
+export type NewHiveEventInput = Omit<HiveEvent, 'id' | 'performedAt'> & { performedAt?: string };
+export type UpdateHiveEventInput = Partial<Omit<HiveEvent, 'id' | 'hiveId'>>;
 export type NewApiaryInput = Omit<Apiary, 'id'>;
 export type NewHiveInput = Pick<Hive, 'apiaryId' | 'name' | 'queenStatus' | 'strength' | 'temperament' | 'boxSystem' | 'notes'> & {
   queenYear?: string;

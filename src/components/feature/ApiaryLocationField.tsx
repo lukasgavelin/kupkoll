@@ -1,7 +1,8 @@
 import * as Location from 'expo-location';
 import { useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { showAlert } from '@/lib/confirm';
 import { formatLocationFromReverseGeocode, inferZone, toLocationDetails } from '@/lib/locationGeocode';
 import { formatCoordinates } from '@/lib/mapLinks';
 import { useTheme } from '@/store/ThemeContext';
@@ -43,7 +44,7 @@ export function ApiaryLocationField({
       const permission = await Location.requestForegroundPermissionsAsync();
 
       if (!permission.granted) {
-        Alert.alert('Platsåtkomst nekad', 'Tillåt platsåtkomst för att hämta bigårdens position från enheten.');
+        showAlert('Platsåtkomst nekad', 'Tillåt platsåtkomst för att hämta bigårdens position från enheten.');
         return;
       }
 
@@ -83,7 +84,7 @@ export function ApiaryLocationField({
         });
       }
     } catch {
-      Alert.alert('Kunde inte hämta plats', 'Kontrollera att platsdelning är tillgänglig på enheten och försök igen.');
+      showAlert('Kunde inte hämta plats', 'Kontrollera att platsdelning är tillgänglig på enheten och försök igen.');
     } finally {
       setIsFetchingLocation(false);
     }
@@ -125,6 +126,7 @@ export function ApiaryLocationField({
           onPress={() => {
             void captureCurrentLocation();
           }}
+          disabled={isFetchingLocation}
           variant="secondary"
           size="compact"
           iconName="locate-outline"

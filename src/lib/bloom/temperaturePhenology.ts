@@ -32,8 +32,8 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function withYear(date: Date, year: number): Date {
-  const month = date.getMonth();
-  const day = date.getDate();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
   const candidate = new Date(Date.UTC(year, month, day));
 
   if (candidate.getUTCMonth() !== month) {
@@ -150,15 +150,18 @@ export async function calculateTemperatureShiftDays(
   fetchImplementation: typeof fetch = fetchWithTimeout,
   options: TemperatureShiftOptions = DEFAULT_OPTIONS,
 ): Promise<number> {
-  const targetYear = targetDate.getUTCFullYear();
+  const targetYear = targetDate.getFullYear();
   const targetStart = new Date(Date.UTC(targetYear, 0, 1));
-  const targetEnd = new Date(Date.UTC(targetYear, targetDate.getUTCMonth(), targetDate.getUTCDate()));
+  const targetEnd = new Date(Date.UTC(targetYear, targetDate.getMonth(), targetDate.getDate()));
 
   if (targetEnd.getTime() < targetStart.getTime()) {
     return 0;
   }
 
   const currentTemperatures = await fetchDailyMeanTemperatures(coordinates, targetStart, targetEnd, fetchImplementation);
+  if (currentTemperatures.length === 0) {
+    return 0;
+  }
   const currentGdd = sumGrowingDegreeDays(currentTemperatures, options.baseTemperatureC);
 
   const referencePromises: Promise<number>[] = [];

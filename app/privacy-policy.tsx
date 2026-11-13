@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
 
 import { AppCard } from '@/components/ui/AppCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { privacyPolicyIntro, privacyPolicyLastUpdated, privacyPolicySections } from '@/data/privacyPolicy';
+import { safeGoBack } from '@/lib/navigation';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
 
@@ -25,7 +25,7 @@ export default function PrivacyPolicyScreen() {
         iconName="arrow-back-outline"
         label="Tillbaka"
         onPress={() => {
-          router.back();
+          safeGoBack('/settings');
         }}
         size="compact"
         variant="ghost"

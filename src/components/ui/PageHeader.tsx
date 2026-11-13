@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/store/ThemeContext';
+import { Theme } from '@/theme';
 
 import { PrimaryButton } from './PrimaryButton';
 import { SectionHeader } from './SectionHeader';
@@ -15,6 +17,9 @@ type PageHeaderProps = {
 };
 
 export function PageHeader({ eyebrow, title, description, actionLabel, onActionPress, actionIconName }: PageHeaderProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   return (
     <View style={styles.wrapper}>
       {actionLabel && onActionPress ? <PrimaryButton label={actionLabel} onPress={onActionPress} variant="secondary" size="compact" iconName={actionIconName} /> : null}
@@ -23,8 +28,10 @@ export function PageHeader({ eyebrow, title, description, actionLabel, onActionP
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: theme.spacing.lg,
-  },
-});
+function createStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrapper: {
+      gap: theme.spacing.lg,
+    },
+  });
+}

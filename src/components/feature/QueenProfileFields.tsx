@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { QueenHistoryDraftEntry, QueenProfileDraft, getQueenMarkingColorFromYear, getQueenMarkingColorMismatch, queenMarkingColors, queenStatuses } from '@/lib/queen';
+import { QueenHistoryDraftEntry, QueenProfileDraft, getQueenMarkingColorFromYear, getQueenMarkingColorMismatch, queenMarkingColorHex, queenMarkingColors, queenStatuses } from '@/lib/queen';
 import { useTheme } from '@/store/ThemeContext';
 import { useKupkoll } from '@/store/KupkollContext';
 import { Theme } from '@/theme';
@@ -42,15 +42,7 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
     }
   }
 
-  /** Färgkoderna för de internationella märkningsfärgerna */
-  const colorHexMap: Record<QueenMarkingColor, string> = {
-    'Vit': '#FFFFFF',
-    'Gul': '#F5C518',
-    'Röd': '#E8312A',
-    'Grön': '#2DB84B',
-    'Blå': '#3B82F6',
-    'Omärkt': 'transparent',
-  };
+  const colorHexMap = queenMarkingColorHex;
 
   return (
     <View style={styles.container}>
@@ -151,6 +143,18 @@ export const QueenProfileFields = memo(function QueenProfileFields({ value, onCh
           style={styles.input}
           value={value.queenIntroducedAt}
         />
+        <View style={styles.optionGrid}>
+          <PrimaryButton
+            label="Fyll i idag"
+            onPress={() => {
+              const now = new Date();
+              const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+              onChange({ ...value, queenIntroducedAt: today });
+            }}
+            size="compact"
+            variant="secondary"
+          />
+        </View>
       </View>
 
       <View style={styles.fieldGroup}>

@@ -51,7 +51,7 @@ export function calculateDragEfficiency(weather: InspectionWeatherSnapshot): { e
   const cond = weather.condition;
   const wind = weather.wind;
 
-  if (temp <= 11) {
+  if (temp < 12) {
     return { efficiency: 0.0, label: 'För kallt för flygning (<12°C)' };
   }
 
@@ -116,7 +116,9 @@ async function getCachedWeatherData(coordinates: Coordinates, date: Date): Promi
   return null;
 }
 
-async function saveCachedWeatherData(
+let weatherCacheWriteQueue: Promise<void> = Promise.resolve();
+
+function saveCachedWeatherData(
   coordinates: Coordinates,
   date: Date,
   data: {
@@ -125,37 +127,42 @@ async function saveCachedWeatherData(
     weatherSnapshot?: InspectionWeatherSnapshot | null;
     weatherTimestamp?: number;
   },
-) {
-  try {
-    const raw = await AsyncStorage.getItem(KUPKOLL_BLOOM_WEATHER_CACHE_KEY);
-    const cache: Record<string, CachedWeatherData> = raw ? JSON.parse(raw) : {};
+): Promise<void> {
+  const nextWrite = weatherCacheWriteQueue.then(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(KUPKOLL_BLOOM_WEATHER_CACHE_KEY);
+      const cache: Record<string, CachedWeatherData> = raw ? JSON.parse(raw) : {};
 
-    const dateStr = createLocalDateStamp(date);
-    const now = Date.now();
-    const cacheKey = `${coordinates.latitude.toFixed(4)}:${coordinates.longitude.toFixed(4)}:${dateStr}`;
+      const dateStr = createLocalDateStamp(date);
+      const now = Date.now();
+      const cacheKey = `${coordinates.latitude.toFixed(4)}:${coordinates.longitude.toFixed(4)}:${dateStr}`;
 
-    cache[cacheKey] = {
-      latitude: coordinates.latitude,
-      longitude: coordinates.longitude,
-      dateStr,
-      shiftDays: data.shiftDays,
-      shiftTimestamp: data.shiftTimestamp,
-      weatherSnapshot: data.weatherSnapshot,
-      weatherTimestamp: data.weatherTimestamp,
-      timestamp: now,
-    };
+      cache[cacheKey] = {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        dateStr,
+        shiftDays: data.shiftDays,
+        shiftTimestamp: data.shiftTimestamp,
+        weatherSnapshot: data.weatherSnapshot,
+        weatherTimestamp: data.weatherTimestamp,
+        timestamp: now,
+      };
 
-    // Cleanup entries older than 48 hours to prevent bloat
-    for (const [key, entry] of Object.entries(cache)) {
-      if (now - entry.timestamp > 48 * 60 * 60 * 1000) {
-        delete cache[key];
+      // Cleanup entries older than 48 hours to prevent bloat
+      for (const [key, entry] of Object.entries(cache)) {
+        if (now - entry.timestamp > 48 * 60 * 60 * 1000) {
+          delete cache[key];
+        }
       }
-    }
 
-    await AsyncStorage.setItem(KUPKOLL_BLOOM_WEATHER_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore cache write errors
-  }
+      await AsyncStorage.setItem(KUPKOLL_BLOOM_WEATHER_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // Ignore cache write errors
+    }
+  });
+
+  weatherCacheWriteQueue = nextWrite.catch(() => {});
+  return nextWrite;
 }
 
 export async function getLikelyBloomingPlantsNow(params: {
@@ -182,7 +189,7 @@ export async function getLikelyBloomingPlantsNow(params: {
   let shiftDays = 0;
   let currentWeather: InspectionWeatherSnapshot | undefined;
   let dragEff = 1.0;
-  let dragLabel = 'Goda flygförutsättningar';
+  let dragLabel = params.enableWeatherAdjustment === false ? 'Väderjustering avstängd' : 'Väderdata saknas';
 
   const shouldApplyWeather = (params.enableWeatherAdjustment ?? true) && params.coordinates;
 
@@ -209,7 +216,7 @@ export async function getLikelyBloomingPlantsNow(params: {
     const weatherPromise = hasValidWeather
       ? Promise.resolve({ ok: true as const, value: cached!.weatherSnapshot! })
       : fetchInspectionWeather(params.coordinates, params.fetchImplementation)
-          .then((value) => ({ ok: value !== null, value }))
+          .then((value) => ({ ok: true as const, value }))
           .catch(() => ({ ok: false as const, value: null }));
 
     const [shiftResult, weatherResult] = await Promise.all([shiftPromise, weatherPromise]);

@@ -44,15 +44,23 @@ export async function fetchWithTimeout(url: RequestInfo | URL, options: RequestI
   }
 }
 
+function assertValidCoordinates(coordinates: Coordinates) {
+  if (!Number.isFinite(coordinates.latitude) || !Number.isFinite(coordinates.longitude)) {
+    throw new Error('Ogiltiga koordinater för väderhämtning.');
+  }
+}
+
 function buildRoundedCoordinate(value: number) {
   return value.toFixed(4);
 }
 
 export function buildSmhiPointForecastUrl(coordinates: Coordinates) {
+  assertValidCoordinates(coordinates);
   return `https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/${buildRoundedCoordinate(coordinates.longitude)}/lat/${buildRoundedCoordinate(coordinates.latitude)}/data.json`;
 }
 
 export function buildOpenMeteoWeatherUrl(coordinates: Coordinates) {
+  assertValidCoordinates(coordinates);
   const url = new URL('https://api.open-meteo.com/v1/forecast');
 
   url.searchParams.set('latitude', coordinates.latitude.toString());
@@ -76,7 +84,7 @@ export function mapSmhiWeatherSymbol(symbol: number): InspectionWeatherCondition
     return 'Mulet';
   }
 
-  if ((symbol >= 8 && symbol <= 14) || symbol === 17 || symbol === 18) {
+  if (symbol === 8 || symbol === 9 || symbol === 17 || symbol === 18) {
     return 'Duggregn';
   }
 
@@ -122,9 +130,21 @@ function getSmhiParameterValue(parameters: SmhiForecastParameter[], name: string
 }
 
 function getClosestSmhiTimeSeries(timeSeries: SmhiForecastTimeSeries[], now = new Date()) {
-  const futureEntry = timeSeries.find((entry) => new Date(entry.validTime).getTime() >= now.getTime());
+  const targetMs = now.getTime();
+  let closestEntry = timeSeries[0];
+  let smallestDiff = Math.abs(new Date(closestEntry.validTime).getTime() - targetMs);
 
-  return futureEntry ?? timeSeries[0];
+  for (let i = 1; i < timeSeries.length; i += 1) {
+    const entry = timeSeries[i];
+    const entryMs = new Date(entry.validTime).getTime();
+    const diff = Math.abs(entryMs - targetMs);
+    if (diff < smallestDiff || (diff === smallestDiff && entryMs >= targetMs)) {
+      closestEntry = entry;
+      smallestDiff = diff;
+    }
+  }
+
+  return closestEntry;
 }
 
 export function parseSmhiWeatherSnapshot(payload: SmhiPointForecastResponse, now = new Date()): InspectionWeatherSnapshot {
@@ -187,12 +207,36 @@ export async function fetchOpenMeteoWeather(coordinates: Coordinates, fetchImple
   };
 }
 
+const WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;
+const weatherCache = new Map<string, { expiresAt: number; snapshot: InspectionWeatherSnapshot }>();
+
 export async function fetchInspectionWeather(coordinates: Coordinates, fetchImplementation: typeof fetch = fetchWithTimeout): Promise<InspectionWeatherSnapshot> {
-  try {
-    return await fetchSmhiWeather(coordinates, fetchImplementation);
-  } catch {
-    return fetchOpenMeteoWeather(coordinates, fetchImplementation);
+  assertValidCoordinates(coordinates);
+
+  const useCache = fetchImplementation === fetchWithTimeout;
+  const cacheKey = `${coordinates.latitude.toFixed(2)},${coordinates.longitude.toFixed(2)}`;
+  if (useCache) {
+    const cached = weatherCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.snapshot;
+    }
   }
+
+  let snapshot: InspectionWeatherSnapshot;
+  try {
+    snapshot = await fetchSmhiWeather(coordinates, fetchImplementation);
+  } catch {
+    snapshot = await fetchOpenMeteoWeather(coordinates, fetchImplementation);
+  }
+
+  if (useCache) {
+    weatherCache.set(cacheKey, {
+      expiresAt: Date.now() + WEATHER_CACHE_TTL_MS,
+      snapshot,
+    });
+  }
+
+  return snapshot;
 }
 
 export async function fetchSeasonWeatherSignal(coordinates: Coordinates, fetchImplementation: typeof fetch = fetchWithTimeout) {

@@ -20,6 +20,7 @@ import {
   deleteInspectionSync,
   deleteTaskSync,
   initDbSync,
+  loadAllDataSync,
   loadFullExportDataSync,
   replaceAllDataLegacySync,
   saveHiveEventAndHiveSync,
@@ -40,11 +41,12 @@ describe('db', () => {
     expect(mockDb.execSync.mock.calls[0]?.[0]).toBe('PRAGMA foreign_keys = ON;');
     const sql = mockDb.execSync.mock.calls[1]?.[0] as string;
     expect(sql).toContain('PRAGMA journal_mode = WAL;');
-    expect(sql).toContain('PRAGMA user_version = 1;');
+    expect(sql).toContain('CREATE INDEX IF NOT EXISTS idx_inspections_hive_performed');
+    expect(sql).toContain('PRAGMA user_version = 2;');
   });
 
   it('skips schema migration in initDbSync when user_version is already current', () => {
-    mockDb.getFirstSync.mockReturnValueOnce({ user_version: 1 });
+    mockDb.getFirstSync.mockReturnValueOnce({ user_version: 2 });
     initDbSync();
 
     expect(mockDb.execSync).not.toHaveBeenCalled();
@@ -106,6 +108,7 @@ describe('db', () => {
     });
 
     const result = loadFullExportDataSync();
+    const coldStartResult = loadAllDataSync();
 
     expect(result.apiaries).toEqual([mockApiary]);
     expect(result.hives).toEqual([mockHive]);
@@ -113,6 +116,25 @@ describe('db', () => {
     expect(result.events).toHaveLength(4);
     expect(result.manualTasks).toEqual([mockTask]);
     expect(result.userSettings).toEqual({ experienceLevel: 'beginner' });
+    expect(coldStartResult).toEqual(result);
+  });
+
+  it('skips corrupt JSON rows without crashing on loadAllDataSync', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockDb.getAllSync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM Apiaries')) {
+        return [{ data: '{"id":"a1","name":"Ok","location":"Uppsala","notes":""}' }, { data: '{corrupt json' }];
+      }
+      return [];
+    });
+    mockDb.getFirstSync.mockReturnValue({ value: '{corrupt settings' });
+
+    const result = loadAllDataSync();
+
+    expect(result.apiaries).toHaveLength(1);
+    expect(result.userSettings).toEqual(DEFAULT_USER_SETTINGS);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it('defaults userSettings to experienced when no Settings row exists', () => {

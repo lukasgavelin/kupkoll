@@ -96,12 +96,21 @@ function showFormAlert(title: string, message: string) {
   Alert.alert(title, message);
 }
 
+import { safeGoBack } from '@/lib/navigation';
+
+function getLocalIsoDate(daysOffset = 0): string {
+  const target = new Date();
+  target.setDate(target.getDate() + daysOffset);
+  return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+}
+
 export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { addEvent, apiaries, hives } = useKupkoll();
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
   const [selectedType, setSelectedType] = useState<HiveEventType>('Drottning bytt');
+  const [eventDateText, setEventDateText] = useState(() => getLocalIsoDate(0));
   const [notes, setNotes] = useState('');
   const [mergedWithHiveName, setMergedWithHiveName] = useState('');
   const [queenYear, setQueenYear] = useState('');
@@ -218,14 +227,26 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
       return;
     }
 
+    const trimmedDate = eventDateText.trim();
+    const todayDate = getLocalIsoDate(0);
+    let performedAt: string | undefined;
+    if (trimmedDate && trimmedDate !== todayDate) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate) || Number.isNaN(new Date(`${trimmedDate}T12:00:00`).getTime())) {
+        showFormAlert('Ogiltigt datum', 'Ange datum för händelsen som ÅÅÅÅ-MM-DD.');
+        return;
+      }
+      performedAt = new Date(`${trimmedDate}T12:00:00`).toISOString();
+    }
+
     addEvent({
       hiveId: selectedHiveId,
+      ...(performedAt ? { performedAt } : {}),
       type: selectedType,
       notes: notes.trim() || defaultNotes[selectedType],
       details,
     });
 
-    router.back();
+    safeGoBack(selectedHiveId ? `/hives/${selectedHiveId}` : '/hives');
   }
 
   return (
@@ -234,7 +255,7 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
       {hives.length ? (
         <AppCard>
           <Text style={theme.textStyles.bodyStrong}>Kupa</Text>
-          <Text style={theme.textStyles.caption}>Händelsen sparas med dagens datum och tid.</Text>
+          <Text style={theme.textStyles.caption}>Välj kupa och eventuellt datum om händelsen skedde tidigare.</Text>
           <View style={styles.chipWrap}>
             {hives.map((hive) => {
               const isSelected = hive.id === selectedHiveId;
@@ -244,6 +265,35 @@ export function HiveEventForm({ initialHiveId, initialType }: HiveEventFormProps
                 <Pressable key={hive.id} onPress={() => setSelectedHiveId(hive.id)} style={({ pressed }) => [styles.chip, isSelected && styles.chipSelected, pressed && styles.chipPressed]}>
                   <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>{hive.name}</Text>
                   {apiaryName ? <Text style={[styles.chipCaption, isSelected && styles.chipLabelSelected]}>{apiaryName}</Text> : null}
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={theme.textStyles.bodyStrong}>Datum för händelse</Text>
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setEventDateText}
+            placeholder="ÅÅÅÅ-MM-DD"
+            placeholderTextColor={theme.colors.textMuted}
+            style={styles.input}
+            value={eventDateText}
+          />
+          <View style={styles.chipWrap}>
+            {[
+              { label: 'Idag', offset: 0 },
+              { label: 'Igår', offset: -1 },
+            ].map((preset) => {
+              const presetDate = getLocalIsoDate(preset.offset);
+              const isSelected = eventDateText.trim() === presetDate;
+              return (
+                <Pressable
+                  key={preset.label}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  onPress={() => setEventDateText(presetDate)}
+                  style={({ pressed }) => [styles.chip, isSelected && styles.chipSelected, pressed && styles.chipPressed]}
+                >
+                  <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>{preset.label}</Text>
                 </Pressable>
               );
             })}

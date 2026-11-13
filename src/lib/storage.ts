@@ -1,4 +1,4 @@
-import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, QueenHistoryEntry, QueenMarkingColor, QueenStatus, Task, UserSettings, VarroaControlMethod, VarroaLevel } from '@/types/domain';
+import { Apiary, Hive, HiveBoxSystem, HiveEvent, HiveEventDetails, HiveEventType, hiveEventTypes, Inspection, InspectionAdvancedDetails, InspectionMode, InspectionVarroaDetails, InspectionWeather, InspectionWeatherCondition, InspectionWeatherWind, QueenChangeStatus, QueenHistoryEntry, QueenMarkingColor, QueenStatus, Task, UserSettings, VarroaControlMethod, VarroaLevel, VarroaTreatmentMethod } from '@/types/domain';
 
 const KUPKOLL_APP_STATE_VERSION = 7;
 
@@ -93,10 +93,13 @@ export function normalizeQueenHistory(value: unknown): QueenHistoryEntry[] {
         return null;
       }
 
+      const imageUris = normalizeImageUris(candidate.imageUris);
+
       return {
         id: typeof candidate.id === 'string' && candidate.id.trim() ? candidate.id.trim() : `queen-history-${index}`,
         year,
         note,
+        ...(imageUris ? { imageUris } : {}),
       };
     })
     .filter((entry): entry is QueenHistoryEntry => Boolean(entry));
@@ -199,6 +202,16 @@ function normalizeInspectionVarroaDetails(value: unknown, varroaLevel: VarroaLev
   };
 }
 
+function normalizeVarroaTreatmentMethod(value: unknown): VarroaTreatmentMethod | undefined {
+  return value === 'Oxalsyra droppning' ||
+    value === 'Oxalsyra förångning' ||
+    value === 'Bandbehandling' ||
+    value === 'Myrsyra' ||
+    value === 'Annan metod'
+    ? value
+    : undefined;
+}
+
 function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -216,6 +229,10 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
   const honeySuperCount = typeof candidate.honeySuperCount === 'number' && Number.isFinite(candidate.honeySuperCount) ? candidate.honeySuperCount : undefined;
   const harvestSummary = typeof candidate.harvestSummary === 'string' && candidate.harvestSummary.trim() ? candidate.harvestSummary.trim() : undefined;
   const feedingSummary = typeof candidate.feedingSummary === 'string' && candidate.feedingSummary.trim() ? candidate.feedingSummary.trim() : undefined;
+  const varroaTreatmentMethod = normalizeVarroaTreatmentMethod(candidate.varroaTreatmentMethod);
+  const varroaTreatmentNote = typeof candidate.varroaTreatmentNote === 'string' && candidate.varroaTreatmentNote.trim() ? candidate.varroaTreatmentNote.trim() : undefined;
+  const varroaMeasurementValue = typeof candidate.varroaMeasurementValue === 'string' && candidate.varroaMeasurementValue.trim() ? candidate.varroaMeasurementValue.trim() : undefined;
+  const varroaControlMethod = normalizeVarroaControlMethod(candidate.varroaControlMethod);
 
   if (
     mergedWithHiveName === undefined &&
@@ -228,7 +245,11 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
     markingNote === undefined &&
     honeySuperCount === undefined &&
     harvestSummary === undefined &&
-    feedingSummary === undefined
+    feedingSummary === undefined &&
+    varroaTreatmentMethod === undefined &&
+    varroaTreatmentNote === undefined &&
+    varroaMeasurementValue === undefined &&
+    varroaControlMethod === undefined
   ) {
     return undefined;
   }
@@ -245,6 +266,10 @@ function normalizeHiveEventDetails(value: unknown): HiveEventDetails | undefined
     honeySuperCount,
     harvestSummary,
     feedingSummary,
+    varroaTreatmentMethod,
+    varroaTreatmentNote,
+    varroaMeasurementValue,
+    varroaControlMethod,
   };
 }
 
@@ -348,12 +373,99 @@ function createParsedState(candidate: {
 
   const userSettings = normalizeUserSettings(candidate.userSettings);
 
+  const apiaries: Apiary[] = [];
+  const apiaryIds = new Set<string>();
+  for (const item of candidate.apiaries) {
+    if (typeof item.id !== 'string' || !item.id.trim() || typeof item.name !== 'string' || !item.name.trim()) {
+      continue;
+    }
+    const id = item.id.trim();
+    if (apiaryIds.has(id)) {
+      continue;
+    }
+    apiaryIds.add(id);
+    apiaries.push({
+      ...(item as Apiary),
+      id,
+      name: item.name.trim(),
+      location: typeof item.location === 'string' ? item.location : '',
+      notes: typeof item.notes === 'string' ? item.notes : '',
+    });
+  }
+
+  const hives: Hive[] = [];
+  const hiveIds = new Set<string>();
+  for (const item of candidate.hives) {
+    if (
+      typeof item.id !== 'string' ||
+      !item.id.trim() ||
+      typeof item.apiaryId !== 'string' ||
+      !apiaryIds.has(item.apiaryId) ||
+      typeof item.name !== 'string' ||
+      !item.name.trim()
+    ) {
+      continue;
+    }
+    const id = item.id.trim();
+    if (hiveIds.has(id)) {
+      continue;
+    }
+    hiveIds.add(id);
+    hives.push(normalizeHive(item));
+  }
+
+  const inspections: Inspection[] = [];
+  const inspectionIds = new Set<string>();
+  for (const item of candidate.inspections) {
+    if (typeof item.id !== 'string' || !item.id.trim() || typeof item.hiveId !== 'string' || !hiveIds.has(item.hiveId)) {
+      continue;
+    }
+    const id = item.id.trim();
+    if (inspectionIds.has(id)) {
+      continue;
+    }
+    inspectionIds.add(id);
+    inspections.push(normalizeInspection(item));
+  }
+
+  const events: HiveEvent[] = [];
+  const eventIds = new Set<string>();
+  for (const item of candidate.events ?? []) {
+    const normalized = normalizeHiveEvent(item);
+    if (!normalized || !hiveIds.has(normalized.hiveId) || eventIds.has(normalized.id)) {
+      continue;
+    }
+    eventIds.add(normalized.id);
+    events.push(normalized);
+  }
+
+  const manualTasks: Task[] = [];
+  const taskIds = new Set<string>();
+  for (const item of candidate.manualTasks) {
+    if (typeof item.id !== 'string' || !item.id.trim() || typeof item.title !== 'string' || !item.title.trim()) {
+      continue;
+    }
+    const id = item.id.trim();
+    if (taskIds.has(id)) {
+      continue;
+    }
+    taskIds.add(id);
+    manualTasks.push({
+      ...(item as Task),
+      id,
+      title: item.title.trim(),
+      description: typeof item.description === 'string' ? item.description : '',
+      dueDate: typeof item.dueDate === 'string' && item.dueDate.trim() ? item.dueDate : new Date().toISOString(),
+      completed: Boolean(item.completed),
+    });
+  }
+
   return {
-    apiaries: candidate.apiaries as Apiary[],
-    hives: candidate.hives.map(normalizeHive),
-    inspections: candidate.inspections.map(normalizeInspection),
-    events: (candidate.events ?? []).map((item) => normalizeHiveEvent(item)).filter((item): item is HiveEvent => Boolean(item)),
-    manualTasks: candidate.manualTasks as Task[],
+    apiaries,
+    hives,
+    inspections,
+    events,
+    manualTasks,
     ...(userSettings ? { userSettings } : {}),
   };
 }

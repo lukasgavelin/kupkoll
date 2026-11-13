@@ -140,6 +140,11 @@ export function getSeasonTimingLabel(season: SeasonLabel, region: SwedishRegion)
   return `Brukar oftast infalla mellan ${range} i ${region}.`;
 }
 
+function matchesLocationKeyword(location: string, keyword: string): boolean {
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|[^a-zåäö0-9])${escaped}(?=$|[^a-zåäö0-9])`, 'i').test(location);
+}
+
 export function getApiaryRegion(apiary?: Apiary): SwedishRegion {
   if (!apiary) {
     return 'Sverige';
@@ -159,19 +164,19 @@ export function getApiaryRegion(apiary?: Apiary): SwedishRegion {
 
   const location = apiary.location.toLowerCase();
 
-  if (northKeywords.some((keyword) => location.includes(keyword))) {
+  if (northKeywords.some((keyword) => matchesLocationKeyword(location, keyword))) {
     return 'Norra Sverige';
   }
 
-  if (southKeywords.some((keyword) => location.includes(keyword))) {
+  if (southKeywords.some((keyword) => matchesLocationKeyword(location, keyword))) {
     return 'Södra Sverige';
   }
 
-  if (middleKeywords.some((keyword) => location.includes(keyword))) {
+  if (middleKeywords.some((keyword) => matchesLocationKeyword(location, keyword))) {
     return 'Mellansverige';
   }
 
-  return location.trim() ? 'Mellansverige' : 'Sverige';
+  return 'Sverige';
 }
 
 export function getZoneFromRegion(region: SwedishRegion): ApiaryZone {
@@ -278,19 +283,29 @@ export function getRecommendedInspectionCadenceDays(season: SeasonLabel, region:
 }
 
 export function formatDateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
   return new Intl.DateTimeFormat('sv-SE', {
     day: 'numeric',
     month: 'short',
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function formatDateTimeLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
   return new Intl.DateTimeFormat('sv-SE', {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function getSeasonLabel(date = new Date()): SeasonLabel {

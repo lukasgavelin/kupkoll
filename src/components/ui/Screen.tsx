@@ -14,7 +14,7 @@ type ScreenProps = {
   resetScrollOnFocus?: boolean;
 };
 
-export function Screen({ children, scroll = true, contentStyle, resetScrollOnFocus = true }: ScreenProps) {
+export function Screen({ children, scroll = true, contentStyle, resetScrollOnFocus = false }: ScreenProps) {
   const theme = useTheme();
   const floatingTabBarSpacing = useFloatingTabBarSpacing();
   const isFocused = useIsFocused();
@@ -41,7 +41,7 @@ export function Screen({ children, scroll = true, contentStyle, resetScrollOnFoc
   if (!scroll) {
     return (
       <SafeAreaView style={styles.safeArea} edges={[ 'top', 'left', 'right' ]}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoider}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardAvoider}>
           <View style={[styles.content, contentStyle]}>{children}</View>
         </KeyboardAvoidingView>
       </SafeAreaView>

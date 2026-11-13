@@ -113,6 +113,15 @@ export default function HiveTrendsScreen() {
                 width={chartWidth}
                 height={220}
                 yAxisInterval={1}
+                segments={3}
+                formatYLabel={(raw) => {
+                  const val = Math.round(Number(raw));
+                  if (val === 0) return 'Ej koll';
+                  if (val === 1) return 'Låg';
+                  if (val === 2) return 'Förhöjd';
+                  if (val === 3) return 'Hög';
+                  return raw;
+                }}
                 chartConfig={{
                   backgroundColor: theme.colors.surface,
                   backgroundGradientFrom: theme.colors.surface,
@@ -146,7 +155,11 @@ export default function HiveTrendsScreen() {
 
       <AppCard>
         <Text style={theme.textStyles.heading}>Skörd</Text>
-        <Text style={theme.textStyles.caption}>Slungning och skattning som loggats för denna kupa.</Text>
+        <Text style={theme.textStyles.caption}>
+          {harvestEvents.length > 0
+            ? `${harvestEvents.length} ${harvestEvents.length === 1 ? 'skörd' : 'skördar'} loggade för denna kupa.`
+            : 'Slungning och skattning som loggats för denna kupa.'}
+        </Text>
         
         {harvestEvents.length > 0 ? (
           <View style={{ marginTop: 16, gap: 16 }}>

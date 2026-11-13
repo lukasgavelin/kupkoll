@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Platform, StyleSheet, Switch, Text, View } from 'react-native';
+import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { router } from 'expo-router';
@@ -8,7 +8,7 @@ import { AppCard } from '@/components/ui/AppCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { confirmDestructiveAction } from '@/lib/confirm';
+import { confirmDestructiveAction, showAlert } from '@/lib/confirm';
 import { loadFullExportDataSync } from '@/lib/db';
 import { exportKupkollData } from '@/lib/export';
 import { parseKupkollImportJson } from '@/lib/import';
@@ -54,21 +54,21 @@ export default function SettingsScreen() {
       setExportStatus({ message: `${result.fileName} skapad.`, isError: false });
 
       if (result.method === 'download') {
-        Alert.alert('Export klar', 'JSON-filen har laddats ned till din enhet. Spara den som backup.');
+        showAlert('Export klar', 'JSON-filen har laddats ned till din enhet. Spara den som backup.');
         return;
       }
 
       if (result.method === 'share') {
-        Alert.alert('Export klar', 'Delningsdialogen har öppnats. Välj Google Drive, iCloud Drive, Dropbox eller annan lagring för att spara din säkerhetskopia.');
+        showAlert('Export klar', 'Delningsdialogen har öppnats. Välj Google Drive, iCloud Drive, Dropbox eller annan lagring för att spara din säkerhetskopia.');
         return;
       }
 
-      Alert.alert('Export klar', `Filen sparades i appens dokumentmapp.
+      showAlert('Export klar', `Filen sparades i appens dokumentmapp.
 
 ${result.fileUri ?? 'Sökväg saknas.'}`);
     } catch {
       setExportStatus({ message: 'Kunde inte skapa exportfilen.', isError: true });
-      Alert.alert('Export misslyckades', 'JSON-filen kunde inte skapas just nu. Försök igen om en stund.');
+      showAlert('Export misslyckades', 'JSON-filen kunde inte skapas just nu. Försök igen om en stund.');
     } finally {
       setIsExporting(false);
     }
@@ -132,7 +132,7 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
 
       if (!parsed.ok) {
         setImportStatus({ message: 'Importfilen kunde inte tolkas.', isError: true });
-        Alert.alert('Import misslyckades', parsed.message);
+        showAlert('Import misslyckades', parsed.message);
         return;
       }
 
@@ -146,18 +146,18 @@ ${result.fileUri ?? 'Sökväg saknas.'}`);
       setImportStatus({ message: `${asset.name ?? 'importfil'} importerad.`, isError: false });
 
       if (parsed.warnings.length > 0) {
-        Alert.alert('Import klar med varningar', parsed.warnings.join('\n'));
+        showAlert('Import klar med varningar', parsed.warnings.join('\n'));
         return;
       }
 
-      Alert.alert('Import klar', 'Backupfilen lästes in och appens data har uppdaterats.');
+      showAlert('Import klar', 'Backupfilen lästes in och appens data har uppdaterats.');
     } catch (error) {
       const detail = error instanceof Error && error.message ? error.message : null;
       setImportStatus({
         message: detail ? `Kunde inte läsa importfilen (${detail}).` : 'Kunde inte läsa importfilen.',
         isError: true,
       });
-      Alert.alert('Import misslyckades', detail ? `JSON-filen kunde inte läsas in: ${detail}` : 'JSON-filen kunde inte läsas in just nu. Försök igen.');
+      showAlert('Import misslyckades', detail ? `JSON-filen kunde inte läsas in: ${detail}` : 'JSON-filen kunde inte läsas in just nu. Försök igen.');
     } finally {
       setIsImporting(false);
     }

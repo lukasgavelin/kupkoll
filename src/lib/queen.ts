@@ -18,6 +18,22 @@ export type QueenProfileDraft = {
 
 export const queenMarkingColors: QueenMarkingColor[] = ['Vit', 'Gul', 'Röd', 'Grön', 'Blå', 'Omärkt'];
 export const queenStatuses: QueenStatus[] = ['Bekräftad', 'Osäker', 'Behöver följas upp'];
+export const queenMarkingColorHex: Record<QueenMarkingColor, string> = {
+  Vit: '#FFFFFF',
+  Gul: '#F5C518',
+  Röd: '#E8312A',
+  Grön: '#2DB84B',
+  Blå: '#3B82F6',
+  Omärkt: 'transparent',
+};
+
+export function getQueenMarkingHex(color: QueenMarkingColor | string | undefined): string | undefined {
+  if (!color || color === 'Omärkt') {
+    return undefined;
+  }
+
+  return queenMarkingColorHex[color as QueenMarkingColor];
+}
 
 /**
  * Internationellt system för märkningsfärg baserat på drottningens födelseår (BIBBA-systemet):

@@ -88,7 +88,7 @@ describe('applyHiveEventToHive', () => {
   });
 
   it.each(['Vinterförlust', 'Samhälle dött/avvecklat', 'Samhälle förenat'] as const)(
-    'clears action status to Stabilt when terminal event %s is logged without details',
+    'sets status to Avslutad when terminal event %s is logged without details',
     (terminalType) => {
       const hive = createHive({ status: 'Behöver åtgärd' });
       const event: HiveEvent = {
@@ -101,12 +101,12 @@ describe('applyHiveEventToHive', () => {
 
       expect(applyHiveEventToHive(hive, event)).toEqual({
         ...hive,
-        status: 'Stabilt',
+        status: 'Avslutad',
       });
     },
   );
 
-  it('clears Under uppbyggnad status when Samhälle förenat is logged with details', () => {
+  it('sets status to Avslutad when Samhälle förenat is logged with details', () => {
     const hive = createHive({ status: 'Under uppbyggnad' });
     const event: HiveEvent = {
       id: 'event-merge',
@@ -121,7 +121,7 @@ describe('applyHiveEventToHive', () => {
 
     expect(applyHiveEventToHive(hive, event)).toEqual({
       ...hive,
-      status: 'Stabilt',
+      status: 'Avslutad',
     });
   });
 

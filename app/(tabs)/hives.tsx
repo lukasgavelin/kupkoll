@@ -12,7 +12,7 @@ import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
 
-const hivePriorityOrder = { 'Behöver åtgärd': 0, 'Under uppbyggnad': 1, 'Stabilt': 2 } as const;
+const hivePriorityOrder = { 'Behöver åtgärd': 0, 'Under uppbyggnad': 1, 'Stabilt': 2, 'Avslutad': 3 } as const;
 
 export default function HivesScreen() {
   const { apiaries, hives, getApiaryById } = useKupkoll();

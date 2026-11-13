@@ -496,4 +496,74 @@ describe('parsePersistedKupkollState', () => {
       manualTasks: tasks,
     });
   });
+
+  it('preserves varroa fields on HiveEventDetails and imageUris on QueenHistoryEntry', () => {
+    const parsed = parsePersistedKupkollState({
+      version: 7,
+      apiaries,
+      hives: [
+        {
+          ...hives[0],
+          queenHistory: [
+            {
+              id: 'qh-1',
+              year: '2025',
+              note: 'Ny drottning',
+              imageUris: ['file:///queen.jpg'],
+            },
+          ],
+        },
+      ],
+      inspections,
+      events: [
+        {
+          id: 'event-varroa',
+          hiveId: 'hive-1',
+          type: 'Varroabehandling',
+          performedAt: '2026-08-15T10:00:00.000Z',
+          notes: 'Oxalsyra',
+          details: {
+            varroaTreatmentMethod: 'Oxalsyra droppning',
+            varroaTreatmentNote: '35 ml',
+            varroaMeasurementValue: '2.5 per dygn',
+            varroaControlMethod: 'Nedfall',
+          },
+        },
+      ],
+      manualTasks: tasks,
+    });
+
+    expect(parsed?.hives[0]?.queenHistory[0]?.imageUris).toEqual(['file:///queen.jpg']);
+    expect(parsed?.events[0]?.details).toMatchObject({
+      varroaTreatmentMethod: 'Oxalsyra droppning',
+      varroaTreatmentNote: '35 ml',
+      varroaMeasurementValue: '2.5 per dygn',
+      varroaControlMethod: 'Nedfall',
+    });
+  });
+
+  it('filters out orphaned records and defaults missing apiary location', () => {
+    const parsed = parsePersistedKupkollState({
+      version: 7,
+      apiaries: [{ id: 'apiary-1', name: 'Testgård' }],
+      hives: [
+        ...hives,
+        { ...hives[0], id: 'hive-orphan', apiaryId: 'missing-apiary' },
+      ],
+      inspections: [
+        ...inspections,
+        { ...inspections[0], id: 'insp-orphan', hiveId: 'missing-hive' },
+      ],
+      events: [
+        ...events,
+        { ...events[0], id: 'event-orphan', hiveId: 'missing-hive' },
+      ],
+      manualTasks: tasks,
+    });
+
+    expect(parsed?.apiaries[0]?.location).toBe('');
+    expect(parsed?.hives.map((h) => h.id)).toEqual(['hive-1']);
+    expect(parsed?.inspections.map((i) => i.id)).toEqual(['insp-1']);
+    expect(parsed?.events.map((e) => e.id)).toEqual(['event-1']);
+  });
 });

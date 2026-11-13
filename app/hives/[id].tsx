@@ -10,21 +10,12 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { confirmDestructiveAction } from '@/lib/confirm';
+import { safeGoBack } from '@/lib/navigation';
+import { getQueenMarkingHex } from '@/lib/queen';
 import { formatDateLabel, getApiaryDisplayLocation, getApiarySeasonLabel } from '@/lib/selectors';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
 import { Theme } from '@/theme';
-
-function getQueenMarkingHex(color: string | undefined): string | undefined {
-  switch (color) {
-    case 'Vit': return '#FFFFFF';
-    case 'Gul': return '#F5C518';
-    case 'Röd': return '#E8312A';
-    case 'Grön': return '#2DB84B';
-    case 'Blå': return '#3B82F6';
-    default: return undefined;
-  }
-}
 
 export default function HiveDetailScreen() {
   const theme = useTheme();
@@ -38,7 +29,7 @@ export default function HiveDetailScreen() {
       <Screen>
         <AppCard>
           <Text style={theme.textStyles.heading}>Kupan hittades inte</Text>
-          <PrimaryButton label="Tillbaka" onPress={() => router.back()} />
+          <PrimaryButton label="Tillbaka" onPress={() => safeGoBack('/hives')} />
         </AppCard>
       </Screen>
     );

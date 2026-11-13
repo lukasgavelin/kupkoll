@@ -1,12 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useState } from 'react';
 
 import { QueenProfileFields } from '@/components/feature/QueenProfileFields';
 import { AppCard } from '@/components/ui/AppCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
+import { showAlert } from '@/lib/confirm';
 import { buildQueenInput, createQueenHistoryDraftEntry, createQueenProfileDraft } from '@/lib/queen';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
@@ -21,7 +22,7 @@ export default function EditHiveScreen() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ id: string }>();
   const { apiaries, getHiveById, getApiaryById, updateHive } = useKupkoll();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const hive = getHiveById(params.id);
   const [selectedApiaryId, setSelectedApiaryId] = useState(hive?.apiaryId ?? apiaries[0]?.id ?? '');
   const [name, setName] = useState(hive?.name ?? '');
@@ -48,19 +49,19 @@ export default function EditHiveScreen() {
     const trimmedName = name.trim();
 
     if (!selectedApiaryId) {
-      Alert.alert('Välj bigård', 'Kupan behöver tillhöra en bigård innan du sparar.');
+      showAlert('Välj bigård', 'Kupan behöver tillhöra en bigård innan du sparar.');
       return;
     }
 
     if (!trimmedName) {
-      Alert.alert('Namn saknas', 'Ange ett namn eller nummer för kupan innan du sparar.');
+      showAlert('Namn saknas', 'Ange ett namn eller nummer för kupan innan du sparar.');
       return;
     }
 
     const queenInput = buildQueenInput(queen);
 
     if (queenInput.error || !queenInput.value) {
-      Alert.alert('Kontrollera drottninguppgifter', queenInput.error ?? 'Drottninguppgifterna kunde inte sparas.');
+      showAlert('Kontrollera drottninguppgifter', queenInput.error ?? 'Drottninguppgifterna kunde inte sparas.');
       return;
     }
 

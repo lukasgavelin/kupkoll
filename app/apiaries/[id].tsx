@@ -159,13 +159,6 @@ export default function ApiaryDetailScreen() {
         <Text style={theme.textStyles.body}>{apiary.notes}</Text>
         <PrimaryButton fullWidth label="Lägg till kupa" onPress={() => router.push(`/hives/new?apiaryId=${apiaryId}`)} />
       </AppCard>
-      {!apiaryHives.length ? (
-        <AppCard>
-          <Text style={theme.textStyles.heading}>Nästa steg</Text>
-          <Text style={theme.textStyles.body}>Lägg till första kupan i bigården och fyll i aktuell drottning.</Text>
-          <PrimaryButton fullWidth label="Lägg till första kupan" onPress={() => router.push(`/hives/new?apiaryId=${apiaryId}`)} />
-        </AppCard>
-      ) : null}
 
       <SectionHeader
         eyebrow="Kupor"

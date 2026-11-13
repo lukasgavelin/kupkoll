@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FloatingTabBarProvider } from '@/store/FloatingTabBarContext';
@@ -16,9 +16,9 @@ export default function TabsLayout() {
   const tabBarHorizontalInset = theme.spacing.lg;
   const tabBarInnerPadding = theme.spacing.xs;
   const tabBarTopPadding = 4;
-  const tabBarBottomPadding = Math.max(theme.spacing.xs, insets.bottom);
-  const tabBarBottomOffset = Platform.OS === 'ios' ? Math.max(insets.bottom, theme.spacing.sm) : 0;
-  const tabBarHeight = 56 + tabBarBottomPadding;
+  const tabBarBottomPadding = theme.spacing.xs;
+  const tabBarBottomOffset = Math.max(insets.bottom, theme.spacing.sm);
+  const tabBarHeight = 58 + tabBarBottomPadding;
   const tabBarFootprint = tabBarHeight + tabBarBottomOffset;
 
   return (
@@ -61,7 +61,7 @@ export default function TabsLayout() {
           <Tabs.Screen name="apiaries" options={{ title: 'Bigårdar', tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} name="leaf-outline" /> }} />
           <Tabs.Screen name="hives" options={{ title: 'Kupor', tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} name="grid-outline" /> }} />
           <Tabs.Screen name="tasks" options={{ title: 'Uppgifter', tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} name="checkbox-outline" /> }} />
-          <Tabs.Screen name="settings" options={{ title: 'Inställningar', tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} name="options-outline" /> }} />
+          <Tabs.Screen name="settings" options={{ title: 'Admin', tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} name="options-outline" /> }} />
         </Tabs>
       </View>
     </FloatingTabBarProvider>

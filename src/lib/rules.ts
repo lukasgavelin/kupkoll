@@ -1,11 +1,6 @@
+import { TERMINAL_HIVE_EVENT_TYPES } from '@/lib/queenEvents';
 import { Apiary, Hive, HiveEvent, HiveEventType, HiveStrength, Inspection, Recommendation, RecommendationKind, RecommendationSeverity, SeasonLabel, Task, UserSettings } from '@/types/domain';
 import { getApiaryRegion, getApiarySeasonLabel, getLatestInspectionMap, getRecommendedInspectionCadenceDays } from '@/lib/selectors';
-
-const TERMINAL_HIVE_EVENT_TYPES = new Set<HiveEventType>([
-  'Vinterförlust',
-  'Samhälle dött/avvecklat',
-  'Samhälle förenat',
-]);
 
 type DerivedResult = {
   recommendations: Recommendation[];
@@ -230,12 +225,32 @@ function isWinterSeason(season: SeasonLabel): boolean {
   return season === 'Vinterro' || season === 'Vintertillsyn';
 }
 
-function hasVarroaTreatmentAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection): boolean {
+function hasEventAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection, types: HiveEventType[]): boolean {
   const inspectionTime = new Date(inspection.performedAt).getTime();
 
   return hiveEvents.some(
-    (event) => event.type === 'Varroabehandling' && new Date(event.performedAt).getTime() > inspectionTime,
+    (event) => types.includes(event.type) && new Date(event.performedAt).getTime() > inspectionTime,
   );
+}
+
+function hasVarroaTreatmentAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection): boolean {
+  if (inspection.varroaDetails?.treatmentPerformed) {
+    return true;
+  }
+
+  return hasEventAfterInspection(hiveEvents, inspection, ['Varroabehandling', 'Uppföljande varroamätning']);
+}
+
+function hasFeedingAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection): boolean {
+  return hasEventAfterInspection(hiveEvents, inspection, ['Stödfodring', 'Invintring slutförd']);
+}
+
+function hasSuperAddedAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection): boolean {
+  return hasEventAfterInspection(hiveEvents, inspection, ['Skattlåda påsatt']);
+}
+
+function hasQueenReplacedAfterInspection(hiveEvents: HiveEvent[], inspection: Inspection): boolean {
+  return hasEventAfterInspection(hiveEvents, inspection, ['Drottning bytt']);
 }
 
 function hasPoorInspectionWeather(inspection: Inspection) {
@@ -281,14 +296,18 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'queen-missing-trend',
-    shouldApply: ({ inspectionHistory, season }) => {
+    shouldApply: ({ inspectionHistory, hiveEvents, season }) => {
       if (isWinterSeason(season)) {
         return false;
       }
 
       const recent = getRecentInspections(inspectionHistory, 3);
 
-      return recent.length === 3 && recent.every((item) => !item.queenSeen);
+      return (
+        recent.length === 3 &&
+        recent.every((item) => !item.queenSeen) &&
+        !hasQueenReplacedAfterInspection(hiveEvents, recent[0])
+      );
     },
     buildRecommendation: (context) =>
       createRecommendation(context, {
@@ -468,9 +487,14 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'weak-colony',
-    shouldApply: ({ hive, inspection, season }) =>
-      !isWinterSeason(season) &&
-      (hive.strength === 'Svagt' || (!inspection.openBrood && !inspection.cappedBrood) || (!inspection.honey && !inspection.pollen)),
+    shouldApply: ({ hive, inspection, season }) => {
+      if (isWinterSeason(season)) {
+        return false;
+      }
+
+      const broodless = season !== 'Invintring' && !inspection.openBrood && !inspection.cappedBrood;
+      return hive.strength === 'Svagt' || broodless || (!inspection.honey && !inspection.pollen);
+    },
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'weak',
@@ -490,11 +514,13 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'super-needed',
-    shouldApply: ({ hive, inspection, season }) =>
+    shouldApply: ({ hive, inspection, hiveEvents, season }) =>
       hive.strength === 'Starkt' &&
       inspection.honey &&
       (inspection.openBrood || inspection.cappedBrood) &&
       !inspection.actionNeeded &&
+      !inspection.advancedDetails?.honeySuperOn &&
+      !hasSuperAddedAfterInspection(hiveEvents, inspection) &&
       hasGoodInspectionWeather(inspection) &&
       (season === 'Vårutveckling' || season === 'Svärmperiod' || season === 'Drag och skattning'),
     buildRecommendation: (context) =>
@@ -516,8 +542,9 @@ const decisionRules: DecisionRule[] = [
   },
   {
     id: 'queen-check',
-    shouldApply: ({ inspection, hive, season }) =>
+    shouldApply: ({ inspection, hive, hiveEvents, season }) =>
       !isWinterSeason(season) &&
+      !hasQueenReplacedAfterInspection(hiveEvents, inspection) &&
       ((!inspection.queenSeen && !inspection.eggsSeen) || (inspection.actionNeeded && hive.queenStatus !== 'Bekräftad')),
     buildRecommendation: (context) =>
       createRecommendation(context, {
@@ -539,8 +566,10 @@ const decisionRules: DecisionRule[] = [
   // L5: Akut foderbrist under vår/vinter
   {
     id: 'food-shortage-spring',
-    shouldApply: ({ inspection, season }) =>
-      !inspection.honey && (season === 'Vårutveckling' || season === 'Vintertillsyn'),
+    shouldApply: ({ inspection, hiveEvents, season }) =>
+      !inspection.honey &&
+      !hasFeedingAfterInspection(hiveEvents, inspection) &&
+      (season === 'Vårutveckling' || season === 'Vintertillsyn'),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'food-spring',
@@ -575,8 +604,10 @@ const decisionRules: DecisionRule[] = [
   // L6: Invintring – vinterfoder saknas (kritisk)
   {
     id: 'winter-no-food',
-    shouldApply: ({ inspection, season }) =>
-      (season === 'Invintring' || season === 'Vinterro') && !inspection.honey,
+    shouldApply: ({ inspection, hiveEvents, season }) =>
+      (season === 'Invintring' || season === 'Vinterro') &&
+      !inspection.honey &&
+      !hasFeedingAfterInspection(hiveEvents, inspection),
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'winter-food',
@@ -620,7 +651,7 @@ const decisionRules: DecisionRule[] = [
   {
     id: 'winter-weak-colony',
     shouldApply: ({ hive, season }) =>
-      (season === 'Invintring' || season === 'Vinterro') && hive.strength === 'Svagt',
+      season === 'Invintring' && hive.strength === 'Svagt',
     buildRecommendation: (context) =>
       createRecommendation(context, {
         id: 'winter-weak',
@@ -633,7 +664,7 @@ const decisionRules: DecisionRule[] = [
       createTask(context, {
         id: 'winter-weak',
         title: 'Överväg förening inför vintern',
-        description: `${context.hive.name} verkar svagt inför övervintringen. Förening med ett starkare samhälle kan rädda bägge coloniers genetiska material.`,
+        description: `${context.hive.name} verkar svagt inför övervintringen. Förening med ett starkare samhälle kan rädda bägge samhällenas genetiska material.`,
         dueInDays: 7,
         priority: 'Medel',
       }),

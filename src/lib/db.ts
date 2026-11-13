@@ -4,7 +4,7 @@ import { KupkollAppState } from '@/lib/storage';
 import { Apiary, Hive, HiveEvent, Inspection, Task, UserSettings } from '@/types/domain';
 
 const DB_NAME = 'kupkoll.db';
-const DB_SCHEMA_VERSION = 1;
+const DB_SCHEMA_VERSION = 2;
 
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   experienceLevel: 'experienced',
@@ -74,70 +74,60 @@ export function initDbSync() {
         data TEXT NOT NULL
       );
 
+      CREATE INDEX IF NOT EXISTS idx_inspections_hive_performed
+        ON Inspections (hiveId, performedAt DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_hive_events_hive_performed
+        ON HiveEvents (hiveId, performedAt DESC);
+
       PRAGMA user_version = ${DB_SCHEMA_VERSION};
     `);
   }
 }
 
+function safeParseJsonRows<T>(rows: { data: string }[], label: string): T[] {
+  const result: T[] = [];
+  for (const row of rows) {
+    try {
+      result.push(JSON.parse(row.data) as T);
+    } catch (error) {
+      console.warn(`[Kupkoll DB] Kunde inte tolka rad i ${label}:`, error);
+    }
+  }
+  return result;
+}
+
 export function loadAllDataSync() {
-  const db = getDbSync();
-
-  const apiariesRows = db.getAllSync<{ data: string }>('SELECT data FROM Apiaries');
-  const apiaries = apiariesRows.map((r) => JSON.parse(r.data) as Apiary);
-
-  const hivesRows = db.getAllSync<{ data: string }>('SELECT data FROM Hives');
-  const hives = hivesRows.map((r) => JSON.parse(r.data) as Hive);
-
-  const inspectionsRows = db.getAllSync<{ data: string }>(`
-    SELECT data FROM (
-      SELECT data, ROW_NUMBER() OVER (PARTITION BY hiveId ORDER BY performedAt DESC) as rn FROM Inspections
-    ) WHERE rn <= 3
-  `);
-  const inspections = inspectionsRows.map((r) => JSON.parse(r.data) as Inspection);
-
-  const eventsRows = db.getAllSync<{ data: string }>(`
-    SELECT data FROM (
-      SELECT data, ROW_NUMBER() OVER (PARTITION BY hiveId ORDER BY performedAt DESC) as rn FROM HiveEvents
-    ) WHERE rn <= 3
-  `);
-  const events = eventsRows.map((r) => JSON.parse(r.data) as HiveEvent);
-
-  const tasksRows = db.getAllSync<{ data: string }>('SELECT data FROM Tasks');
-  const tasks = tasksRows.map((r) => JSON.parse(r.data) as Task);
-
-  const settingsRow = db.getFirstSync<{ value: string }>('SELECT value FROM Settings WHERE id = "userSettings"');
-  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { ...DEFAULT_USER_SETTINGS };
-
-  return {
-    apiaries,
-    hives,
-    inspections,
-    events,
-    manualTasks: tasks,
-    userSettings,
-  };
+  return loadFullExportDataSync();
 }
 
 export function loadFullExportDataSync(): KupkollAppState & { userSettings: UserSettings } {
   const db = getDbSync();
 
   const apiariesRows = db.getAllSync<{ data: string }>('SELECT data FROM Apiaries');
-  const apiaries = apiariesRows.map((r) => JSON.parse(r.data) as Apiary);
+  const apiaries = safeParseJsonRows<Apiary>(apiariesRows, 'Apiaries');
 
   const hivesRows = db.getAllSync<{ data: string }>('SELECT data FROM Hives');
-  const hives = hivesRows.map((r) => JSON.parse(r.data) as Hive);
+  const hives = safeParseJsonRows<Hive>(hivesRows, 'Hives');
 
   const inspectionsRows = db.getAllSync<{ data: string }>('SELECT data FROM Inspections ORDER BY performedAt DESC');
-  const inspections = inspectionsRows.map((r) => JSON.parse(r.data) as Inspection);
+  const inspections = safeParseJsonRows<Inspection>(inspectionsRows, 'Inspections');
 
   const eventsRows = db.getAllSync<{ data: string }>('SELECT data FROM HiveEvents ORDER BY performedAt DESC');
-  const events = eventsRows.map((r) => JSON.parse(r.data) as HiveEvent);
+  const events = safeParseJsonRows<HiveEvent>(eventsRows, 'HiveEvents');
 
   const tasksRows = db.getAllSync<{ data: string }>('SELECT data FROM Tasks');
-  const tasks = tasksRows.map((r) => JSON.parse(r.data) as Task);
+  const tasks = safeParseJsonRows<Task>(tasksRows, 'Tasks');
 
   const settingsRow = db.getFirstSync<{ value: string }>('SELECT value FROM Settings WHERE id = "userSettings"');
-  const userSettings = settingsRow ? (JSON.parse(settingsRow.value) as UserSettings) : { ...DEFAULT_USER_SETTINGS };
+  let userSettings: UserSettings = { ...DEFAULT_USER_SETTINGS };
+  if (settingsRow) {
+    try {
+      userSettings = JSON.parse(settingsRow.value) as UserSettings;
+    } catch (error) {
+      console.warn('[Kupkoll DB] Kunde inte tolka Settings, använder standard:', error);
+    }
+  }
 
   return {
     apiaries,
@@ -255,11 +245,11 @@ export function replaceAllDataLegacySync(data: { apiaries: Apiary[]; hives: Hive
 export function loadInspectionsForHiveSync(hiveId: string): Inspection[] {
   const db = getDbSync();
   const rows = db.getAllSync<{ data: string }>('SELECT data FROM Inspections WHERE hiveId = ? ORDER BY performedAt DESC', [hiveId]);
-  return rows.map((r) => JSON.parse(r.data) as Inspection);
+  return safeParseJsonRows<Inspection>(rows, 'Inspections');
 }
 
 export function loadEventsForHiveSync(hiveId: string): HiveEvent[] {
   const db = getDbSync();
   const rows = db.getAllSync<{ data: string }>('SELECT data FROM HiveEvents WHERE hiveId = ? ORDER BY performedAt DESC', [hiveId]);
-  return rows.map((r) => JSON.parse(r.data) as HiveEvent);
+  return safeParseJsonRows<HiveEvent>(rows, 'HiveEvents');
 }

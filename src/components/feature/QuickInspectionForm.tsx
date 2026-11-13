@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -8,6 +8,7 @@ import { AppCard } from '@/components/ui/AppCard';
 import { EmptyStateCard } from '@/components/ui/EmptyStateCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { showAlert } from '@/lib/confirm';
 import { fetchInspectionWeather } from '@/lib/weather';
 import { useKupkoll } from '@/store/KupkollContext';
 import { useTheme } from '@/store/ThemeContext';
@@ -18,7 +19,14 @@ type BooleanKey = 'queenSeen' | 'eggsSeen' | 'openBrood' | 'cappedBrood' | 'hone
 
 type QuickInspectionFormProps = {
   initialHiveId?: string;
+  onUnsavedPhotosChange?: (hasUnsaved: boolean) => void;
 };
+
+function getLocalIsoDate(daysOffset = 0): string {
+  const target = new Date();
+  target.setDate(target.getDate() + daysOffset);
+  return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+}
 
 type InspectionPreset = {
   id: string;
@@ -193,12 +201,13 @@ function createInspectionImageFilename(uri: string) {
   return `inspection_${Date.now()}_${randomSuffix}.${sanitizedExtension}`;
 }
 
-export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps) {
+export function QuickInspectionForm({ initialHiveId, onUnsavedPhotosChange }: QuickInspectionFormProps) {
   const theme = useTheme();
   const { addInspection, apiaries, hives, userSettings } = useKupkoll();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [inspectionMode, setInspectionMode] = useState<InspectionMode>('Snabb genomgång');
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId ?? hives[0]?.id ?? '');
+  const [inspectionDateText, setInspectionDateText] = useState(() => getLocalIsoDate(0));
   const [temperament, setTemperament] = useState<HiveTemperament>(inspectionPresets[0].temperament);
   const [varroaLevel, setVarroaLevel] = useState<VarroaLevel>(inspectionPresets[0].varroaLevel);
   const [varroaChecked, setVarroaChecked] = useState(false);
@@ -216,6 +225,10 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
   const [imageUris, setImageUris] = useState<string[]>([]);
   const copiedSessionUrisRef = useRef<Set<string>>(new Set());
   const isSavedRef = useRef(false);
+
+  useEffect(() => {
+    onUnsavedPhotosChange?.(imageUris.length > 0 && !isSavedRef.current);
+  }, [imageUris.length, onUnsavedPhotosChange]);
 
   useEffect(() => {
     const copiedSessionUris = copiedSessionUrisRef.current;
@@ -310,14 +323,14 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
       if (useCamera) {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
         if (!permission.granted) {
-          Alert.alert('Kamera nekas', 'Du behöver ge åtkomst till kameran för att ta bilder.');
+          showAlert('Kamera nekas', 'Du behöver ge åtkomst till kameran för att ta bilder.');
           return;
         }
         result = await ImagePicker.launchCameraAsync(options);
       } else {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
-          Alert.alert('Bilder nekas', 'Du behöver ge åtkomst till bildbiblioteket.');
+          showAlert('Bilder nekas', 'Du behöver ge åtkomst till bildbiblioteket.');
           return;
         }
         result = await ImagePicker.launchImageLibraryAsync(options);
@@ -343,7 +356,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
         setImageUris((current) => [...current, newPath]);
       }
     } catch (err) {
-      Alert.alert('Kunde inte lägga till bild', 'Ett fel inträffade när bilden skulle hämtas.');
+      showAlert('Kunde inte lägga till bild', 'Ett fel inträffade när bilden skulle hämtas.');
     }
   }
 
@@ -383,7 +396,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   function openEventShortcut(type?: HiveEventType) {
     if (!selectedHiveId) {
-      Alert.alert('Välj kupa först', 'Välj vilken kupa du går igenom innan du loggar en händelse.');
+      showAlert('Välj kupa först', 'Välj vilken kupa du går igenom innan du loggar en händelse.');
       return;
     }
 
@@ -393,20 +406,31 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
   function saveInspection() {
     if (!selectedHiveId) {
-      Alert.alert('Välj kupa', 'Välj vilken kupa som ska få genomgången.');
+      showAlert('Välj kupa', 'Välj vilken kupa som ska få genomgången.');
       return;
+    }
+
+    const trimmedDate = inspectionDateText.trim();
+    const todayDate = getLocalIsoDate(0);
+    let performedAt: string | undefined;
+    if (trimmedDate && trimmedDate !== todayDate) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate) || Number.isNaN(new Date(`${trimmedDate}T12:00:00`).getTime())) {
+        showAlert('Ogiltigt datum', 'Ange datum för genomgången som ÅÅÅÅ-MM-DD.');
+        return;
+      }
+      performedAt = new Date(`${trimmedDate}T12:00:00`).toISOString();
     }
 
     const trimmedTemperature = temperatureText.trim();
     const parsedTemperature = trimmedTemperature ? Number(trimmedTemperature.replace(',', '.')) : undefined;
 
     if (trimmedTemperature && (parsedTemperature === undefined || Number.isNaN(parsedTemperature))) {
-      Alert.alert('Ogiltig temperatur', 'Ange temperaturen i grader som ett tal, till exempel 17 eller 17,5.');
+      showAlert('Ogiltig temperatur', 'Ange temperaturen i grader som ett tal, till exempel 17 eller 17,5.');
       return;
     }
 
     if (varroaChecked && varroaLevel === 'Ej kontrollerad') {
-      Alert.alert('Komplettera varroa', 'Om varroa är kontrollerad behöver du också ange om nivån var låg, förhöjd eller hög.');
+      showAlert('Komplettera varroa', 'Om varroa är kontrollerad behöver du också ange om nivån var låg, förhöjd eller hög.');
       return;
     }
 
@@ -443,6 +467,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
 
     addInspection({
       hiveId: selectedHiveId,
+      ...(performedAt ? { performedAt } : {}),
       mode: inspectionMode,
       temperament,
       varroaLevel: varroaChecked ? varroaLevel : 'Ej kontrollerad',
@@ -455,7 +480,7 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
     });
 
     isSavedRef.current = true;
-    Alert.alert('Genomgång sparad', 'Genomgången är sparad och kupans sida är uppdaterad.');
+    showAlert('Genomgång sparad', 'Genomgången är sparad och kupans sida är uppdaterad.');
     router.replace(`/hives/${selectedHiveId}`);
   }
 
@@ -527,6 +552,35 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
                   <Text style={[theme.textStyles.caption, selected && styles.choiceCardMetaSelected]}>{hive.status}</Text>
                 </View>
                 <Text style={[theme.textStyles.body, selected && styles.choiceCardBodySelected]}>{hive.notes}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.inlineLabel}>Datum för genomgång</Text>
+        <TextInput
+          autoCapitalize="none"
+          onChangeText={setInspectionDateText}
+          placeholder="ÅÅÅÅ-MM-DD"
+          placeholderTextColor={theme.colors.textMuted}
+          style={styles.input}
+          value={inspectionDateText}
+        />
+        <View style={styles.optionGrid}>
+          {[
+            { label: 'Idag', offset: 0 },
+            { label: 'Igår', offset: -1 },
+          ].map((preset) => {
+            const presetDate = getLocalIsoDate(preset.offset);
+            const selected = inspectionDateText.trim() === presetDate;
+            return (
+              <Pressable
+                key={preset.label}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => setInspectionDateText(presetDate)}
+                style={[styles.option, selected && styles.optionSelected]}
+              >
+                <Text style={[styles.optionLabel, selected && styles.optionSelectedText]}>{preset.label}</Text>
               </Pressable>
             );
           })}
@@ -864,7 +918,13 @@ export function QuickInspectionForm({ initialHiveId }: QuickInspectionFormProps)
               {imageUris.map((uri, index) => (
                 <View key={`${uri}-${index}`} style={styles.imageWrapper}>
                   <Image source={{ uri }} style={styles.imagePreview} />
-                  <Pressable style={styles.removeImageButton} onPress={() => removeImage(index)}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ta bort bild"
+                    hitSlop={10}
+                    style={styles.removeImageButton}
+                    onPress={() => removeImage(index)}
+                  >
                     <Text style={styles.removeImageText}>✕</Text>
                   </Pressable>
                 </View>

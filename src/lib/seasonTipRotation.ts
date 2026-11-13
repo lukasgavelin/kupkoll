@@ -47,8 +47,8 @@ function normalizeRotationState(input: unknown): PersistedSeasonTipRotationState
 
     const candidate = value as Record<string, unknown>;
     const lastShownOn = typeof candidate.lastShownOn === 'string' ? candidate.lastShownOn : undefined;
-    const focusStartIndex = typeof candidate.focusStartIndex === 'number' && Number.isInteger(candidate.focusStartIndex) ? candidate.focusStartIndex : undefined;
-    const watchStartIndex = typeof candidate.watchStartIndex === 'number' && Number.isInteger(candidate.watchStartIndex) ? candidate.watchStartIndex : undefined;
+    const focusStartIndex = typeof candidate.focusStartIndex === 'number' && Number.isInteger(candidate.focusStartIndex) && candidate.focusStartIndex >= 0 ? candidate.focusStartIndex : undefined;
+    const watchStartIndex = typeof candidate.watchStartIndex === 'number' && Number.isInteger(candidate.watchStartIndex) && candidate.watchStartIndex >= 0 ? candidate.watchStartIndex : undefined;
 
     if (lastShownOn === undefined || focusStartIndex === undefined || watchStartIndex === undefined) {
       return state;

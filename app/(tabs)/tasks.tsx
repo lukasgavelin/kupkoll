@@ -56,6 +56,15 @@ function parseOptionalDueDate(raw: string): string | null | undefined {
   return parsed.toISOString();
 }
 
+function formatOffsetIsoDate(daysOffset: number): string {
+  const target = new Date();
+  target.setDate(target.getDate() + daysOffset);
+  const year = target.getFullYear();
+  const month = String(target.getMonth() + 1).padStart(2, '0');
+  const day = String(target.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function TasksScreen() {
   const theme = useTheme();
   const { apiaries, hives, tasks, manualTasks, recommendations, getHiveById, getApiaryById, addTask, toggleTask, deleteTask } = useKupkoll();
@@ -211,6 +220,28 @@ export default function TasksScreen() {
               style={styles.input}
               value={dueDateInput}
             />
+            <View style={styles.chipRow}>
+              {[
+                { label: 'Idag', offset: 0 },
+                { label: '+3 dagar', offset: 3 },
+                { label: '+7 dagar', offset: 7 },
+              ].map((preset) => {
+                const presetDate = formatOffsetIsoDate(preset.offset);
+                const selected = dueDateInput.trim() === presetDate;
+                return (
+                  <Pressable
+                    key={preset.label}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    hitSlop={6}
+                    onPress={() => setDueDateInput(presetDate)}
+                    style={[styles.chip, selected && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipLabel, selected && styles.chipLabelActive]}>{preset.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Anteckning (valfritt)</Text>

@@ -52,3 +52,14 @@ export function confirmDestructiveAction({
     );
   });
 }
+
+export function showAlert(title: string, message?: string): void {
+  if (Platform.OS === 'web') {
+    if (typeof globalThis.alert === 'function') {
+      globalThis.alert(message ? `${title}\n\n${message}` : title);
+    }
+    return;
+  }
+
+  Alert.alert(title, message);
+}

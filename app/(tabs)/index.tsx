@@ -1,3 +1,4 @@
+import { useIsFocused } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
@@ -28,7 +29,23 @@ export default function HomeScreen() {
   const inspectionTarget = latestInspection?.hiveId ?? quickHive?.id;
 
   // Compute season status for SeasonStatusCard
-  const [seasonDate] = useState(() => new Date());
+  const isFocused = useIsFocused();
+  const [seasonDate, setSeasonDate] = useState(() => new Date());
+
+  useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    const now = new Date();
+    if (
+      now.getFullYear() !== seasonDate.getFullYear() ||
+      now.getMonth() !== seasonDate.getMonth() ||
+      now.getDate() !== seasonDate.getDate()
+    ) {
+      setSeasonDate(now);
+    }
+  }, [isFocused, seasonDate]);
   const baseSeasonStatus = useMemo(() => getSeasonStatus(seasonDate, apiaries), [seasonDate, apiaries]);
   const [seasonStatus, setSeasonStatus] = useState(baseSeasonStatus);
   const [bloomPredictions, setBloomPredictions] = useState<BloomPrediction[]>([]);
